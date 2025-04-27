@@ -1,8 +1,14 @@
 // src/features/dashboard/components/DashboardLayout.jsx
 // Provides the main layout structure for the authenticated dashboard area, including Navbar and Sidebar.
 
-import React, { useState, useEffect } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Outlet,
+  useNavigate,
+  useLocation,
+  useOutletContext,
+} from "react-router-dom";
+import { useMediaQuery } from "react-responsive";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { Sheet, SheetContent } from "../../../components/ui/sheet"; // Corrected path
@@ -28,6 +34,7 @@ import {
 import { FolderPlus, X, Check } from "lucide-react";
 import { Label } from "../../../components/ui/label"; // Corrected path
 import { getProjectFromPath } from "../utils/dashboardUtils"; // Helper function
+import { getAppearanceSettings } from "../../settings/services/appearanceSettingsService"; // Import appearance service
 
 const DashboardLayout = () => {
   const { user } = useAuth();
@@ -39,17 +46,72 @@ const DashboardLayout = () => {
   const [projectObjects, setProjectObjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
-  const [taskFormProject, setTaskFormProject] = useState(null); // For pre-filling project in form
+  const [taskFormProject, setTaskFormProject] = useState(null);
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [lastTaskUpdate, setLastTaskUpdate] = useState(Date.now()); // Add timestamp for task list refresh
+  const [lastTaskUpdate, setLastTaskUpdate] = useState(Date.now());
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
+  const [appearanceSettings, setAppearanceSettings] = useState({
+    backgroundTheme: "default",
+    uiDensity: "comfortable",
+    reduceAnimations: false,
+  });
+  const [selectedProject, setSelectedProject] = useState("");
+
+  // Apply appearance settings when component mounts
+  useEffect(() => {
+    const loadAppearanceSettings = async () => {
+      try {
+        const { settings } = await getAppearanceSettings();
+        setAppearanceSettings(settings);
+
+        // Apply background theme
+        if (settings.backgroundTheme) {
+          const root = document.documentElement;
+          // Remove any existing theme classes
+          const themeClasses = [
+            "bg-theme-waves",
+            "bg-theme-dots",
+            "bg-theme-gradient-soft",
+            "bg-theme-gradient-vibrant",
+          ];
+          themeClasses.forEach((className) => {
+            root.classList.remove(className);
+          });
+
+          // Add the selected theme class if not default
+          if (settings.backgroundTheme !== "default") {
+            root.classList.add(`bg-theme-${settings.backgroundTheme}`);
+          }
+        }
+
+        // Apply UI density
+        if (settings.uiDensity) {
+          const body = document.body;
+          // Remove existing density classes
+          body.classList.remove("ui-compact", "ui-comfortable", "ui-spacious");
+          // Add the selected density class
+          body.classList.add(`ui-${settings.uiDensity}`);
+        }
+
+        // Apply animations setting
+        document.body.classList.toggle(
+          "reduce-animations",
+          settings.reduceAnimations
+        );
+      } catch (error) {
+        console.error("Error loading appearance settings:", error);
+      }
+    };
+
+    loadAppearanceSettings();
+  }, []);
 
   // Derive selectedProject directly from URL using the utility function
-  const selectedProject = React.useMemo(() => {
+  const selectedProjectMemo = React.useMemo(() => {
     const projectFromUrl = getProjectFromPath(location.pathname);
     console.log(
       `[DashboardLayout] Current Path: ${location.pathname}, Derived Project: ${projectFromUrl}`
@@ -154,7 +216,7 @@ const DashboardLayout = () => {
     // Use the *currently selected* project if no specific one is passed
     setTaskFormProject(
       project ||
-        projectObjects.find((p) => p.name === selectedProject)?.name ||
+        projectObjects.find((p) => p.name === selectedProjectMemo)?.name ||
         "Inbox"
     );
     setTaskFormOpen(true);
@@ -240,7 +302,7 @@ const DashboardLayout = () => {
         setProjectObjects((prev) => prev.filter((p) => p._id !== project._id));
         setAllProjects((prev) => prev.filter((p) => p !== projectName));
         toast({ title: "Project Deleted", description: response.data.message });
-        if (selectedProject === projectName) {
+        if (selectedProjectMemo === projectName) {
           handleSelectProject("today"); // Navigate away if deleted project was selected
         }
       } else {
@@ -261,7 +323,7 @@ const DashboardLayout = () => {
       {/* Mobile Only: Sidebar as Sheet - Pass isOpen and onClose */}
       {isMobile && (
         <Sidebar
-          selectedProject={selectedProject}
+          selectedProject={selectedProjectMemo}
           onSelectProject={handleSelectProject}
           myProjects={allProjects}
           onAddTask={handleOpenTaskForm}
@@ -279,7 +341,7 @@ const DashboardLayout = () => {
       <Navbar
         onSidebarToggle={toggleSidebar}
         onAddTask={handleOpenTaskForm}
-        selectedProject={selectedProject} // Pass selectedProject for context if needed
+        selectedProject={selectedProjectMemo} // Pass selectedProject for context if needed
         className="glass-navbar border-b border-gray-200/40 dark:border-zinc-700/40 shadow-sm"
       />
 
@@ -288,7 +350,7 @@ const DashboardLayout = () => {
         {/* Desktop Only: Permanent Sidebar */}
         {!isMobile && (
           <Sidebar
-            selectedProject={selectedProject}
+            selectedProject={selectedProjectMemo}
             onSelectProject={handleSelectProject}
             myProjects={allProjects}
             onAddTask={handleOpenTaskForm}
@@ -307,7 +369,7 @@ const DashboardLayout = () => {
             context={{
               allProjects,
               projectObjects,
-              selectedProject,
+              selectedProject: selectedProjectMemo,
               lastTaskUpdate,
             }}
           />
@@ -316,19 +378,19 @@ const DashboardLayout = () => {
 
       {/* TaskForm Dialog */}
       <Dialog open={taskFormOpen} onOpenChange={setTaskFormOpen}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto p-0 glass-card shadow-lg">
+        <DialogContent className="sm:max-w-[550px] glass-card relative shadow-lg p-0">
           <TaskForm
             availableProjects={allProjects}
             onTaskCreated={handleCloseTaskForm}
-            initialProject={taskFormProject} // Pass the project to pre-fill
+            initialProject={taskFormProject}
           />
         </DialogContent>
       </Dialog>
 
       {/* Add Project Dialog */}
       <Dialog open={addProjectOpen} onOpenChange={setAddProjectOpen}>
-        <DialogContent className="glass-card shadow-lg sm:max-w-[450px]">
-          <DialogHeader className="pb-2">
+        <DialogContent className="glass-card relative shadow-lg sm:max-w-[450px] p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle className="flex items-center gap-2 text-lg">
               <FolderPlus
                 size={18}
@@ -355,7 +417,7 @@ const DashboardLayout = () => {
             />
           </div>
 
-          <DialogFooter className="border-t border-border/20">
+          <DialogFooter className="border-t border-border/20 px-6 py-4">
             <Button
               variant="outline"
               onClick={() => setAddProjectOpen(false)}

@@ -273,8 +273,8 @@ const StatsPage = () => {
   // Loading and Error states
   if (loading) {
     return (
-      <div className="py-6 md:py-8 px-4 space-y-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
+      <div className="py-6 md:py-8 px-4 space-y-8 relative bg-theme">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">
           Task Statistics
         </h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -293,8 +293,10 @@ const StatsPage = () => {
 
   if (error) {
     return (
-      <div className="py-6 md:py-8 px-4 text-center">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6">Task Statistics</h1>
+      <div className="py-6 md:py-8 px-4 text-center relative bg-theme">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">
+          Task Statistics
+        </h1>
         <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300">
           <AlertCircle className="inline-block h-5 w-5 mr-2" />
           Error loading statistics: {error}
@@ -305,8 +307,10 @@ const StatsPage = () => {
 
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="py-6 md:py-8 px-4 text-center">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6">Task Statistics</h1>
+      <div className="py-6 md:py-8 px-4 text-center relative bg-theme">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">
+          Task Statistics
+        </h1>
         <div className="p-6 bg-muted/30 border rounded-lg text-muted-foreground">
           No tasks found. Add some tasks to generate statistics.
         </div>
@@ -315,14 +319,10 @@ const StatsPage = () => {
   }
 
   return (
-    <div className="py-4 px-2 sm:py-6 sm:px-4 glass-morphism rounded-xl shadow-md mx-2 sm:mx-4 my-2">
-      <motion.h1
-        className="text-2xl md:text-3xl font-bold mb-4 text-center bg-gradient-to-r from-primary/90 via-purple-500/90 to-pink-500/90 bg-clip-text text-transparent animate-gradient-x"
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.2 }}
-      >
+    <div className="py-6 md:py-8 px-4 space-y-8 relative bg-theme">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">
         Task Statistics
-      </motion.h1>
+      </h1>
 
       {/* Key Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">

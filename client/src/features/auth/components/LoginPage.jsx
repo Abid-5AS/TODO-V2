@@ -35,9 +35,9 @@ const LoginPage = () => {
       transition: {
         when: "beforeChildren",
         staggerChildren: 0.1,
-        duration: 0.3
-      }
-    }
+        duration: 0.3,
+      },
+    },
   };
 
   const itemVariants = {
@@ -45,25 +45,26 @@ const LoginPage = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
-    }
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
   };
 
   const buttonVariants = {
     idle: { scale: 1 },
     hover: { scale: 1.03, transition: { duration: 0.2 } },
-    tap: { scale: 0.98 }
+    tap: { scale: 0.98 },
   };
 
   return (
-    <div className="min-h-[calc(100vh-theme(space.14))] flex items-center justify-center bg-background dark:bg-gray-900 overflow-hidden pt-14"> {/* Adjusted min-height */} 
+    <div className="min-h-[calc(100vh-theme(space.14))] flex items-center justify-center bg-theme relative overflow-hidden pt-14">
+      {" "}
+      {/* Added bg-theme and relative classes */}
       {/* Background gradient elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute top-[20%] -right-[5%] w-[30%] h-[30%] rounded-full bg-accent/5 blur-3xl" />
         <div className="absolute -bottom-[5%] left-[30%] w-[50%] h-[30%] rounded-full bg-primary/5 blur-3xl" />
       </div>
-
       <motion.div
         initial="hidden"
         animate="visible"
@@ -74,15 +75,15 @@ const LoginPage = () => {
           variants={itemVariants}
           className="p-8 bg-card dark:bg-gray-800 rounded-xl shadow-lg backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80 border border-border dark:border-gray-700"
         >
-          <motion.h2 
+          <motion.h2
             variants={itemVariants}
             className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
           >
             Welcome Back
           </motion.h2>
-          
+
           {state.error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-3 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800"
@@ -90,8 +91,12 @@ const LoginPage = () => {
               {state.error}
             </motion.div>
           )}
-          
-          <motion.form variants={itemVariants} action={formAction} className="space-y-5">
+
+          <motion.form
+            variants={itemVariants}
+            action={formAction}
+            className="space-y-5"
+          >
             <motion.div variants={itemVariants}>
               <label className="block mb-2 font-medium text-sm">Email</label>
               <div className="relative">
@@ -104,7 +109,7 @@ const LoginPage = () => {
                 />
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <label className="block mb-2 font-medium text-sm">Password</label>
               <div className="relative">
@@ -117,7 +122,7 @@ const LoginPage = () => {
                 />
               </div>
             </motion.div>
-            
+
             <motion.button
               variants={buttonVariants}
               whileHover="hover"
@@ -128,32 +133,54 @@ const LoginPage = () => {
             >
               {isPending ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Signing in...
                 </span>
-              ) : "Sign In"}
+              ) : (
+                "Sign In"
+              )}
             </motion.button>
           </motion.form>
-          
-          <motion.div 
+
+          <motion.div
             variants={itemVariants}
             className="relative my-6 flex items-center"
           >
             <div className="flex-grow border-t border-gray-300 dark:border-gray-700"></div>
-            <span className="flex-shrink mx-4 text-gray-500 dark:text-gray-400 text-sm">or continue with</span>
+            <span className="flex-shrink mx-4 text-gray-500 dark:text-gray-400 text-sm">
+              or continue with
+            </span>
             <div className="flex-grow border-t border-gray-300 dark:border-gray-700"></div>
           </motion.div>
-          
+
           <motion.button
             variants={buttonVariants}
             whileHover="hover"
             whileTap="tap"
             type="button"
             onClick={() =>
-              (window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'}/api/auth/google`)
+              (window.location.href = `${
+                import.meta.env.VITE_API_BASE_URL || "http://localhost:5001"
+              }/api/auth/google`)
             }
             className="w-full py-3 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 font-medium flex items-center justify-center gap-3 shadow-sm"
           >
@@ -185,13 +212,16 @@ const LoginPage = () => {
             </svg>
             Sign in with Google
           </motion.button>
-          
-          <motion.div 
+
+          <motion.div
             variants={itemVariants}
             className="mt-6 text-center text-sm"
           >
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:text-primary/80 font-medium hover:underline transition-all duration-200">
+            <Link
+              to="/signup"
+              className="text-primary hover:text-primary/80 font-medium hover:underline transition-all duration-200"
+            >
               Sign Up
             </Link>
           </motion.div>

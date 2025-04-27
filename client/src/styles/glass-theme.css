@@ -101,6 +101,7 @@
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(209, 213, 219, 0.2);
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .glass-button:hover {

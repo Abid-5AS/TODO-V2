@@ -212,7 +212,7 @@ const TaskItem = ({
         className={cn(
           "w-full mb-4 rounded-xl overflow-visible transition-shadow duration-200",
           "shadow-sm hover:shadow-md",
-          "glass-card", // Apply glass card effect
+          "glass-card relative", // Added relative positioning
           "border-0",
           "px-0 py-0",
           className

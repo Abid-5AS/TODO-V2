@@ -144,14 +144,14 @@ const DashboardPage = () => {
 
   return (
     <motion.div
-      className="py-4 px-2 sm:py-6 sm:px-4 glass-morphism rounded-xl shadow-md"
+      className="py-4 px-2 sm:py-6 sm:px-4 bg-theme relative rounded-xl shadow-md"
       initial="hidden"
       animate="visible"
       variants={pageContentVariants}
       key={projectKey} // Add key to force re-render on project change
     >
       <motion.h1
-        className="text-2xl md:text-3xl font-bold mb-4 text-center bg-gradient-to-r from-primary/90 via-purple-500/90 to-pink-500/90 bg-clip-text text-transparent animate-gradient-x"
+        className="text-2xl md:text-3xl font-bold mb-4 text-center bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent animate-gradient-x drop-shadow-sm"
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.2 }}
       >
@@ -162,7 +162,7 @@ const DashboardPage = () => {
       {location.pathname.includes("/dashboard/project/") && (
         <div className="flex justify-center mb-4">
           <motion.div
-            className="glass-card inline-block p-1 rounded-lg"
+            className="glass-card relative inline-block p-1 rounded-lg"
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}

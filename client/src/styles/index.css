@@ -11,6 +11,212 @@ body {
   overflow-anchor: none;
 }
 
+/* UI Density Settings */
+.ui-compact {
+  --ui-spacing-scale: 0.85;
+  --card-padding: 0.75rem;
+  --section-padding: 1rem;
+}
+
+.ui-comfortable {
+  --ui-spacing-scale: 1;
+  --card-padding: 1rem;
+  --section-padding: 1.25rem;
+}
+
+.ui-spacious {
+  --ui-spacing-scale: 1.15;
+  --card-padding: 1.25rem;
+  --section-padding: 1.5rem;
+}
+
+/* Apply the UI density to components */
+.ui-compact .card,
+.ui-compact .card-content {
+  padding: var(--card-padding);
+}
+
+.ui-compact .card-header,
+.ui-compact .card-footer {
+  padding: calc(var(--card-padding) * 1.1);
+}
+
+.ui-compact .section-content {
+  padding: var(--section-padding);
+}
+
+.ui-spacious .card,
+.ui-spacious .card-content {
+  padding: var(--card-padding);
+}
+
+.ui-spacious .card-header,
+.ui-spacious .card-footer {
+  padding: calc(var(--card-padding) * 1.1);
+}
+
+.ui-spacious .section-content {
+  padding: var(--section-padding);
+}
+
+/* UI Density applied to specific components */
+.ui-compact .button-spacing {
+  gap: 0.5rem;
+}
+
+.ui-spacious .button-spacing {
+  gap: 1rem;
+}
+
+/* Apply spacing to form fields based on density */
+.ui-compact .form-group {
+  margin-bottom: 0.75rem;
+}
+
+.ui-comfortable .form-group {
+  margin-bottom: 1rem;
+}
+
+.ui-spacious .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Reduced animations setting */
+.reduce-animations * {
+  transition-duration: 0.1s !important;
+  animation-duration: 0.1s !important;
+}
+
+.reduce-animations .animate-pulse,
+.reduce-animations .animate-spin,
+.reduce-animations .animate-bounce,
+.reduce-animations .animate-ping,
+.reduce-animations .animate-gradient-x {
+  animation: none !important;
+}
+
+/* Remove hover effects in reduced animation mode */
+.reduce-animations *:hover {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Background theme styles */
+:root.bg-theme-waves,
+html.bg-theme-waves,
+body.bg-theme-waves,
+.bg-theme-waves {
+  background-color: var(--background);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264.888-.14 1.005-.157 1.87-.34 2.12-.33 1.034-.033 2.365.193 2.992.632.35.2.527.513.78.857.735 1.023 1.65 1.85 2.627 2.46 1.158.723 2.7.9 4.312.81.895-.047 1.813-.363 2.438-.847.307-.23.652-.513.83-.87.46-.913.39-1.872.29-2.82-.13-1.225-.262-2.244-.428-2.76-.12-.378-.26-.64-.506-.813-.46-.32-.456-.323-.615-.43-.795-.53-1.783-.802-3.01-.76-1.07.036-2.202.232-3.402.635-.142.047-.25.096-.363.145-.3.13-.653.292-.834.41-.31.204-.4.578-.213.946.06.126.186.725.063 1.016-.13.32-.38.63-.413.95-.05.534.1 1.07.453 1.522.86 1.096 2.05 1.442 2.505 1.163.458-.28.455-.482.52-.934.025-.184.084-.466.157-.924.11-.695.13-1.033.035-1.207-.118-.21-.34-.218-.744-.028-.102.05-.27.128-.34.157-.45.19-.843.156-1.166-.11-.29-.24-.438-.603-.32-.937.12-.333.337-.554.59-.63.34-.1.573.025.858.22l.126.09c.21.146.424.228.656.257.766.096 1.523-.443 1.657-1.2.087-.49-.074-.97-.39-1.33-.136-.155-.11-.205.044-.16.137.038.32.11.457.234.91.82 1.074 2.254.476 3.212-.86 1.375-2.683 1.54-4.04.9-.39-.19-.75-.49-1.013-.823-.304-.392-.565-.944-.58-1.417-.014-.464.14-.74.403-1.015.27-.284.463-.556.437-.838-.026-.28-.215-.536-.492-.644-.63-.248-1.335-.218-2.316.086-.416.13-.793.312-1.173.502-.517.26-1.04.505-1.62.62-.63.126-1.255.082-1.825-.067-.922-.244-1.438-.8-1.732-1.242-.33-.49-.376-1.084-.09-1.732.245-.558.674-1.122 1.19-1.583.383-.344.712-.605 1.35-.986.15-.09.29-.17.417-.235l.06-.03c.13-.057.536-.256.55-.34.01-.084-.146-.086-.19-.092-.75-.104-2.154.14-2.96.57-.578.307-.946.637-1.39 1.147-.395.453-.716 1.06-.95 1.673-.07.186-.12.39-.14.606-.06.594.052 1.096.262 1.565.22.49.553.934 1.024 1.346.53.462 1.198.846 2.075 1.15.515.177 1.053.278 1.593.396z' fill='%23ccd1d9' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+:root.dark.bg-theme-waves,
+html.dark.bg-theme-waves,
+body.dark.bg-theme-waves,
+.dark .bg-theme-waves {
+  background-color: var(--background);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264.888-.14 1.005-.157 1.87-.34 2.12-.33 1.034-.033 2.365.193 2.992.632.35.2.527.513.78.857.735 1.023 1.65 1.85 2.627 2.46 1.158.723 2.7.9 4.312.81.895-.047 1.813-.363 2.438-.847.307-.23.652-.513.83-.87.46-.913.39-1.872.29-2.82-.13-1.225-.262-2.244-.428-2.76-.12-.378-.26-.64-.506-.813-.46-.32-.456-.323-.615-.43-.795-.53-1.783-.802-3.01-.76-1.07.036-2.202.232-3.402.635-.142.047-.25.096-.363.145-.3.13-.653.292-.834.41-.31.204-.4.578-.213.946.06.126.186.725.063 1.016-.13.32-.38.63-.413.95-.05.534.1 1.07.453 1.522.86 1.096 2.05 1.442 2.505 1.163.458-.28.455-.482.52-.934.025-.184.084-.466.157-.924.11-.695.13-1.033.035-1.207-.118-.21-.34-.218-.744-.028-.102.05-.27.128-.34.157-.45.19-.843.156-1.166-.11-.29-.24-.438-.603-.32-.937.12-.333.337-.554.59-.63.34-.1.573.025.858.22l.126.09c.21.146.424.228.656.257.766.096 1.523-.443 1.657-1.2.087-.49-.074-.97-.39-1.33-.136-.155-.11-.205.044-.16.137.038.32.11.457.234.91.82 1.074 2.254.476 3.212-.86 1.375-2.683 1.54-4.04.9-.39-.19-.75-.49-1.013-.823-.304-.392-.565-.944-.58-1.417-.014-.464.14-.74.403-1.015.27-.284.463-.556.437-.838-.026-.28-.215-.536-.492-.644-.63-.248-1.335-.218-2.316.086-.416.13-.793.312-1.173.502-.517.26-1.04.505-1.62.62-.63.126-1.255.082-1.825-.067-.922-.244-1.438-.8-1.732-1.242-.33-.49-.376-1.084-.09-1.732.245-.558.674-1.122 1.19-1.583.383-.344.712-.605 1.35-.986.15-.09.29-.17.417-.235l.06-.03c.13-.057.536-.256.55-.34.01-.084-.146-.086-.19-.092-.75-.104-2.154.14-2.96.57-.578.307-.946.637-1.39 1.147-.395.453-.716 1.06-.95 1.673-.07.186-.12.39-.14.606-.06.594.052 1.096.262 1.565.22.49.553.934 1.024 1.346.53.462 1.198.846 2.075 1.15.515.177 1.053.278 1.593.396z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+:root.bg-theme-dots,
+html.bg-theme-dots,
+body.bg-theme-dots,
+.bg-theme-dots {
+  background-color: var(--background);
+  background-image: radial-gradient(
+    var(--primary) 0.5px,
+    var(--background) 0.5px
+  );
+  background-size: 15px 15px;
+  background-attachment: fixed;
+}
+
+:root.bg-theme-gradient-soft,
+html.bg-theme-gradient-soft,
+body.bg-theme-gradient-soft,
+.bg-theme-gradient-soft {
+  background-color: var(--background);
+  background-image: linear-gradient(
+    45deg,
+    oklch(from var(--primary) l c h / 0.03) 0%,
+    oklch(from var(--primary) l c calc(h + 60deg) / 0.03) 50%,
+    oklch(from var(--primary) l c calc(h + 120deg) / 0.03) 100%
+  );
+  background-attachment: fixed;
+}
+
+:root.dark.bg-theme-gradient-soft,
+html.dark.bg-theme-gradient-soft,
+body.dark.bg-theme-gradient-soft,
+.dark .bg-theme-gradient-soft {
+  background-color: var(--background);
+  background-image: linear-gradient(
+    45deg,
+    oklch(from var(--primary) l c h / 0.05) 0%,
+    oklch(from var(--primary) l c calc(h + 60deg) / 0.05) 50%,
+    oklch(from var(--primary) l c calc(h + 120deg) / 0.05) 100%
+  );
+  background-attachment: fixed;
+}
+
+:root.bg-theme-gradient-vibrant,
+html.bg-theme-gradient-vibrant,
+body.bg-theme-gradient-vibrant,
+.bg-theme-gradient-vibrant {
+  background-color: var(--background);
+  background-image: radial-gradient(
+      at 10% 30%,
+      oklch(from var(--primary) l c h / 0.07) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 80% 20%,
+      oklch(from var(--primary) l c calc(h + 60deg) / 0.07) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 30% 70%,
+      oklch(from var(--primary) l c calc(h + 120deg) / 0.07) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 90% 80%,
+      oklch(from var(--primary) l c calc(h + 180deg) / 0.07) 0px,
+      transparent 50%
+    );
+  background-attachment: fixed;
+}
+
+:root.dark.bg-theme-gradient-vibrant,
+html.dark.bg-theme-gradient-vibrant,
+body.dark.bg-theme-gradient-vibrant,
+.dark .bg-theme-gradient-vibrant {
+  background-color: var(--background);
+  background-image: radial-gradient(
+      at 10% 30%,
+      oklch(from var(--primary) l c h / 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 80% 20%,
+      oklch(from var(--primary) l c calc(h + 60deg) / 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 30% 70%,
+      oklch(from var(--primary) l c calc(h + 120deg) / 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 90% 80%,
+      oklch(from var(--primary) l c calc(h + 180deg) / 0.1) 0px,
+      transparent 50%
+    );
+  background-attachment: fixed;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -248,4 +454,102 @@ body {
 
 .kanban-board::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+}
+
+/* Background themes */
+.bg-theme-waves {
+  background-color: var(--background);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264.888-.14 1.005-.157 1.87-.34 2.12-.33 1.034-.033 2.365.193 2.992.632.35.2.527.513.78.857.735 1.023 1.65 1.85 2.627 2.46 1.158.723 2.7.9 4.312.81.895-.047 1.813-.363 2.438-.847.307-.23.652-.513.83-.87.46-.913.39-1.872.29-2.82-.13-1.225-.262-2.244-.428-2.76-.12-.378-.26-.64-.506-.813-.46-.32-.456-.323-.615-.43-.795-.53-1.783-.802-3.01-.76-1.07.036-2.202.232-3.402.635-.142.047-.25.096-.363.145-.3.13-.653.292-.834.41-.31.204-.4.578-.213.946.06.126.186.725.063 1.016-.13.32-.38.63-.413.95-.05.534.1 1.07.453 1.522.86 1.096 2.05 1.442 2.505 1.163.458-.28.455-.482.52-.934.025-.184.084-.466.157-.924.11-.695.13-1.033.035-1.207-.118-.21-.34-.218-.744-.028-.102.05-.27.128-.34.157-.45.19-.843.156-1.166-.11-.29-.24-.438-.603-.32-.937.12-.333.337-.554.59-.63.34-.1.573.025.858.22l.126.09c.21.146.424.228.656.257.766.096 1.523-.443 1.657-1.2.087-.49-.074-.97-.39-1.33-.136-.155-.11-.205.044-.16.137.038.32.11.457.234.91.82 1.074 2.254.476 3.212-.86 1.375-2.683 1.54-4.04.9-.39-.19-.75-.49-1.013-.823-.304-.392-.565-.944-.58-1.417-.014-.464.14-.74.403-1.015.27-.284.463-.556.437-.838-.026-.28-.215-.536-.492-.644-.63-.248-1.335-.218-2.316.086-.416.13-.793.312-1.173.502-.517.26-1.04.505-1.62.62-.63.126-1.255.082-1.825-.067-.922-.244-1.438-.8-1.732-1.242-.33-.49-.376-1.084-.09-1.732.245-.558.674-1.122 1.19-1.583.383-.344.712-.605 1.35-.986.15-.09.29-.17.417-.235l.06-.03c.13-.057.536-.256.55-.34.01-.084-.146-.086-.19-.092-.75-.104-2.154.14-2.96.57-.578.307-.946.637-1.39 1.147-.395.453-.716 1.06-.95 1.673-.07.186-.12.39-.14.606-.06.594.052 1.096.262 1.565.22.49.553.934 1.024 1.346.53.462 1.198.846 2.075 1.15.515.177 1.053.278 1.593.396z' fill='%23ccd1d9' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.dark .bg-theme-waves {
+  background-color: var(--background);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264.888-.14 1.005-.157 1.87-.34 2.12-.33 1.034-.033 2.365.193 2.992.632.35.2.527.513.78.857.735 1.023 1.65 1.85 2.627 2.46 1.158.723 2.7.9 4.312.81.895-.047 1.813-.363 2.438-.847.307-.23.652-.513.83-.87.46-.913.39-1.872.29-2.82-.13-1.225-.262-2.244-.428-2.76-.12-.378-.26-.64-.506-.813-.46-.32-.456-.323-.615-.43-.795-.53-1.783-.802-3.01-.76-1.07.036-2.202.232-3.402.635-.142.047-.25.096-.363.145-.3.13-.653.292-.834.41-.31.204-.4.578-.213.946.06.126.186.725.063 1.016-.13.32-.38.63-.413.95-.05.534.1 1.07.453 1.522.86 1.096 2.05 1.442 2.505 1.163.458-.28.455-.482.52-.934.025-.184.084-.466.157-.924.11-.695.13-1.033.035-1.207-.118-.21-.34-.218-.744-.028-.102.05-.27.128-.34.157-.45.19-.843.156-1.166-.11-.29-.24-.438-.603-.32-.937.12-.333.337-.554.59-.63.34-.1.573.025.858.22l.126.09c.21.146.424.228.656.257.766.096 1.523-.443 1.657-1.2.087-.49-.074-.97-.39-1.33-.136-.155-.11-.205.044-.16.137.038.32.11.457.234.91.82 1.074 2.254.476 3.212-.86 1.375-2.683 1.54-4.04.9-.39-.19-.75-.49-1.013-.823-.304-.392-.565-.944-.58-1.417-.014-.464.14-.74.403-1.015.27-.284.463-.556.437-.838-.026-.28-.215-.536-.492-.644-.63-.248-1.335-.218-2.316.086-.416.13-.793.312-1.173.502-.517.26-1.04.505-1.62.62-.63.126-1.255.082-1.825-.067-.922-.244-1.438-.8-1.732-1.242-.33-.49-.376-1.084-.09-1.732.245-.558.674-1.122 1.19-1.583.383-.344.712-.605 1.35-.986.15-.09.29-.17.417-.235l.06-.03c.13-.057.536-.256.55-.34.01-.084-.146-.086-.19-.092-.75-.104-2.154.14-2.96.57-.578.307-.946.637-1.39 1.147-.395.453-.716 1.06-.95 1.673-.07.186-.12.39-.14.606-.06.594.052 1.096.262 1.565.22.49.553.934 1.024 1.346.53.462 1.198.846 2.075 1.15.515.177 1.053.278 1.593.396z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.bg-theme-dots {
+  background-color: var(--background);
+  background-image: radial-gradient(
+    var(--primary) 0.5px,
+    var(--background) 0.5px
+  );
+  background-size: 15px 15px;
+}
+
+.bg-theme-gradient-soft {
+  background-color: var(--background);
+  background-image: linear-gradient(
+    45deg,
+    oklch(from var(--primary) l c h / 0.03) 0%,
+    oklch(from var(--primary) l c calc(h + 60deg) / 0.03) 50%,
+    oklch(from var(--primary) l c calc(h + 120deg) / 0.03) 100%
+  );
+  background-attachment: fixed;
+}
+
+.dark .bg-theme-gradient-soft {
+  background-color: var(--background);
+  background-image: linear-gradient(
+    45deg,
+    oklch(from var(--primary) l c h / 0.05) 0%,
+    oklch(from var(--primary) l c calc(h + 60deg) / 0.05) 50%,
+    oklch(from var(--primary) l c calc(h + 120deg) / 0.05) 100%
+  );
+  background-attachment: fixed;
+}
+
+.bg-theme-gradient-vibrant {
+  background-color: var(--background);
+  background-image: radial-gradient(
+      at 10% 30%,
+      oklch(from var(--primary) l c h / 0.07) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 80% 20%,
+      oklch(from var(--primary) l c calc(h + 60deg) / 0.07) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 30% 70%,
+      oklch(from var(--primary) l c calc(h + 120deg) / 0.07) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 90% 80%,
+      oklch(from var(--primary) l c calc(h + 180deg) / 0.07) 0px,
+      transparent 50%
+    );
+  background-attachment: fixed;
+}
+
+.dark .bg-theme-gradient-vibrant {
+  background-color: var(--background);
+  background-image: radial-gradient(
+      at 10% 30%,
+      oklch(from var(--primary) l c h / 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 80% 20%,
+      oklch(from var(--primary) l c calc(h + 60deg) / 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 30% 70%,
+      oklch(from var(--primary) l c calc(h + 120deg) / 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 90% 80%,
+      oklch(from var(--primary) l c calc(h + 180deg) / 0.1) 0px,
+      transparent 50%
+    );
+  background-attachment: fixed;
+}
+
+/* Class to apply the current theme to any container */
+.bg-theme {
+  position: relative;
+  background-color: transparent;
 }

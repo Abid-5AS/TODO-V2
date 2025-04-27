@@ -279,7 +279,7 @@ const TaskForm = ({
   };
 
   return (
-    <div className="p-5 md:p-6 max-h-[85vh] overflow-y-auto">
+    <div className="p-5 md:p-6">
       <DialogHeader className="pb-4 border-b mb-5">
         <DialogTitle className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Add New Task

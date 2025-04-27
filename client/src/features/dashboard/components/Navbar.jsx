@@ -19,6 +19,10 @@ import {
   DropdownMenuSeparator,
 } from "../../../components/ui/dropdown-menu"; // Corrected path
 import { motion } from "framer-motion";
+import {
+  getAppearanceSettings,
+  updateAppearanceSettings,
+} from "../../settings/services/appearanceSettingsService"; // Import appearance service
 
 const Navbar = ({ onSidebarToggle, onAddTask, className }) => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -28,18 +32,37 @@ const Navbar = ({ onSidebarToggle, onAddTask, className }) => {
   // Check if we're on login or signup page (public view)
   const isPublicAuthPage = ["/login", "/signup"].includes(location.pathname);
 
-  const [dark, setDark] = useState(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) return savedTheme === "dark";
-    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-  });
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("theme", dark ? "dark" : "light");
-  }, [dark]);
+    // Load appearance settings when component mounts
+    const loadSettings = async () => {
+      try {
+        const { settings } = await getAppearanceSettings();
+        setDark(settings.darkMode);
+      } catch (error) {
+        console.error("Error loading appearance settings:", error);
+      }
+    };
 
-  const toggleDark = () => setDark((d) => !d);
+    loadSettings();
+  }, []);
+
+  const toggleDark = async () => {
+    try {
+      const newDarkMode = !dark;
+      setDark(newDarkMode);
+
+      // Update appearance settings through the service
+      await updateAppearanceSettings({
+        darkMode: newDarkMode,
+      });
+    } catch (error) {
+      console.error("Error toggling dark mode:", error);
+      // Revert state if failed
+      setDark(dark);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -152,7 +175,7 @@ const Navbar = ({ onSidebarToggle, onAddTask, className }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="glass-card border-gray-200/40 dark:border-zinc-700/40 shadow-lg rounded-lg mt-1 w-48"
+                className="glass-card relative border-gray-200/40 dark:border-zinc-700/40 shadow-lg rounded-lg mt-1 w-48"
               >
                 <DropdownMenuItem asChild>
                   <Link
