@@ -143,6 +143,64 @@ export const useTasks = (initialProject, allProjects = []) => {
 
   // --- Task CUD Operations (Optimistic Updates) --- 
 
+  // Add Task
+  const addTask = useCallback(async (taskData) => {
+    // Generate a temporary ID for optimistic update
+    const tempId = `temp-${Date.now()}`;
+    const newTask = {
+      _id: tempId,
+      ...taskData,
+      status: taskData.status || 'todo',
+      subtasks: taskData.subtasks || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Only add to the current view if the task belongs to the current project context
+    const shouldAddToCurrentView = (
+      // If we're in a specific project view and the task belongs to that project
+      (taskData.project === projectContext) ||
+      // Or if we're in Inbox and the task is for Inbox
+      (projectContext === 'Inbox' && (!taskData.project || taskData.project === 'Inbox')) ||
+      // Or if we're in Today/Upcoming view and the task has a due date
+      (projectContext === 'today' && isToday(taskData.dueDate)) ||
+      (projectContext === 'upcoming' && isUpcoming(taskData.dueDate)) ||
+      // Or if we're in All Tasks view
+      (projectContext === 'all')
+    );
+
+    if (shouldAddToCurrentView) {
+      // Optimistically add the task to the list
+      setTasks(prevTasks => [newTask, ...prevTasks]);
+    }
+
+    try {
+      const result = await createTask(taskData);
+      if (!result.success || !result.data) throw new Error(result.message || 'Failed to create task');
+      
+      if (shouldAddToCurrentView) {
+        // Replace the temporary task with the actual one from the server
+        setTasks(prevTasks => prevTasks.map(task => 
+          task._id === tempId ? { ...result.data, subtasks: result.data.subtasks || [] } : task
+        ));
+      } else {
+        // If the task was created for a different project than the current view,
+        // we need to reload tasks to ensure consistency
+        loadTasks(projectContext);
+      }
+
+      return result.data;
+    } catch (err) {
+      console.error("Create Task Error:", err);
+      toast({ title: "Create Task Failed", description: err.message, variant: "destructive" });
+      // Remove the temporary task on failure
+      if (shouldAddToCurrentView) {
+        setTasks(prevTasks => prevTasks.filter(task => task._id !== tempId));
+      }
+      throw err;
+    }
+  }, [projectContext, loadTasks]);
+
   // Update Task
   const updateTask = useCallback(async (taskId, updates) => {
     const originalTasks = [...tasks];
@@ -277,6 +335,8 @@ export const useTasks = (initialProject, allProjects = []) => {
     filter,
     setFilter: (value) => startTransition(() => setFilter(value)),
     updateProjectContext,
+    loadTasks, // Expose loadTasks function to allow direct refreshing
+    addTask, // Add the new function to create tasks with optimistic updates
     updateTask,
     deleteTask,
     addSubtask,

@@ -2,7 +2,7 @@
 // Provides the form for creating new tasks, including AI suggestions.
 
 import React, { useState, useEffect } from "react";
-import { createTask } from "../services/taskService"; // Corrected path
+import { useTasks } from "../hooks/useTasks"; // Import useTasks hook
 import {
   getAISubtaskSuggestions,
   getAIDescriptionSuggestion,
@@ -53,6 +53,8 @@ const TaskForm = ({
   availableProjects = [], 
   initialProject 
 }) => {
+  // Use the useTasks hook to get the addTask function for optimistic updates
+  const { addTask } = useTasks(initialProject, availableProjects);
   const { toast } = useToast();
   const [form, setForm] = useState({
     ...defaultForm,
@@ -166,7 +168,10 @@ const TaskForm = ({
         dueDate: form.dueDate || null, // Ensure null if empty
         project: form.project || "Inbox", // Ensure default
       };
-      await createTask(taskData);
+      
+      // Use the addTask function from useTasks for optimistic updates
+      await addTask(taskData);
+      
       toast({ title: "Task Created Successfully" });
       // Reset form state
       setForm({...defaultForm, project: initialProject || "Inbox"});

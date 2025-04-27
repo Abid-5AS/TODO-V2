@@ -11,6 +11,16 @@ import {
 import { useToast } from "../../../hooks/use-toast"; // Corrected path
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../../lib/utils"; // Import the cn utility function
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../../components/ui/alert-dialog";
 
 import TaskDisplay from "./TaskDisplay";
 import TaskEditForm from "./TaskEditForm";
@@ -32,6 +42,7 @@ const TaskItem = ({
   const [isUpdating, setIsUpdating] = useState(false); // Tracks async operations
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // --- Handlers for TaskDisplay Actions --- 
@@ -69,10 +80,12 @@ const TaskItem = ({
     }
   }, [accordionOpen, setAccordionOpen]);
 
-  const handleDelete = useCallback(async (e) => {
-    e.stopPropagation(); 
-    if (!window.confirm("Are you sure you want to delete this task and its subtasks?")) return;
-    
+  const handleDeleteClick = useCallback((e) => {
+    e.stopPropagation();
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
     setIsUpdating(true);
     try {
       await onOptimisticDelete(task._id);
@@ -118,44 +131,60 @@ const TaskItem = ({
     }
   }, [isEditing, accordionOpen, setAccordionOpen]);
 
-  // Animation variants for edit form
+  // Animation variants for edit form - simplified to avoid layout constraints
   const editFormVariants = {
-    hidden: { opacity: 0, height: 0, y: -10, marginBottom: 0 },
+    hidden: { opacity: 0, scale: 0.95 },
     visible: {
       opacity: 1,
-      height: "auto",
-      y: 0,
-      marginBottom: "1rem", // Maintain spacing
-      transition: { duration: 0.3, ease: "easeInOut" },
+      scale: 1,
+      transition: { duration: 0.3, ease: "easeOut" },
     },
     exit: {
       opacity: 0,
-      height: 0,
-      y: -10,
-      marginBottom: 0,
-      transition: { duration: 0.2, ease: "easeInOut" },
+      scale: 0.95,
+      transition: { duration: 0.2, ease: "easeIn" },
     },
   };
 
   const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
   return (
-    <motion.div 
-      className={cn(
-        className, // Pass className from TaskList
-        isUpdating ? "opacity-60 pointer-events-none animate-pulse-fast" : "", // Visual feedback during updates
-        "overflow-visible rounded-xl" // Ensure rounded corners apply
-      )}
-      layout // Enable layout animation for the entire item
-    >
+    <>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this task and its subtasks? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <motion.div 
+        layout
+        layoutId={`task-${task._id}`}
+        className="w-full mb-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3, layout: { duration: 0.5, ease: "easeOut" } }}
+        style={{ transformOrigin: 'center' }}
+      >
       <Accordion
         type="single"
         collapsible
         value={accordionOpen ? `item-${task._id}` : ""} // Control accordion state externally
         onValueChange={() => { /* State managed by handleAccordionToggle/handleEdit */ }}
-        className="rounded-xl overflow-visible shadow-md hover:shadow-lg transition-shadow duration-300"
+        className="rounded-xl overflow-visible shadow-md hover:shadow-lg transition-shadow duration-300 w-full"
       >
-        <AccordionItem value={`item-${task._id}`} className="border-none overflow-visible">
+        <AccordionItem value={`item-${task._id}`} className="border-none overflow-visible" style={{ transformOrigin: 'center' }}>
           {/* Use a div for the main clickable area, handle toggling */} 
           <div 
              className={`cursor-pointer rounded-t-xl ${accordionOpen && hasSubtasks && !isEditing ? 'rounded-b-none' : 'rounded-b-xl'}`} 
@@ -170,8 +199,9 @@ const TaskItem = ({
                   animate="visible"
                   exit="exit"
                   variants={editFormVariants}
-                  className="task-edit-container px-0 pt-0 pb-0" // No padding needed if TaskEditForm has it
+                  className="task-edit-container px-0 pt-0 pb-0 w-full" // Add w-full to ensure full width
                   onClick={(e) => e.stopPropagation()} // Prevent accordion toggle when clicking inside edit form
+                  layout="position" // Use position-only layout for better animation
                 >
                   <TaskEditForm
                     task={task}
@@ -190,13 +220,14 @@ const TaskItem = ({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   whileHover={{ scale: 1.005 }} // Subtle hover on display only
-                  className="task-display-container"
+                  className="task-display-container w-full"
+                  layout="preserve-aspect" // Better layout animation that preserves aspect ratio
                 >
                   <TaskDisplay
                     task={task}
                     onToggleComplete={handleToggleComplete}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteClick}
                     isAccordionOpen={accordionOpen} // Pass state to maybe change chevron
                     hasSubtasks={hasSubtasks}
                   />
@@ -225,6 +256,7 @@ const TaskItem = ({
         </AccordionItem>
       </Accordion>
     </motion.div>
+    </>
   );
 };
 

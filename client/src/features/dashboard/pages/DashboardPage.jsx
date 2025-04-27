@@ -13,7 +13,7 @@ import { useTitle } from "../../../hooks/useTitle"; // Corrected path
 import { motion } from "framer-motion";
 
 const DashboardPage = () => {
-  const { allProjects = [], projectObjects = [] } = useOutletContext() || {}; // Get projects from layout context
+  const { allProjects = [], projectObjects = [], lastTaskUpdate } = useOutletContext() || {}; // Get projects and lastTaskUpdate from layout context
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -113,6 +113,7 @@ const DashboardPage = () => {
     projectObjects: projectObjects,
     onTaskMoved: handleTaskMoved, // Pass down if needed
     onTaskCountChange: handleTaskCountChange,
+    lastTaskUpdate, // Pass the lastTaskUpdate timestamp to trigger refreshes
   };
 
   // Animation for the page content container

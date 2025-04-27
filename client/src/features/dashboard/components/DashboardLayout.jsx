@@ -43,6 +43,7 @@ const DashboardLayout = () => {
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [lastTaskUpdate, setLastTaskUpdate] = useState(Date.now()); // Add timestamp for task list refresh
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
@@ -150,7 +151,15 @@ const DashboardLayout = () => {
     setTaskFormProject(project || (projectObjects.find(p => p.name === selectedProject)?.name) || 'Inbox');
     setTaskFormOpen(true);
   };
-  const handleCloseTaskForm = () => setTaskFormOpen(false);
+  
+  // Close the task form and force a re-render of the task list
+  const handleCloseTaskForm = () => {
+    setTaskFormOpen(false);
+    
+    // Force a re-render of the task list by updating a timestamp
+    // This will ensure the task list is refreshed after a new task is added
+    setLastTaskUpdate(Date.now());
+  };
 
   const handleSidebarAction = (action) => {
     if (action === "addProject") setAddProjectOpen(true);
@@ -270,8 +279,8 @@ const DashboardLayout = () => {
 
         {/* Content Outlet */} 
         <main className="flex-1 overflow-auto bg-white/20 dark:bg-zinc-900/20 backdrop-blur-sm scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent hover:scrollbar-thumb-gray-300/20 dark:hover:scrollbar-thumb-gray-600/20">
-          {/* Pass projects data down via context */}
-          <Outlet context={{ allProjects, projectObjects, selectedProject }} />
+          {/* Pass projects data and lastTaskUpdate timestamp down via context */}
+          <Outlet context={{ allProjects, projectObjects, selectedProject, lastTaskUpdate }} />
         </main>
       </div>
 
