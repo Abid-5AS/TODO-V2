@@ -6,12 +6,13 @@ import { CalendarClock, Trash2, RefreshCw } from "lucide-react";
  * Component to manage the holiday data cache
  */
 const HolidayCacheManager = () => {
-  const [isVisible, setIsVisible] = useState(false);
+  // Always show in development mode
+  const [isVisible, setIsVisible] = useState(true);
   
   // Constants for local storage
   const HOLIDAY_STORAGE_KEY = "islamic_holiday_data";
   
-  // Only show this component in development mode
+  // Only show this component in development mode or when explicitly visible
   if (import.meta.env.PROD && !isVisible) {
     return null;
   }
@@ -22,10 +23,11 @@ const HolidayCacheManager = () => {
       
       if (!storedData) {
         return {
-          status: "No holiday data cached",
+          status: "⚠️ No holiday data cached - click Refresh",
           timestamp: null,
           age: null,
-          size: 0
+          size: 0,
+          hasData: false
         };
       }
       
@@ -40,18 +42,22 @@ const HolidayCacheManager = () => {
       const dataSizeBytes = storedData.length;
       const dataSizeKB = (dataSizeBytes / 1024).toFixed(2);
       
+      const holidaysCount = parsedData.data?.holidays?.length || 0;
+      
       return {
-        status: "Holiday data cached",
+        status: holidaysCount > 0 ? "Holiday data cached" : "⚠️ No holidays found in cache - click Refresh",
         timestamp: timestamp.toLocaleString(),
         age: `${ageInDays} days, ${ageInHours} hours ago`,
         size: `${dataSizeKB} KB`,
-        holidays: parsedData.data.holidays.length,
-        willExpireIn: `${30 - ageInDays} days`
+        holidays: holidaysCount,
+        willExpireIn: `${30 - ageInDays} days`,
+        hasData: true
       };
     } catch (error) {
       return {
-        status: "Error parsing holiday cache",
-        error: String(error)
+        status: "⚠️ Error parsing holiday cache",
+        error: String(error),
+        hasData: false
       };
     }
   };
@@ -59,20 +65,24 @@ const HolidayCacheManager = () => {
   const clearHolidayCache = () => {
     try {
       localStorage.removeItem(HOLIDAY_STORAGE_KEY);
+      toast.success("Holiday cache cleared");
       // Force refresh to show updated state
       window.location.reload();
     } catch (error) {
       console.error("Error clearing holiday cache:", error);
+      toast.error("Failed to clear cache");
     }
   };
   
   const refreshHolidayCache = () => {
     try {
       localStorage.removeItem(HOLIDAY_STORAGE_KEY);
+      toast.success("Refreshing holiday data...");
       // Force refresh to regenerate cache
       window.location.reload();
     } catch (error) {
       console.error("Error refreshing holiday cache:", error);
+      toast.error("Failed to refresh cache");
     }
   };
   
@@ -82,7 +92,7 @@ const HolidayCacheManager = () => {
   return (
     <div className="mt-4 pt-3 border-t border-blue-100/30 text-xs">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs text-slate-500 font-medium">Cache Status</span>
+        <span className={`text-xs ${!cacheInfo.hasData || cacheInfo.holidays === 0 ? "text-amber-500 font-bold" : "text-slate-500 font-medium"}`}>Cache Status</span>
         <div className="flex space-x-2">
           <button 
             onClick={refreshHolidayCache}
@@ -101,7 +111,7 @@ const HolidayCacheManager = () => {
         </div>
       </div>
       
-      <div className="text-slate-500">
+      <div className={!cacheInfo.hasData || cacheInfo.holidays === 0 ? "text-amber-500" : "text-slate-500"}>
         <p>{cacheInfo.status}</p>
         {cacheInfo.timestamp && (
           <>

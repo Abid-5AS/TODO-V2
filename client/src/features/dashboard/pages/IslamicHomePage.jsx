@@ -202,14 +202,14 @@ const IslamicHomePage = () => {
 
       {/* Main dashboard content */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Daily Quran Verse */}
         <motion.div
-          className="col-span-1 lg:col-span-3"
+          className="col-span-1 md:col-span-3"
           variants={itemVariants}
         >
           <DailyQuranVerse />
@@ -232,7 +232,10 @@ const IslamicHomePage = () => {
         </motion.div>
 
         {/* Prayer Times Section */}
-        <motion.div variants={itemVariants}>
+        <motion.div 
+          className="col-span-1 row-span-2"
+          variants={itemVariants}
+        >
           <PrayerTimesSection
             prayerTimes={prayerTimes}
             activePrayer={activePrayer}
@@ -243,7 +246,10 @@ const IslamicHomePage = () => {
         </motion.div>
 
         {/* Islamic Calendar Section */}
-        <motion.div variants={itemVariants}>
+        <motion.div 
+          className="col-span-1"
+          variants={itemVariants}
+        >
           <IslamicCalendarSection
             itemVariants={itemVariants}
             isLoading={isIslamicDateLoading}
@@ -251,7 +257,10 @@ const IslamicHomePage = () => {
         </motion.div>
 
         {/* Prohibited Prayer Times Section */}
-        <motion.div variants={itemVariants}>
+        <motion.div 
+          className="col-span-1"
+          variants={itemVariants}
+        >
           <ProhibitedTimesSection
             prohibitedTimes={prohibitedTimes}
             itemVariants={itemVariants}
@@ -259,13 +268,16 @@ const IslamicHomePage = () => {
         </motion.div>
 
         {/* Prayer Tracking Section - Placeholder */}
-        <motion.div variants={itemVariants}>
-          <div className="glass-card p-5 rounded-lg shadow-md border border-blue-200/20 h-full">
+        <motion.div 
+          className="col-span-1 md:col-span-3"
+          variants={itemVariants}
+        >
+          <div className="glass-card p-5 rounded-lg shadow-md border border-blue-200/20">
             <h2 className="text-lg font-semibold mb-4 text-slate-800 dark:text-white flex items-center">
               <Download className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2" />
               Prayer Tracking
             </h2>
-            <div className="flex items-center justify-center h-[250px] text-gray-500 dark:text-gray-400 text-center">
+            <div className="flex items-center justify-center h-[180px] text-gray-500 dark:text-gray-400 text-center">
               Coming soon - Track your prayer activities
             </div>
           </div>
