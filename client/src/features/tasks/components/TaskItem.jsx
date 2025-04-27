@@ -201,10 +201,21 @@ const TaskItem = ({
       <motion.div
         layout
         layoutId={`task-${task._id}`}
-        className="w-full mb-4 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-visible" // Added rounded-xl and overflow-visible
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
+        className={cn(
+          "w-full mb-4 rounded-xl overflow-visible transition-shadow duration-300",
+          "shadow-md hover:shadow-xl",
+          "bg-gradient-to-br from-white/90 to-blue-50/80 dark:from-zinc-900/80 dark:to-zinc-800/70",
+          "border border-zinc-200/60 dark:border-zinc-700/60",
+          "px-2 py-2 sm:px-4 sm:py-3",
+          className
+        )}
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.97 }}
+        whileHover={{
+          scale: 1.015,
+          boxShadow: "0 6px 32px 0 rgba(80,80,180,0.10)",
+        }}
         transition={{
           duration: 0.3,
           layout: { duration: 0.5, ease: "easeOut" },
@@ -220,8 +231,12 @@ const TaskItem = ({
           }}
           className="w-full"
         >
-          <AccordionItem value={`item-${task._id}`} className="border-none rounded-xl overflow-hidden" style={{ transformOrigin: 'center' }}>
-           {/* Use a div for the main clickable area, handle toggling */}
+          <AccordionItem
+            value={`item-${task._id}`}
+            className="border-none rounded-xl overflow-hidden"
+            style={{ transformOrigin: "center" }}
+          >
+            {/* Use a div for the main clickable area, handle toggling */}
             <div
               className={`cursor-pointer`} // Removed rounding classes, parent Accordion handles it
               onClick={handleAccordionToggle}
