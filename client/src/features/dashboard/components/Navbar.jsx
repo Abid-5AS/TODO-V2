@@ -85,7 +85,7 @@ const Navbar = ({ onSidebarToggle, onAddTask, className }) => {
             to={isAuthenticated ? "/dashboard" : "/"}
             className="text-xl font-bold text-primary dark:text-primary/90"
           >
-            Task Tree
+            Task Manager
           </Link>
         </div>
 

@@ -5,7 +5,7 @@ import axiosInstance from '../../../api/axiosInstance';
 
 export const loginUser = async (credentials) => {
   try {
-    const response = await axiosInstance.post('/api/auth/login', credentials);
+    const response = await axiosInstance.post('/api/auth/signin', credentials);
     if (response.data.success) {
       return response.data; // Contains user and token
     } else {
