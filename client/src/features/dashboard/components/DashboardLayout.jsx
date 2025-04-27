@@ -301,7 +301,7 @@ const DashboardLayout = () => {
         )}
 
         {/* Content Outlet */}
-        <main className="flex-1 overflow-auto backdrop-blur-sm scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent hover:scrollbar-thumb-gray-300/20 dark:hover:scrollbar-thumb-gray-600/20 paper-texture">
+        <main className="flex-1 overflow-auto backdrop-blur-sm paper-texture">
           {/* Pass projects data and lastTaskUpdate timestamp down via context */}
           <Outlet
             context={{
@@ -327,9 +327,9 @@ const DashboardLayout = () => {
 
       {/* Add Project Dialog */}
       <Dialog open={addProjectOpen} onOpenChange={setAddProjectOpen}>
-        <DialogContent className="glass-card shadow-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="glass-card shadow-lg sm:max-w-[450px]">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <FolderPlus
                 size={18}
                 className="text-primary animate-pulse-slow"
@@ -338,8 +338,11 @@ const DashboardLayout = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="py-2">
-            <Label htmlFor="project-name" className="mb-2 block">
+          <div className="px-6 py-4">
+            <Label
+              htmlFor="project-name"
+              className="mb-2 block text-sm font-medium"
+            >
               Project Name
             </Label>
             <Input
@@ -348,10 +351,11 @@ const DashboardLayout = () => {
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               className="glass-input"
+              autoFocus
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t border-border/20">
             <Button
               variant="outline"
               onClick={() => setAddProjectOpen(false)}

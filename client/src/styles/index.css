@@ -91,6 +91,11 @@ body {
   --sidebar-accent-foreground: oklch(0.28 0.006 285.885);
   --sidebar-border: oklch(0.9 0.01 90);
   --sidebar-ring: oklch(0.623 0.214 259.815);
+  --card-border-radius: 1rem;
+  --global-border-radius: 0.5rem;
+  --button-border-radius: 0.25rem;
+  --scrollbar-thumb: oklch(0.9 0.02 var(--hue) / 0.2);
+  --scrollbar-thumb-hover: oklch(0.9 0.02 var(--hue) / 0.3);
 }
 
 .dark {
@@ -126,6 +131,9 @@ body {
   --sidebar-accent-foreground: oklch(0.88 0 0);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.488 0.243 264.376);
+  --card-shadow: 0 0 0 1px oklch(0.2 0.05 var(--hue));
+  --scrollbar-thumb: oklch(0.5 0.05 var(--hue) / 0.3);
+  --scrollbar-thumb-hover: oklch(0.5 0.05 var(--hue) / 0.5);
 
   /* Add dark mode background with subtle gradients */
   background-image: radial-gradient(
@@ -179,33 +187,65 @@ body {
   transition: opacity 300ms, transform 300ms;
 }
 
-/* Kanban board scrollbars */
-.kanban-scrollbar::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+/* Global scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.kanban-scrollbar::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 8px;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.kanban-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
-  border-radius: 8px;
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
 
-.kanban-scrollbar-dark::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
-.kanban-scrollbar-dark::-webkit-scrollbar-track {
-  background: oklch(0.22 0.005 285.885);
-  border-radius: 8px;
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-.kanban-scrollbar-dark::-webkit-scrollbar-thumb {
-  background: oklch(0.45 0.005 285.885);
-  border-radius: 8px;
+/* Existing code for the kanban board scrollbar styling */
+.kanban-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.kanban-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.dark .kanban-container::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+/* Preserve kanban board specialized scrollbar */
+.kanban-board::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }

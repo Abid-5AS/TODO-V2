@@ -27,7 +27,16 @@ import {
 } from "../../../components/ui/popover"; // Corrected path
 import { Calendar } from "../../../components/ui/calendar"; // Corrected path
 import { format, isValid } from "date-fns";
-import { CalendarIcon, Brain, Sparkles, X, PlusCircle, Check, ListPlus, Loader2 } from "lucide-react";
+import {
+  CalendarIcon,
+  Brain,
+  Sparkles,
+  X,
+  PlusCircle,
+  Check,
+  ListPlus,
+  Loader2,
+} from "lucide-react";
 import { cn } from "../../../lib/utils"; // Corrected path
 import {
   DialogHeader,
@@ -48,17 +57,19 @@ const defaultForm = {
   project: "Inbox",
 };
 
-const TaskForm = ({ 
-  onTaskCreated, 
-  availableProjects = [], 
-  initialProject 
+const TaskForm = ({
+  onTaskCreated,
+  availableProjects = [],
+  initialProject,
 }) => {
   // Use the useTasks hook to get the addTask function for optimistic updates
   const { addTask } = useTasks(initialProject, availableProjects);
   const { toast } = useToast();
   const [form, setForm] = useState({
     ...defaultForm,
-    project: availableProjects.includes(initialProject) ? initialProject : "Inbox",
+    project: availableProjects.includes(initialProject)
+      ? initialProject
+      : "Inbox",
   });
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState("");
@@ -70,14 +81,16 @@ const TaskForm = ({
   const [error, setError] = useState(null);
   const [useDueDate, setUseDueDate] = useState(false);
   const [selectedLabels, setSelectedLabels] = useState([]);
-  const [newLabel, setNewLabel] = useState('');
+  const [newLabel, setNewLabel] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Update project in form if initialProject changes or availableProjects loads
   useEffect(() => {
-    setForm(f => ({ 
-      ...f, 
-      project: availableProjects.includes(initialProject) ? initialProject : "Inbox" 
+    setForm((f) => ({
+      ...f,
+      project: availableProjects.includes(initialProject)
+        ? initialProject
+        : "Inbox",
     }));
   }, [initialProject, availableProjects]);
 
@@ -94,12 +107,12 @@ const TaskForm = ({
   // Handle date change
   const handleDateChange = (date) => {
     if (date && isValid(date)) {
-      const formattedDate = format(date, 'yyyy-MM-dd');
+      const formattedDate = format(date, "yyyy-MM-dd");
       setForm({ ...form, dueDate: formattedDate });
       setUseDueDate(true);
       setCalendarOpen(false); // Close popover after selection
     } else {
-      setForm({ ...form, dueDate: '' });
+      setForm({ ...form, dueDate: "" });
       setUseDueDate(false);
     }
   };
@@ -109,23 +122,26 @@ const TaskForm = ({
     const trimmedLabel = newLabel.trim();
     if (trimmedLabel && !selectedLabels.includes(trimmedLabel)) {
       setSelectedLabels([...selectedLabels, trimmedLabel]);
-      setNewLabel('');
+      setNewLabel("");
     }
   };
 
   const handleRemoveLabel = (labelToRemove) => {
-    setSelectedLabels(selectedLabels.filter(l => l !== labelToRemove));
+    setSelectedLabels(selectedLabels.filter((l) => l !== labelToRemove));
   };
 
   // Update form.labels when selectedLabels changes
   useEffect(() => {
-    setForm(prev => ({ ...prev, labels: selectedLabels.join(',') }));
+    setForm((prev) => ({ ...prev, labels: selectedLabels.join(",") }));
   }, [selectedLabels]);
 
   // Subtask management
   const handleAddSubtask = () => {
     if (newSubtask.trim()) {
-      setSubtasks([...subtasks, { title: newSubtask.trim(), status: "pending" }]);
+      setSubtasks([
+        ...subtasks,
+        { title: newSubtask.trim(), status: "pending" },
+      ]);
       setNewSubtask("");
     }
   };
@@ -145,8 +161,10 @@ const TaskForm = ({
       status: "pending",
     }));
     // Avoid adding duplicates
-    const currentTitles = new Set(subtasks.map(st => st.title));
-    const uniqueNewSubtasks = newAISubtasks.filter(nst => !currentTitles.has(nst.title));
+    const currentTitles = new Set(subtasks.map((st) => st.title));
+    const uniqueNewSubtasks = newAISubtasks.filter(
+      (nst) => !currentTitles.has(nst.title)
+    );
     setSubtasks([...subtasks, ...uniqueNewSubtasks]);
     setAiSuggestions([]); // Clear suggestions after adding
   };
@@ -155,8 +173,8 @@ const TaskForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) {
-        toast({ title: "Task title is required", variant: "destructive" });
-        return;
+      toast({ title: "Task title is required", variant: "destructive" });
+      return;
     }
     setLoading(true);
     setError(null);
@@ -168,13 +186,13 @@ const TaskForm = ({
         dueDate: form.dueDate || null, // Ensure null if empty
         project: form.project || "Inbox", // Ensure default
       };
-      
+
       // Use the addTask function from useTasks for optimistic updates
       await addTask(taskData);
-      
+
       toast({ title: "Task Created Successfully" });
       // Reset form state
-      setForm({...defaultForm, project: initialProject || "Inbox"});
+      setForm({ ...defaultForm, project: initialProject || "Inbox" });
       setSubtasks([]);
       setAiSuggestions([]);
       setAiDescription("");
@@ -183,9 +201,14 @@ const TaskForm = ({
       if (onTaskCreated) onTaskCreated(); // Close dialog/sheet
     } catch (err) {
       console.error("Create task error:", err);
-      const message = err.response?.data?.message || err.message || "Failed to create task";
+      const message =
+        err.response?.data?.message || err.message || "Failed to create task";
       setError(message);
-      toast({ title: "Error Creating Task", description: message, variant: "destructive" });
+      toast({
+        title: "Error Creating Task",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -198,22 +221,31 @@ const TaskForm = ({
     setAiSuggestions([]);
     try {
       const data = await getAISubtaskSuggestions(form.title);
-      const suggestions = (data.suggestion || '')
+      const suggestions = (data.suggestion || "")
         .split(/\n|\r/)
         .map((s) => s.replace(/^[-•*\d.\s]+/, "").trim())
         .filter(Boolean)
         .slice(0, 5);
       setAiSuggestions(suggestions);
-       if (!suggestions.length) toast({ title: "AI couldn't suggest subtasks", description: "Try refining the task title.", variant: "default" });
+      if (!suggestions.length)
+        toast({
+          title: "AI couldn't suggest subtasks",
+          description: "Try refining the task title.",
+          variant: "default",
+        });
     } catch (err) {
-       console.error("AI Subtask suggestion error:", err);
-       toast({ title: "AI Suggestion Failed", description: err.message, variant: "destructive" });
-       setAiSuggestions([]);
+      console.error("AI Subtask suggestion error:", err);
+      toast({
+        title: "AI Suggestion Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+      setAiSuggestions([]);
     } finally {
       setAiSubtasksLoading(false);
     }
   };
-  
+
   const handleAIDescription = async () => {
     if (!form.title.trim()) return;
     setAiDescriptionLoading(true);
@@ -221,16 +253,25 @@ const TaskForm = ({
     try {
       const data = await getAIDescriptionSuggestion(form.title);
       setAiDescription(data.description || "");
-       if (!data.description) toast({ title: "AI couldn't generate description", description: "Try refining the task title.", variant: "default" });
+      if (!data.description)
+        toast({
+          title: "AI couldn't generate description",
+          description: "Try refining the task title.",
+          variant: "default",
+        });
     } catch (err) {
       console.error("AI Description suggestion error:", err);
-       toast({ title: "AI Description Failed", description: err.message, variant: "destructive" });
-       setAiDescription("");
+      toast({
+        title: "AI Description Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+      setAiDescription("");
     } finally {
       setAiDescriptionLoading(false);
     }
   };
-  
+
   // Add AI description to form
   const handleAddAIDescription = () => {
     setForm({ ...form, description: aiDescription });
@@ -238,15 +279,15 @@ const TaskForm = ({
   };
 
   return (
-    <div className="p-5 md:p-6 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
+    <div className="p-5 md:p-6 max-h-[85vh] overflow-y-auto">
       <DialogHeader className="pb-4 border-b mb-5">
         <DialogTitle className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Add New Task
         </DialogTitle>
       </DialogHeader>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title Input */} 
+        {/* Title Input */}
         <div>
           <Label htmlFor="title" className="font-medium text-sm mb-1 block">
             Title <span className="text-red-500">*</span>
@@ -261,53 +302,84 @@ const TaskForm = ({
             placeholder="e.g., Plan project kickoff meeting"
           />
         </div>
-        
-        {/* AI Buttons */} 
+
+        {/* AI Buttons */}
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             onClick={handleAIDescription}
-            disabled={aiDescriptionLoading || aiSubtasksLoading || !form.title.trim()}
+            disabled={
+              aiDescriptionLoading || aiSubtasksLoading || !form.title.trim()
+            }
             size="sm"
             variant="outline"
             className="bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-300 hover:bg-green-500/20"
           >
-            {aiDescriptionLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <Sparkles className="mr-1 h-4 w-4" />}
+            {aiDescriptionLoading ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-1 h-4 w-4" />
+            )}
             AI Description
           </Button>
           <Button
             type="button"
             onClick={handleAISuggest}
-            disabled={aiSubtasksLoading || aiDescriptionLoading || !form.title.trim()}
+            disabled={
+              aiSubtasksLoading || aiDescriptionLoading || !form.title.trim()
+            }
             size="sm"
             variant="outline"
             className="bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20"
           >
-             {aiSubtasksLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <Brain className="mr-1 h-4 w-4" />}
+            {aiSubtasksLoading ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Brain className="mr-1 h-4 w-4" />
+            )}
             AI Subtasks
           </Button>
         </div>
-        
+
         {/* AI Description Suggestion Area */}
         {aiDescription && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-3 space-y-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800"
           >
-            <p className="text-sm text-green-800 dark:text-green-200">{aiDescription}</p>
+            <p className="text-sm text-green-800 dark:text-green-200">
+              {aiDescription}
+            </p>
             <div className="flex justify-end gap-2">
-                 <Button type="button" size="sm" variant="ghost" onClick={() => setAiDescription('')} className="text-muted-foreground hover:text-foreground">Discard</Button>
-                 <Button type="button" onClick={handleAddAIDescription} size="sm" variant="outline" className="bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20">
-                    <Check className="mr-1 h-4 w-4" /> Use This
-                </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setAiDescription("")}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Discard
+              </Button>
+              <Button
+                type="button"
+                onClick={handleAddAIDescription}
+                size="sm"
+                variant="outline"
+                className="bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20"
+              >
+                <Check className="mr-1 h-4 w-4" /> Use This
+              </Button>
             </div>
           </motion.div>
         )}
 
         {/* Description Input */}
         <div>
-          <Label htmlFor="description" className="font-medium text-sm mb-1 block">
+          <Label
+            htmlFor="description"
+            className="font-medium text-sm mb-1 block"
+          >
             Description
           </Label>
           <Textarea
@@ -320,25 +392,28 @@ const TaskForm = ({
             placeholder="Add details, notes, or links..."
           />
         </div>
-        
-        {/* Date & Priority */} 
+
+        {/* Date & Priority */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Due Date */} 
+          {/* Due Date */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="dueDate" className="font-medium text-sm">
                 Due Date
               </Label>
               <div className="flex items-center space-x-2">
-                <Label htmlFor="use-due-date" className="text-xs text-muted-foreground">
-                  {useDueDate ? 'Enabled' : 'Disabled'}
+                <Label
+                  htmlFor="use-due-date"
+                  className="text-xs text-muted-foreground"
+                >
+                  {useDueDate ? "Enabled" : "Disabled"}
                 </Label>
                 <Switch
                   id="use-due-date"
                   checked={useDueDate}
                   onCheckedChange={(checked) => {
                     setUseDueDate(checked);
-                    if (!checked) setForm({ ...form, dueDate: '' });
+                    if (!checked) setForm({ ...form, dueDate: "" });
                     // If enabling, maybe open the calendar?
                     // if (checked) setCalendarOpen(true);
                   }}
@@ -354,19 +429,28 @@ const TaskForm = ({
                   className={cn(
                     "w-full justify-start text-left font-normal h-9",
                     "bg-background/70 dark:bg-input/50",
-                    !useDueDate && "text-muted-foreground opacity-50 cursor-not-allowed",
+                    !useDueDate &&
+                      "text-muted-foreground opacity-50 cursor-not-allowed",
                     form.dueDate && useDueDate && "text-foreground"
                   )}
                   disabled={!useDueDate}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {form.dueDate && useDueDate ? format(new Date(form.dueDate), "PPP") : <span>Pick a date</span>}
+                  {form.dueDate && useDueDate ? (
+                    format(new Date(form.dueDate), "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={form.dueDate && isValid(new Date(form.dueDate)) ? new Date(form.dueDate) : undefined}
+                  selected={
+                    form.dueDate && isValid(new Date(form.dueDate))
+                      ? new Date(form.dueDate)
+                      : undefined
+                  }
                   onSelect={handleDateChange}
                   initialFocus
                   disabled={!useDueDate}
@@ -374,14 +458,14 @@ const TaskForm = ({
               </PopoverContent>
             </Popover>
           </div>
-          {/* Priority Select */} 
+          {/* Priority Select */}
           <div className="space-y-1.5">
             <Label htmlFor="priority" className="font-medium text-sm">
               Priority
             </Label>
-            <Select 
-              value={form.priority} 
-              onValueChange={(value) => handleSelectChange('priority', value)}
+            <Select
+              value={form.priority}
+              onValueChange={(value) => handleSelectChange("priority", value)}
             >
               <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
                 <SelectValue placeholder="Select priority" />
@@ -394,15 +478,15 @@ const TaskForm = ({
             </Select>
           </div>
         </div>
-        
-        {/* Project Select */} 
+
+        {/* Project Select */}
         <div className="space-y-1.5">
           <Label htmlFor="project" className="font-medium text-sm">
             Project
           </Label>
-          <Select 
-            value={form.project} 
-            onValueChange={(value) => handleSelectChange('project', value)}
+          <Select
+            value={form.project}
+            onValueChange={(value) => handleSelectChange("project", value)}
           >
             <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
               <SelectValue placeholder="Select project" />
@@ -419,18 +503,20 @@ const TaskForm = ({
             </SelectContent>
           </Select>
         </div>
-        
-        {/* Labels Input */} 
+
+        {/* Labels Input */}
         <div className="space-y-1.5">
-          <Label className="font-medium text-sm">
-            Labels
-          </Label>
+          <Label className="font-medium text-sm">Labels</Label>
           <div className="flex flex-wrap gap-1.5 mb-2 min-h-[20px]">
-            {selectedLabels.map(label => (
-              <Badge key={label} variant="secondary" className="px-2 py-0.5 text-xs bg-muted hover:bg-muted/80">
+            {selectedLabels.map((label) => (
+              <Badge
+                key={label}
+                variant="secondary"
+                className="px-2 py-0.5 text-xs bg-muted hover:bg-muted/80"
+              >
                 {label}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => handleRemoveLabel(label)}
                   className="ml-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-background/50 p-px"
                   aria-label={`Remove label ${label}`}
@@ -446,7 +532,9 @@ const TaskForm = ({
               onChange={(e) => setNewLabel(e.target.value)}
               placeholder="Add a label..."
               className="bg-background/70 dark:bg-input/50 h-9"
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLabel())}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleAddLabel())
+              }
             />
             <Button
               type="button"
@@ -460,33 +548,47 @@ const TaskForm = ({
             </Button>
           </div>
         </div>
-        
-        {/* Subtasks Section */} 
+
+        {/* Subtasks Section */}
         <div className="space-y-1.5">
           <Label htmlFor="subtasks" className="font-medium text-sm">
             Subtasks
           </Label>
-          {/* AI Suggestion Area for Subtasks */} 
+          {/* AI Suggestion Area for Subtasks */}
           {aiSuggestions.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-3 space-y-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800"
-              >
-                  <ul className="pl-4 list-disc text-sm space-y-1 text-blue-800 dark:text-blue-200">
-                      {aiSuggestions.map((s, i) => (
-                          <li key={i}>{s}</li>
-                      ))}
-                  </ul>
-                  <div className="flex justify-end gap-2">
-                      <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestions([])} className="text-muted-foreground hover:text-foreground">Discard All</Button>
-                      <Button type="button" onClick={handleAddAISubtasks} size="sm" variant="outline" className="bg-blue-500/10 border-blue-500/30 text-blue-700 hover:bg-blue-500/20">
-                          <ListPlus className="mr-1 h-4 w-4" /> Add These
-                      </Button>
-                  </div>
-              </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3 space-y-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800"
+            >
+              <ul className="pl-4 list-disc text-sm space-y-1 text-blue-800 dark:text-blue-200">
+                {aiSuggestions.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setAiSuggestions([])}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Discard All
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleAddAISubtasks}
+                  size="sm"
+                  variant="outline"
+                  className="bg-blue-500/10 border-blue-500/30 text-blue-700 hover:bg-blue-500/20"
+                >
+                  <ListPlus className="mr-1 h-4 w-4" /> Add These
+                </Button>
+              </div>
+            </motion.div>
           )}
-          {/* Subtask List */} 
+          {/* Subtask List */}
           {subtasks.length > 0 && (
             <ul className="space-y-1.5 mt-2">
               {subtasks.map((st, idx) => (
@@ -515,14 +617,16 @@ const TaskForm = ({
               ))}
             </ul>
           )}
-          {/* Add Subtask Input */} 
+          {/* Add Subtask Input */}
           <div className="flex space-x-2 pt-1">
             <Input
               id="subtasks"
               value={newSubtask}
               onChange={(e) => setNewSubtask(e.target.value)}
               placeholder="Add a subtask item..."
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddSubtask())}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleAddSubtask())
+              }
               className="bg-background/70 dark:bg-input/50 h-9"
             />
             <Button
@@ -537,14 +641,14 @@ const TaskForm = ({
             </Button>
           </div>
         </div>
-        
-        {/* Error Display */} 
+
+        {/* Error Display */}
         {error && (
           <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
-        
+
         {/* Footer Buttons */}
         <DialogFooter className="pt-4">
           <Button
@@ -554,7 +658,7 @@ const TaskForm = ({
           >
             {loading ? (
               <span className="flex items-center justify-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Adding...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
               </span>
             ) : (
               <span className="flex items-center justify-center">
