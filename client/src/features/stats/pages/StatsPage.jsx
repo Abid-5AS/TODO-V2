@@ -42,7 +42,7 @@ import {
 import { Skeleton } from "../../../components/ui/skeleton"; // Corrected path
 import { motion } from "framer-motion";
 
-const MotionCard = motion(Card);
+const MotionCard = motion.create(Card);
 
 // Animation variants for statistics cards
 const cardVariants = {

@@ -1,21 +1,8 @@
 import React from "react";
 import { Clock, Loader2, SunIcon, SunriseIcon, SunsetIcon, MoonIcon } from "lucide-react";
 import { motion } from "framer-motion";
-
-// Helper function to format remaining time string "HH:MM:SS" into human-readable format
-const formatRemainingTime = (remainingTimeStr) => {
-  if (!remainingTimeStr || remainingTimeStr === "--:--:--") return "N/A";
-
-  const [hours, minutes, seconds] = remainingTimeStr.split(":").map(Number);
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m remaining`;
-  } else if (minutes > 0) {
-    return `${minutes}m ${seconds}s remaining`;
-  } else {
-    return `${seconds}s remaining`;
-  }
-};
+import PropTypes from "prop-types";
+import { formatTimeHumanReadable, formatTo12Hour as format12Hour } from "../../../../utils/timeUtils";
 
 // Helper to get the next prayer time
 const getNextPrayerTime = (prayerName, prayerTimes) => {
@@ -40,14 +27,13 @@ const getNextPrayerTime = (prayerName, prayerTimes) => {
 
 const PrayerTimesSection = ({
   prayerTimes,
-  loading,
+  isLoading,
   activePrayer,
   nextPrayer,
   remainingTime,
-  formatTo12Hour,
   itemVariants,
 }) => {
-  if (!prayerTimes && loading) {
+  if (!prayerTimes && isLoading) {
     return (
       <motion.div
         className="glass-card p-5 rounded-lg shadow-md border border-blue-200/20 flex flex-col"
@@ -160,15 +146,11 @@ const PrayerTimesSection = ({
 
               <div className="text-right">
                 <div className="font-medium text-slate-800 dark:text-white">
-                  {formatTo12Hour
-                    ? formatTo12Hour(prayer.startTime)
-                    : prayer.startTime}
+                  {format12Hour(prayer.startTime)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Until{" "}
-                  {formatTo12Hour
-                    ? formatTo12Hour(prayer.endTime)
-                    : prayer.endTime}
+                  {format12Hour(prayer.endTime)}
                 </p>
 
                 {isActive && remainingTime && (
@@ -178,7 +160,7 @@ const PrayerTimesSection = ({
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
                   >
-                    {remainingTime} remaining
+                    {formatTimeHumanReadable(remainingTime)}
                   </motion.div>
                 )}
               </div>
@@ -198,4 +180,14 @@ const PrayerTimesSection = ({
   );
 };
 
-export default PrayerTimesSection;
+PrayerTimesSection.propTypes = {
+  prayerTimes: PropTypes.object,
+  isLoading: PropTypes.bool,
+  activePrayer: PropTypes.string,
+  nextPrayer: PropTypes.string,
+  remainingTime: PropTypes.string,
+  itemVariants: PropTypes.object,
+};
+
+// Export as memoized component to prevent re-renders unless props actually change
+export default React.memo(PrayerTimesSection);

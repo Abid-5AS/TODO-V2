@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bug, ChevronDown, ChevronUp } from "lucide-react";
+import { Bug, ChevronDown, ChevronUp, CalendarClock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const DebugSection = ({
@@ -12,6 +12,50 @@ const DebugSection = ({
   itemVariants,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  
+  // Constants for local storage
+  const HOLIDAY_STORAGE_KEY = "islamic_holiday_data";
+
+  // Function to get holiday cache information
+  const getHolidayCacheInfo = () => {
+    try {
+      const storedData = localStorage.getItem(HOLIDAY_STORAGE_KEY);
+      
+      if (!storedData) {
+        return {
+          status: "No holiday data cached",
+          timestamp: null,
+          age: null,
+          size: 0
+        };
+      }
+      
+      const parsedData = JSON.parse(storedData);
+      const timestamp = new Date(parsedData.timestamp);
+      const now = new Date();
+      const ageInMs = now - timestamp;
+      const ageInDays = Math.floor(ageInMs / (1000 * 60 * 60 * 24));
+      const ageInHours = Math.floor((ageInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      // Calculate storage size (approximate)
+      const dataSizeBytes = storedData.length;
+      const dataSizeKB = (dataSizeBytes / 1024).toFixed(2);
+      
+      return {
+        status: "Holiday data cached",
+        timestamp: timestamp.toLocaleString(),
+        age: `${ageInDays} days, ${ageInHours} hours ago`,
+        size: `${dataSizeKB} KB`,
+        holidays: parsedData.data.holidays.length,
+        willExpireIn: `${30 - ageInDays} days`
+      };
+    } catch (error) {
+      return {
+        status: "Error parsing holiday cache",
+        error: String(error)
+      };
+    }
+  };
 
   // Function to safely format timezone information
   const formatTimezone = (timezone) => {
@@ -55,6 +99,9 @@ const DebugSection = ({
     hanafi: "University of Islamic Sciences, Karachi - Fajr: 18°, Isha: 18°",
     mwl: "Muslim World League (Google Default) - Fajr: 18°, Isha: 17°",
   };
+
+  // Get holiday cache information
+  const holidayCacheInfo = getHolidayCacheInfo();
 
   return (
     <motion.div className="glass-card p-4 rounded-lg" variants={itemVariants}>
@@ -106,6 +153,59 @@ const DebugSection = ({
                     )
                   )}
               </ul>
+            </div>
+          </div>
+
+          {/* Holiday Cache Information */}
+          <div>
+            <h3 className="font-medium text-amber-600 dark:text-amber-400 mb-1 flex items-center">
+              <CalendarClock className="w-4 h-4 mr-1 text-amber-500" />
+              Holiday Cache Information
+            </h3>
+            <div className="text-xs bg-amber-50/50 dark:bg-amber-900/20 p-3 rounded border border-amber-200/50 dark:border-amber-800/30">
+              <p>
+                <span className="font-medium">Status:</span> {holidayCacheInfo.status}
+              </p>
+              {holidayCacheInfo.timestamp && (
+                <>
+                  <p>
+                    <span className="font-medium">Created on:</span> {holidayCacheInfo.timestamp}
+                  </p>
+                  <p>
+                    <span className="font-medium">Age:</span> {holidayCacheInfo.age}
+                  </p>
+                  <p>
+                    <span className="font-medium">Size:</span> {holidayCacheInfo.size}
+                  </p>
+                  {holidayCacheInfo.holidays && (
+                    <p>
+                      <span className="font-medium">Holidays stored:</span> {holidayCacheInfo.holidays}
+                    </p>
+                  )}
+                  {holidayCacheInfo.willExpireIn && (
+                    <p>
+                      <span className="font-medium">Will expire in:</span> {holidayCacheInfo.willExpireIn}
+                    </p>
+                  )}
+                </>
+              )}
+              {holidayCacheInfo.error && (
+                <p className="text-red-500">
+                  <span className="font-medium">Error:</span> {holidayCacheInfo.error}
+                </p>
+              )}
+              <div className="mt-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    localStorage.removeItem(HOLIDAY_STORAGE_KEY);
+                    onRefresh();
+                  }}
+                  className="text-xs py-1 px-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                >
+                  Clear Holiday Cache
+                </button>
+              </div>
             </div>
           </div>
 

@@ -124,6 +124,7 @@ export const calculateFallbackPrayerTimes = (latitude, longitude) => {
 
   // Base times (these will be adjusted)
   let fajrHour,
+    fajrMinute,
     sunriseHour,
     sunriseMinute,
     dhuhrHour,
@@ -131,6 +132,7 @@ export const calculateFallbackPrayerTimes = (latitude, longitude) => {
     asrHour,
     asrMinute,
     maghribHour,
+    maghribMinute,
     ishaHour,
     ishaMinute;
 
@@ -224,12 +226,12 @@ export const calculateFallbackPrayerTimes = (latitude, longitude) => {
     }
   }
 
-  const fajrTime = formatTime(fajrHour, fajrMinute);
-  const sunriseTime = formatTime(sunriseHour, sunriseMinute);
-  const dhuhrTime = formatTime(dhuhrHour, dhuhrMinute);
-  const asrTime = formatTime(asrHour, asrMinute);
+  const fajrTime = formatTime(fajrHour, fajrMinute || 0);
+  const sunriseTime = formatTime(sunriseHour, sunriseMinute || 0);
+  const dhuhrTime = formatTime(dhuhrHour, dhuhrMinute || 0);
+  const asrTime = formatTime(asrHour, asrMinute || 0);
   const maghribTime = formatTime(maghribHour, maghribMinute || 0);
-  const ishaTime = formatTime(ishaHour, ishaMinute);
+  const ishaTime = formatTime(ishaHour, ishaMinute || 0);
 
   // Calculate sunset (just before maghrib)
   const sunsetTime = subtractMinutes(maghribTime, 3);

@@ -1,8 +1,10 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { AlertTriangle, Sunrise, Sun, Sunset } from "lucide-react";
 import { motion } from "framer-motion";
+import { formatTo12Hour } from "../../../../utils/timeUtils";
 
-const ProhibitedTimesSection = ({ prohibitedTimes, formatTo12Hour, itemVariants }) => {
+const ProhibitedTimesSection = ({ prohibitedTimes, itemVariants }) => {
   // Function to render the appropriate icon based on iconType
   const renderIcon = (iconType) => {
     switch (iconType) {
@@ -58,7 +60,7 @@ const ProhibitedTimesSection = ({ prohibitedTimes, formatTo12Hour, itemVariants 
               </p>
             </div>
             <div className="text-xs font-mono font-medium bg-red-100/70 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded">
-              {time.time}
+              {formatTo12Hour(time.time)}
             </div>
           </div>
         ))}
@@ -87,6 +89,18 @@ const ProhibitedTimesSection = ({ prohibitedTimes, formatTo12Hour, itemVariants 
       </div>
     </motion.div>
   );
+};
+
+ProhibitedTimesSection.propTypes = {
+  prohibitedTimes: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      reason: PropTypes.string,
+      time: PropTypes.string,
+      iconType: PropTypes.string
+    })
+  ).isRequired,
+  itemVariants: PropTypes.object
 };
 
 export default ProhibitedTimesSection;

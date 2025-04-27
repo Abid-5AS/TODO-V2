@@ -1,7 +1,7 @@
 // src/features/dashboard/pages/IslamicHomePage.jsx
 // Islamic home page featuring Quran verse, prayer times, and prayer tracking
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { MapPin, RefreshCw, Settings, Bug, Download } from "lucide-react";
 import { useTitle } from "../../../hooks/useTitle";
@@ -58,7 +58,7 @@ const IslamicHomePage = () => {
     isLoading: isIslamicDateLoading,
     error: islamicDateError,
     refreshIslamicDate,
-  } = useIslamicDate();
+  } = useIslamicDate(location);
 
   // UI state
   const [showDebug, setShowDebug] = useState(true);
@@ -66,23 +66,16 @@ const IslamicHomePage = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update time based on the selected timezone
+  // Update time for display purposes only (e.g., clock component if added)
   useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(new Date());
-
-      // Update which prayer is active
-      updateActivePrayer(new Date());
-    };
-
-    // Initial update
-    updateTime();
-
     // Set up interval for continuous updates
-    const intervalId = setInterval(updateTime, 1000);
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute instead of every second
 
+    // Clear interval on component unmount
     return () => clearInterval(intervalId);
-  }, [updateActivePrayer]);
+  }, []); // Empty dependency array: run only once on mount
 
   // Handle dashboard refresh
   const handleRefreshDashboard = () => {
@@ -116,7 +109,8 @@ const IslamicHomePage = () => {
     },
   };
 
-  const itemVariants = {
+  // Memoize animation variants to prevent unnecessary re-renders
+  const itemVariants = useMemo(() => ({
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
@@ -127,7 +121,7 @@ const IslamicHomePage = () => {
         damping: 20,
       },
     },
-  };
+  }), []);
 
   // Handler for saving user preferences
   const savePrayerTimeAdjustments = (adjustments) => {
@@ -240,10 +234,7 @@ const IslamicHomePage = () => {
             prayerTimes={prayerTimes}
             activePrayer={activePrayer}
             remainingTime={remainingTime}
-            loading={isPrayerTimesLoading}
-            formatTo12Hour={(time) =>
-              formatTo12Hour(time, settings?.use12HourFormat)
-            }
+            isLoading={isPrayerTimesLoading}
             itemVariants={itemVariants}
           />
         </motion.div>
@@ -251,8 +242,8 @@ const IslamicHomePage = () => {
         {/* Islamic Calendar Section */}
         <motion.div variants={itemVariants}>
           <IslamicCalendarSection
-            islamicDate={islamicDate}
             itemVariants={itemVariants}
+            isLoading={isIslamicDateLoading}
           />
         </motion.div>
 
@@ -260,9 +251,6 @@ const IslamicHomePage = () => {
         <motion.div variants={itemVariants}>
           <ProhibitedTimesSection
             prohibitedTimes={prohibitedTimes}
-            formatTo12Hour={(time) =>
-              formatTo12Hour(time, settings?.use12HourFormat)
-            }
             itemVariants={itemVariants}
           />
         </motion.div>
