@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select"; // Corrected path
 import { Label } from "../../../components/ui/label"; // Corrected path
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 const TaskEditForm = ({ 
   task, 
