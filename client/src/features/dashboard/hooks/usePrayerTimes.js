@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { fetchTimezone } from "../utils/islamic/locationUtils";
 import {
-  timeStringToDate,
+  timeStringToDate as baseTimeStringToDate,
   addMinutes,
   subtractMinutes,
   calculateFallbackPrayerTimes,
@@ -14,6 +14,14 @@ import {
   getLocalStorageItem,
   setLocalStorageItem,
 } from "../../../utils/localStorageUtils"; // Import localStorage helpers
+
+// Helper to convert HH:MM string to minutes since midnight
+const timeStringToMinutes = (timeStr) => {
+  if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return null;
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  if (isNaN(hours) || isNaN(minutes)) return null;
+  return hours * 60 + minutes;
+};
 
 export const usePrayerTimes = (location, settings) => {
   const [prayerTimes, setPrayerTimes] = useState(null);
@@ -73,8 +81,7 @@ export const usePrayerTimes = (location, settings) => {
     if (cachedData) {
       console.log("Using cached prayer times for", cacheKey);
       setPrayerTimes(cachedData);
-      const prohibited = calculateProhibitedTimes(cachedData);
-      setProhibitedTimes(prohibited);
+      setProhibitedTimes(calculateProhibitedTimes(cachedData));
       setError(null); // Clear any previous error
       setIsLoading(false); // Not loading if using cache
       return; // Exit if cache is valid
@@ -115,7 +122,7 @@ export const usePrayerTimes = (location, settings) => {
             Object.entries(settings.timeAdjustments).forEach(
               ([prayer, minutes]) => {
                 if (timings[prayer] && minutes !== 0) {
-                  const timeDate = timeStringToDate(timings[prayer]);
+                  const timeDate = baseTimeStringToDate(timings[prayer]);
                   const adjustedTime = addMinutes(timeDate, minutes);
                   timings[prayer] = adjustedTime;
                 }
@@ -125,8 +132,7 @@ export const usePrayerTimes = (location, settings) => {
 
           setPrayerTimes(timings);
           setLocalStorageItem(cacheKey, timings); // Cache the fetched data
-          const prohibited = calculateProhibitedTimes(timings);
-          setProhibitedTimes(prohibited);
+          setProhibitedTimes(calculateProhibitedTimes(timings));
           setError(null);
         } else {
           throw new Error("Invalid data format from prayer times API");
@@ -137,16 +143,14 @@ export const usePrayerTimes = (location, settings) => {
           "Using fallback prayer times (invalid coordinates: lat=0, lng=0)"
         );
         setPrayerTimes(memoizedFallbackTimes);
-        const prohibited = calculateProhibitedTimes(memoizedFallbackTimes);
-        setProhibitedTimes(prohibited);
+        setProhibitedTimes(calculateProhibitedTimes(memoizedFallbackTimes));
         setError("Location coordinates invalid. Using estimated prayer times.");
       }
     } catch (apiError) {
       console.error("Error fetching prayer times from API:", apiError);
       // Fallback if API fails
       setPrayerTimes(memoizedFallbackTimes);
-      const prohibited = calculateProhibitedTimes(memoizedFallbackTimes);
-      setProhibitedTimes(prohibited);
+      setProhibitedTimes(calculateProhibitedTimes(memoizedFallbackTimes));
       setError(
         `Could not fetch prayer times: ${apiError.message}. Using estimated times.`
       );
@@ -173,119 +177,114 @@ export const usePrayerTimes = (location, settings) => {
 
   // ----- Active Prayer Calculation Logic (mostly unchanged) -----
 
-  // Function to update active prayer and remaining time (Internal Logic)
-  const updateActivePrayer = useCallback(
-    (currentTime) => {
-      if (!prayerTimes) {
-        return { activePrayer: null, remainingTime: null };
+  const getNextPrayerInfo = useCallback((currentMinutesSinceMidnight) => {
+    if (!prayerTimes) return null;
+
+    const prayerOrder = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    let nextPrayer = null;
+    let minDiff = Infinity;
+
+    for (const prayerName of prayerOrder) {
+      const prayerTimeStr = prayerTimes[prayerName] || prayerTimes[prayerName.toLowerCase()];
+      const prayerMinutes = timeStringToMinutes(prayerTimeStr);
+
+      if (prayerMinutes === null) continue; // Skip if time is invalid
+
+      let diff = prayerMinutes - currentMinutesSinceMidnight;
+      
+      // If difference is negative, it means the prayer is tomorrow
+      if (diff < 0) {
+        diff += 24 * 60; // Add minutes in a day
       }
-      try {
-        const now = new Date();
-        const { prayerName: nextPrayer, time: nextPrayerTime } =
-          getNextPrayerTime(prayerTimes, now) || {};
 
-        if (!nextPrayer) return { activePrayer: null, remainingTime: null };
-
-        let currentPrayer = null;
-        const prayerOrder = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
-        const nextPrayerIndex = prayerOrder.indexOf(nextPrayer);
-
-        if (nextPrayerIndex > 0) {
-          currentPrayer = prayerOrder[nextPrayerIndex - 1];
-          if (currentPrayer === "Sunrise") currentPrayer = "Fajr";
-        } else if (nextPrayerIndex === 0) {
-          currentPrayer = "Isha";
-        }
-
-        const timeUntilNextPrayer = getRemainingTime(nextPrayerTime);
-
-        return {
-          activePrayer: currentPrayer,
-          remainingTime: formatRemainingTime(timeUntilNextPrayer),
-        };
-      } catch (error) {
-        console.error("Error updating active prayer:", error);
-        return { activePrayer: null, remainingTime: null };
+      if (diff < minDiff) {
+        minDiff = diff;
+        nextPrayer = { prayerName, time: prayerTimeStr, diffMinutes: minDiff };
       }
-    },
-    [prayerTimes] // Depends only on prayerTimes
-  );
-
-  // Helper function to get remaining time in milliseconds
-  const getRemainingTime = (prayerTime) => {
-     if (!prayerTime) return null;
-     const [hours, minutes] = prayerTime.split(":").map(Number);
-     const now = new Date();
-     const prayerDate = new Date();
-     prayerDate.setHours(hours, minutes, 0, 0);
-     if (prayerDate < now) {
-       prayerDate.setDate(prayerDate.getDate() + 1);
-     }
-     return prayerDate - now;
-  };
-
-  // Use our utility function instead of local implementation
-  const formatRemainingTime = (timeDiff) => {
-    return formatTimeToHHMMSS(timeDiff);
-  };
-
-  // Helper function to get the next prayer time
-  const getNextPrayerTime = (prayerTimes, currentTime) => {
-     if (!prayerTimes) return null;
-     const prayers = [
-       { name: "Fajr", time: prayerTimes.Fajr },
-       { name: "Sunrise", time: prayerTimes.Sunrise },
-       { name: "Dhuhr", time: prayerTimes.Dhuhr },
-       { name: "Asr", time: prayerTimes.Asr },
-       { name: "Maghrib", time: prayerTimes.Maghrib },
-       { name: "Isha", time: prayerTimes.Isha },
-     ];
-     const validPrayers = prayers.filter((p) => p.time);
-     if (validPrayers.length === 0) return null;
-
-     let nextPrayer = null;
-     let closestTimeDiff = Infinity;
-
-     for (const prayer of validPrayers) {
-       try {
-         const [hours, minutes] = prayer.time.split(":").map(Number);
-         const prayerDate = new Date(currentTime);
-         prayerDate.setHours(hours, minutes, 0, 0);
-         if (prayerDate < currentTime) prayerDate.setDate(prayerDate.getDate() + 1);
-         const timeDiff = prayerDate - currentTime;
-         if (timeDiff > 0 && timeDiff < closestTimeDiff) {
-           closestTimeDiff = timeDiff;
-           nextPrayer = { prayerName: prayer.name, time: prayer.time };
-         }
-       } catch (error) {
-         console.error(`Error calc next prayer for ${prayer.name}:`, error);
+    }
+    
+    // If the closest prayer is still negative after adding 24h (shouldn't happen with valid data)
+    // or if no prayer found, default to Fajr as next
+    if (!nextPrayer && (prayerTimes.Fajr || prayerTimes.fajr)) {
+       const fajrTimeStr = prayerTimes.Fajr || prayerTimes.fajr;
+       const fajrMinutes = timeStringToMinutes(fajrTimeStr);
+       if (fajrMinutes !== null) {
+           let diff = fajrMinutes - currentMinutesSinceMidnight + (24 * 60); // Ensure it's tomorrow
+           nextPrayer = { prayerName: "Fajr", time: fajrTimeStr, diffMinutes: diff };
        }
-     }
-     return nextPrayer;
+    }
+
+    return nextPrayer;
+  }, [prayerTimes]);
+
+  // Helper to get current minutes since midnight at the location's timezone
+  const getCurrentMinutesAtLocation = (location) => {
+    const now = new Date();
+    if (!location) {
+      return now.getHours() * 60 + now.getMinutes(); // fallback to browser time
+    }
+
+    try {
+      const tz = getTimezoneFromLocation(location) || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: tz,
+      });
+      const parts = formatter.formatToParts(now);
+      const hourPart = parts.find((p) => p.type === 'hour');
+      const minutePart = parts.find((p) => p.type === 'minute');
+      const hours = hourPart ? parseInt(hourPart.value, 10) : now.getHours();
+      const minutes = minutePart ? parseInt(minutePart.value, 10) : now.getMinutes();
+      return hours * 60 + minutes;
+    } catch (err) {
+      console.warn('Could not calculate current minutes at location, falling back to browser time', err);
+      return now.getHours() * 60 + now.getMinutes();
+    }
   };
 
-  // Update which prayer is active (Effect runs when prayerTimes changes)
+  const updateActivePrayerState = useCallback(() => {
+    const currentMinutesSinceMidnight = getCurrentMinutesAtLocation(location);
+
+    const nextPrayerInfo = getNextPrayerInfo(currentMinutesSinceMidnight);
+
+    let currentPrayerName = null;
+    let remainingMillis = null;
+
+    if (nextPrayerInfo) {
+      const prayerOrder = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+      const nextIndex = prayerOrder.indexOf(nextPrayerInfo.prayerName);
+
+      if (nextIndex === 0) {
+        currentPrayerName = "Isha";
+      } else if (nextIndex > 0) {
+        currentPrayerName = prayerOrder[nextIndex - 1];
+        if (currentPrayerName === "Sunrise") currentPrayerName = "Fajr";
+      }
+      remainingMillis = nextPrayerInfo.diffMinutes * 60 * 1000;
+    }
+
+    setActivePrayer((prev) => (prev !== currentPrayerName ? currentPrayerName : prev));
+    setRemainingTime((prev) => {
+      const newRemaining = remainingMillis ? formatTimeToHHMMSS(remainingMillis) : null;
+      return prev !== newRemaining ? newRemaining : prev;
+    });
+  }, [prayerTimes, location, getNextPrayerInfo]);
+
+  // Update active prayer periodically and when prayerTimes change
   useEffect(() => {
-    console.log("useEffect [prayerTimes] running. prayerTimes:", prayerTimes);
-    if (!prayerTimes) return;
-
-    const updateActiveAndRemaining = () => {
-      const { activePrayer: active, remainingTime: remaining } = updateActivePrayer(new Date());
-      // Only update state if the values actually changed to prevent potential loops
-      if (active !== activePrayer) {
-        setActivePrayer(active);
-      }
-      if (remaining !== remainingTime) {
-        setRemainingTime(remaining);
-      }
-    };
-
-    updateActiveAndRemaining(); // Update immediately
-    const interval = setInterval(updateActiveAndRemaining, 60000); // Update every minute
+    if (!prayerTimes) {
+        setActivePrayer(null);
+        setRemainingTime(null);
+        return;
+    }
+    
+    updateActivePrayerState(); // Initial calculation
+    const interval = setInterval(updateActivePrayerState, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  // Remove activePrayer and remainingTime from dependencies
-  }, [prayerTimes, updateActivePrayer]);
+  }, [prayerTimes, updateActivePrayerState]);
 
   // Function to refresh prayer times on demand (clears cache first)
   const refreshPrayerTimes = useCallback(() => {
@@ -306,6 +305,6 @@ export const usePrayerTimes = (location, settings) => {
     error,
     activePrayer,
     remainingTime,
-    refreshPrayerTimes, // Expose the refresh function
+    refreshPrayerTimes,
   };
 };

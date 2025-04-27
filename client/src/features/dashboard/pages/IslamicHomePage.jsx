@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MapPin, RefreshCw, Settings, Bug, Download } from "lucide-react";
+import { MapPin, RefreshCw, Settings, Bug, Download, Loader2 } from "lucide-react";
 import { useTitle } from "../../../hooks/useTitle";
 import { toast } from "sonner";
 
@@ -215,35 +215,54 @@ const IslamicHomePage = () => {
           <DailyQuranVerse />
         </motion.div>
 
-        {/* Daily Prayer Overview Section */}
-        <motion.div
-          className="col-span-1 md:col-span-2"
-          variants={itemVariants}
-        >
-          <DailyOverviewSection
-            prayerTimes={prayerTimes}
-            currentTime={currentTime}
-            location={location}
-            formatTo12Hour={(time) =>
-              formatTo12Hour(time, settings?.use12HourFormat)
-            }
-            itemVariants={itemVariants}
-          />
-        </motion.div>
+        {/* Daily Prayer Overview Section - Conditionally render */}
+        {prayerTimes && !isPrayerTimesLoading ? (
+          <motion.div
+            className="col-span-1 md:col-span-2"
+            variants={itemVariants}
+          >
+            <DailyOverviewSection
+              prayerTimes={prayerTimes} // Pass guaranteed valid times
+              location={location}
+              formatTo12Hour={(time) =>
+                formatTo12Hour(time, settings?.use12HourFormat)
+              }
+              itemVariants={itemVariants}
+            />
+          </motion.div>
+        ) : (
+           // Optional: Show a placeholder while loading
+           <motion.div className="col-span-1 md:col-span-2" variants={itemVariants}>
+             <div className="glass-card p-5 rounded-lg shadow-md h-[310px] flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+                <span className="ml-2 text-muted-foreground">Loading Overview...</span>
+             </div>
+           </motion.div>
+        )}
 
         {/* Prayer Times Section */}
-        <motion.div 
-          className="col-span-1 row-span-2"
-          variants={itemVariants}
-        >
-          <PrayerTimesSection
-            prayerTimes={prayerTimes}
-            activePrayer={activePrayer}
-            remainingTime={remainingTime}
-            isLoading={isPrayerTimesLoading}
-            itemVariants={itemVariants}
-          />
-        </motion.div>
+        {/* Conditionally render or show loading state */}
+        {prayerTimes && !isPrayerTimesLoading ? (
+          <motion.div 
+            className="col-span-1 row-span-2"
+            variants={itemVariants}
+          >
+            <PrayerTimesSection
+              prayerTimes={prayerTimes}
+              activePrayer={activePrayer}
+              remainingTime={remainingTime}
+              isLoading={false} // Pass false since we checked loading state
+              itemVariants={itemVariants}
+            />
+          </motion.div>
+        ) : (
+           <motion.div className="col-span-1 row-span-2" variants={itemVariants}>
+             <div className="glass-card p-5 rounded-lg shadow-md h-full flex items-center justify-center">
+               <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <span className="ml-2 text-muted-foreground">Loading Times...</span>
+             </div>
+           </motion.div>
+        )}
 
         {/* Islamic Calendar Section */}
         <motion.div 

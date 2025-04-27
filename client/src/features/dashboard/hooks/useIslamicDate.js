@@ -277,8 +277,8 @@ export const useIslamicDate = (location) => {
           
           // Add formatted date
           const formattedDate = `${holiday.day} ${hijriMonthNames[holiday.month - 1]} ${hijriYearForHoliday}`;
-          
-          return {
+
+  return {
             ...holiday,
             hijriYear: hijriYearForHoliday,
             daysLeft: daysLeftApprox,

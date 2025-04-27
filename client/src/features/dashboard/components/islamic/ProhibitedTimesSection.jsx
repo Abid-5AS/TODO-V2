@@ -60,7 +60,8 @@ const ProhibitedTimesSection = ({ prohibitedTimes, itemVariants }) => {
               </p>
             </div>
             <div className="text-xs font-mono font-medium bg-red-100/70 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded">
-              {formatTo12Hour(time.time)}
+              {/* Directly display the pre-formatted time range string */}
+              {time.time || "--:--"}
             </div>
           </div>
         ))}
