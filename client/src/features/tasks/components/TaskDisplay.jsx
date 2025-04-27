@@ -32,37 +32,36 @@ const TaskDisplay = ({
 
   // Determine background based on status
   const cardBgClass =
-    status === "completed"
-      ? "bg-muted/30 dark:bg-muted/20"
-      : "bg-card/80 dark:bg-card/70 backdrop-blur-sm";
+    status === "completed" ? "bg-muted/10 dark:bg-muted/5" : "backdrop-blur-sm"; // Reduced opacity for completed tasks
 
-  // Determine text color based on status
+  // Determine text color based on status - softened styles
   const titleClass =
     status === "completed"
-      ? "line-through text-muted-foreground/80 dark:text-muted-foreground/70"
-      : "text-foreground dark:text-foreground";
+      ? "line-through text-muted-foreground/70 dark:text-muted-foreground/60"
+      : "text-foreground/90 dark:text-foreground/90"; // Reduced opacity for better contrast
 
   const descriptionClass =
     status === "completed"
-      ? "text-muted-foreground/70 dark:text-muted-foreground/60"
-      : "text-muted-foreground dark:text-muted-foreground";
+      ? "text-muted-foreground/60 dark:text-muted-foreground/50"
+      : "text-muted-foreground/80 dark:text-muted-foreground/80"; // Increased opacity for better readability
 
   return (
-    <Card
+    <div
       className={cn(
-        `border-none shadow-none rounded-none ${cardBgClass} transition-colors duration-300`,
-        "relative", // Add relative positioning
+        "rounded-lg transition-colors duration-300",
+        cardBgClass,
+        "relative",
         className
       )}
     >
-      <CardContent className="p-3">
+      <div className="p-3">
         <div className="flex items-start gap-3">
           {/* Status toggle button */}
-          <motion.div whileTap={{ scale: 0.9 }}>
+          <motion.div whileTap={{ scale: 0.9 }} className="icon-animated">
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 rounded-full p-0 flex-shrink-0 mt-px hover:bg-muted/50 dark:hover:bg-muted/30"
+              className="h-6 w-6 rounded-full p-0 flex-shrink-0 mt-px hover:bg-muted/30 dark:hover:bg-muted/15"
               onClick={onToggleComplete}
               aria-label={
                 status === "todo"
@@ -73,13 +72,13 @@ const TaskDisplay = ({
               }
             >
               {status === "todo" && (
-                <CircleDashed className="h-4 w-4 text-muted-foreground" />
+                <CircleDashed className="h-4 w-4 text-muted-foreground/80" />
               )}
               {status === "doing" && (
-                <CircleDotDashed className="h-4 w-4 text-blue-500 animate-spin-slow" />
+                <CircleDotDashed className="h-4 w-4 text-blue-500/90 animate-spin-slow" />
               )}
               {status === "completed" && (
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-green-500/90 animate-scale-in" />
               )}
             </Button>
           </motion.div>
@@ -105,15 +104,17 @@ const TaskDisplay = ({
               {task.priority && (
                 <Badge
                   variant={getPriorityVariant(task.priority)}
-                  className="text-[10px] px-1.5 py-0 h-5 leading-tight"
+                  className={`text-[10px] px-1.5 py-0 h-5 leading-tight opacity-85 ${
+                    task.priority === "High" ? "animate-pulse-slow" : ""
+                  }`}
                 >
                   {task.priority}
                 </Badge>
               )}
 
               {task.dueDate && (
-                <span className="text-muted-foreground dark:text-muted-foreground text-[11px] flex items-center">
-                  <Calendar className="h-3 w-3 mr-1" />
+                <span className="text-muted-foreground/80 dark:text-muted-foreground/70 text-[11px] flex items-center">
+                  <Calendar className="h-3 w-3 mr-1 animate-pulse-slow" />
                   {new Date(task.dueDate).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -124,7 +125,7 @@ const TaskDisplay = ({
               {task.project && task.project !== "Inbox" && (
                 <Badge
                   variant="secondary"
-                  className="text-[10px] px-1.5 py-0 h-5 leading-tight bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
+                  className="text-[10px] px-1.5 py-0 h-5 leading-tight bg-blue-100/80 text-blue-800/90 dark:bg-blue-900/30 dark:text-blue-300/90 transition-all duration-300"
                 >
                   #{task.project}
                 </Badge>
@@ -140,7 +141,7 @@ const TaskDisplay = ({
                     <Badge
                       key={index}
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 h-5 leading-tight"
+                      className="text-[10px] px-1.5 py-0 h-5 leading-tight transition-all duration-300 hover:bg-muted/40 opacity-85"
                     >
                       {label}
                     </Badge>
@@ -149,7 +150,7 @@ const TaskDisplay = ({
               {task.labels && task.labels.length > 3 && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-5 leading-tight"
+                  className="text-[10px] px-1.5 py-0 h-5 leading-tight opacity-85"
                 >
                   ...
                 </Badge>
@@ -159,21 +160,21 @@ const TaskDisplay = ({
 
           {/* Action Buttons & Subtask Indicator */}
           <div className="absolute top-2 right-2 flex items-center gap-0.5 z-10">
-            <motion.div whileTap={{ scale: 0.9 }}>
+            <motion.div whileTap={{ scale: 0.9 }} className="icon-animated">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                className="h-6 w-6 p-0 text-muted-foreground/70 hover:text-foreground/90 hover:bg-muted/30 transition-colors duration-200"
                 onClick={onEdit}
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
             </motion.div>
-            <motion.div whileTap={{ scale: 0.9 }}>
+            <motion.div whileTap={{ scale: 0.9 }} className="icon-animated">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+                className="h-6 w-6 p-0 text-muted-foreground/70 hover:text-red-500/90 hover:bg-red-50/70 dark:hover:bg-red-950/20 transition-colors duration-200"
                 onClick={onDelete}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -182,7 +183,7 @@ const TaskDisplay = ({
             {/* Subtasks indicator - Conditionally render AccordionTrigger */}
             {hasSubtasks && (
               <AccordionTrigger
-                className="p-1 hover:bg-muted/50 dark:hover:bg-muted/30 rounded h-6 w-6 ml-0.5 data-[state=open]:rotate-180 transition-transform duration-200"
+                className="p-1 hover:bg-muted/40 dark:hover:bg-muted/20 rounded h-6 w-6 ml-0.5 data-[state=open]:rotate-180 transition-transform duration-200 icon-animated"
                 aria-label={
                   isAccordionOpen ? "Collapse subtasks" : "Expand subtasks"
                 }
@@ -192,8 +193,8 @@ const TaskDisplay = ({
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

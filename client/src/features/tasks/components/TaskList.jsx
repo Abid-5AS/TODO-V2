@@ -150,48 +150,61 @@ const TaskList = ({
         {" "}
         {/* Make toolbar sticky */}
         <motion.div
-          className="flex flex-col md:flex-row gap-3 md:items-center bg-gradient-to-r from-white/80 to-white/70 dark:from-zinc-900/70 dark:to-zinc-800/60 rounded-xl p-4 shadow-lg backdrop-blur-xl border border-gray-200/50 dark:border-zinc-700/50 transition-all duration-300"
+          className="flex flex-col md:flex-row gap-3 md:items-center rounded-xl p-4 shadow-md border-0 backdrop-blur-sm bg-background/50 dark:bg-background/40 transition-all duration-300"
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
         >
           <div className="flex-grow relative">
-            <Input
-              type="text"
-              value={search}
-              onChange={handleSearch}
-              placeholder="Search tasks..."
-              className="w-full pl-10 py-2 rounded-lg bg-gradient-to-r from-white/60 to-white/50 dark:from-zinc-800/60 dark:to-zinc-800/40 backdrop-blur-sm border border-zinc-300/60 dark:border-zinc-700/60 focus:ring-2 focus:ring-primary/70 text-base transition-all text-zinc-800 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
-              <Search size={18} />
-            </span>
+            <div className="relative">
+              <Input
+                type="text"
+                value={search}
+                onChange={handleSearch}
+                placeholder="Search tasks..."
+                className="w-full pl-10 py-2 h-10 rounded-lg border-0 focus:ring-2 focus:ring-primary/60 text-base transition-all text-zinc-800 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 bg-white/80 dark:bg-zinc-800/60"
+              />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                <Search size={16} className="text-zinc-400" />
+              </div>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Select value={filter} onValueChange={handleFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] rounded-lg bg-gradient-to-r from-white/60 to-white/50 dark:from-zinc-800/60 dark:to-zinc-800/40 backdrop-blur-sm border border-zinc-300/60 dark:border-zinc-700/60 focus:ring-2 focus:ring-purple-500/70 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start">
-                <Filter size={16} className="text-muted-foreground" />
+              <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-lg backdrop-blur-sm border-0 focus:ring-2 focus:ring-primary/60 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start bg-white/80 dark:bg-zinc-800/60">
+                <Filter
+                  size={16}
+                  className="text-muted-foreground icon-animated"
+                />
                 <SelectValue placeholder="Filter by..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-0 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md">
                 {FILTER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="transition-all duration-200 hover:bg-muted/20"
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={handleSort}>
-              <SelectTrigger className="w-full sm:w-[160px] min-w-[110px] rounded-lg bg-gradient-to-r from-white/60 to-white/50 dark:from-zinc-800/60 dark:to-zinc-800/40 backdrop-blur-sm border border-zinc-300/60 dark:border-zinc-700/60 focus:ring-2 focus:ring-pink-500/70 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start">
+              <SelectTrigger className="w-full sm:w-[160px] h-10 min-w-[110px] rounded-lg backdrop-blur-sm border-0 focus:ring-2 focus:ring-primary/60 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start bg-white/80 dark:bg-zinc-800/60">
                 <ArrowUpWideNarrow
                   size={16}
-                  className="text-muted-foreground"
+                  className="text-muted-foreground icon-animated"
                 />
                 <SelectValue placeholder="Sort by..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-0 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md">
                 {SORT_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="transition-all duration-200 hover:bg-muted/20"
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -204,7 +217,7 @@ const TaskList = ({
       {/* --- Task List --- */}
       {tasks.length === 0 ? (
         <motion.div
-          className="text-center p-8 mt-6 text-muted-foreground bg-gradient-to-r from-white/60 to-white/50 dark:from-zinc-900/60 dark:to-zinc-800/50 backdrop-blur-xl border border-gray-200/50 dark:border-zinc-700/50 rounded-xl shadow-lg mx-auto max-w-md transition-all duration-300"
+          className="text-center p-8 mt-6 text-muted-foreground backdrop-blur-xl border-0 bg-white/50 dark:bg-zinc-800/40 rounded-xl shadow-md mx-auto max-w-md transition-all duration-300"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
@@ -235,7 +248,7 @@ const TaskList = ({
                 key={task._id}
                 variants={taskItemVariants}
                 layout={false} // Disable layout animation for performance
-                className="relative z-0" // Base z-index, TaskItem can increase on hover/drag
+                className="relative z-0 transition-list-item" // Add transition class
                 style={{ overflow: "visible" }}
               >
                 <TaskItem
@@ -248,7 +261,7 @@ const TaskList = ({
                   accordionOpen={!!openAccordions[task._id]}
                   setAccordionOpen={() => toggleAccordion(task._id)} // Pass simplified handler
                   availableProjects={allProjects} // Pass project names for edit form datalist
-                  className="bg-gradient-to-r from-white/70 to-white/60 dark:from-zinc-900/60 dark:to-zinc-800/50 backdrop-blur-xl border border-gray-200/40 dark:border-zinc-700/40 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl overflow-visible"
+                  className="transition-all duration-300 rounded-xl overflow-visible"
                 />
               </motion.li>
             ))}

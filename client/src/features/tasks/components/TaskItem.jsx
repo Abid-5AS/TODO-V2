@@ -21,6 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
+import { Button } from "../../../components/ui/button";
+import {
+  CircleDashed,
+  CircleDotDashed,
+  Check,
+  Edit,
+  Trash2,
+} from "lucide-react";
 
 import TaskDisplay from "./TaskDisplay";
 import TaskEditForm from "./TaskEditForm";
@@ -203,23 +211,23 @@ const TaskItem = ({
         layoutId={`task-${task._id}`}
         className={cn(
           "w-full mb-4 rounded-xl overflow-visible transition-shadow duration-200",
-          "shadow-md hover:shadow-lg",
-          "bg-gradient-to-br from-white/90 to-blue-50/80 dark:from-zinc-900/80 dark:to-zinc-800/70",
-          "border border-zinc-200/60 dark:border-zinc-700/60",
-          "px-2 py-2 sm:px-4 sm:py-3",
+          "shadow-sm hover:shadow-md",
+          "glass-card", // Apply glass card effect
+          "border-0",
+          "px-0 py-0",
           className
         )}
         initial={{ opacity: 0, y: 5, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -5, scale: 0.99 }}
         whileHover={{
-          scale: 1.005, // Even smaller scale for faster effect
-          boxShadow: "0 4px 15px 0 rgba(80,80,180,0.06)",
+          scale: 1.005,
+          boxShadow: "0 4px 10px 0 rgba(80,80,180,0.03)",
         }}
         transition={{
-          duration: 0.15, // Faster animation
+          duration: 0.15,
           layout: {
-            duration: 0.15, // Faster layout transition
+            duration: 0.15,
             ease: "easeOut",
             type: "tween",
           },
@@ -227,7 +235,7 @@ const TaskItem = ({
         style={{
           willChange: "transform, opacity",
           transformOrigin: "center",
-          position: "relative", // Ensure position context for child elements
+          position: "relative",
         }}
       >
         <Accordion
@@ -241,12 +249,12 @@ const TaskItem = ({
         >
           <AccordionItem
             value={`item-${task._id}`}
-            className="border-none rounded-xl overflow-hidden"
+            className="border-0 rounded-xl overflow-hidden"
             style={{ transformOrigin: "center" }}
           >
             {/* Use a div for the main clickable area, handle toggling */}
             <div
-              className={`cursor-pointer`} // Removed rounding classes, parent Accordion handles it
+              className={`cursor-pointer p-1`}
               onClick={handleAccordionToggle}
             >
               {/* Animate presence for switching between Display and Edit */}
@@ -258,7 +266,7 @@ const TaskItem = ({
                     animate="visible"
                     exit="exit"
                     variants={editFormVariants}
-                    className="task-edit-container px-0 pt-0 pb-0 w-full" // Add w-full to ensure full width
+                    className="task-edit-container w-full" // Add w-full to ensure full width
                     onClick={(e) => e.stopPropagation()} // Prevent accordion toggle when clicking inside edit form
                     layout="position" // Use position-only layout for better animation
                   >
@@ -298,11 +306,7 @@ const TaskItem = ({
 
             {/* Accordion Content for Subtasks - Render only if not editing and has subtasks */}
             {hasSubtasks && !isEditing && (
-              <AccordionContent
-                className="pt-3 pb-4 px-4 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md border-t border-gray-200/40 dark:border-zinc-700/40 rounded-b-xl overflow-hidden"
-                // Ensure content doesn't animate closed instantly when accordion is externally closed
-                // Framer Motion's AnimatePresence on AccordionItem might be needed for smooth exit
-              >
+              <AccordionContent className="pt-2 pb-3 px-4 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md rounded-b-xl overflow-hidden">
                 <SubtaskList
                   taskId={task._id}
                   subtasks={task.subtasks}

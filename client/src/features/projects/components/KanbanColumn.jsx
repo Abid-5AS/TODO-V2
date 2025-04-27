@@ -42,17 +42,17 @@ const KanbanColumn = ({ id, title, tasks = [] }) => {
       custom={columnIndex}
       className={cn(
         "w-full md:w-[280px] lg:w-[320px] flex-shrink-0 rounded-xl flex flex-col h-full",
-        isOver ? "ring-2 ring-primary/50 bg-primary/5" : "",
-        "transition-all duration-300"
+        isOver ? "ring-2 ring-primary/40" : "",
+        "transition-all duration-300 bg-transparent"
       )}
       style={{ minHeight: "400px" }}
       whileHover={{
         scale: 1.01,
-        boxShadow: "0 4px 24px 0 rgba(80,80,180,0.10)",
+        boxShadow: "0 4px 20px 0 rgba(80,80,180,0.08)",
       }}
       whileTap={{ scale: 0.98 }}
     >
-      <div className="p-3 border-b border-border sticky top-0 bg-muted/40 dark:bg-zinc-800/40 backdrop-blur-sm rounded-t-xl z-10">
+      <div className="p-3 border-0 sticky top-0 bg-white/40 dark:bg-zinc-800/30 backdrop-blur-sm rounded-t-xl z-10">
         <h2 className="font-semibold text-sm text-center capitalize">
           {title} ({tasks.length})
         </h2>
@@ -63,8 +63,10 @@ const KanbanColumn = ({ id, title, tasks = [] }) => {
       >
         <div
           className={cn(
-            "flex-grow overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent rounded-b-xl",
-            isOver ? "bg-primary/5" : "bg-muted/20 dark:bg-zinc-900/30"
+            "flex-grow overflow-y-auto p-2 space-y-2.5 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent rounded-b-xl",
+            isOver
+              ? "bg-primary/5"
+              : "bg-white/10 dark:bg-zinc-900/20 backdrop-blur-sm"
           )}
         >
           {tasks.map((task) => (
@@ -76,7 +78,7 @@ const KanbanColumn = ({ id, title, tasks = [] }) => {
             </p>
           )}
           {isOver && (
-            <div className="border-2 border-dashed border-primary/50 rounded-lg p-4 mt-2 animate-pulse transition-all duration-200">
+            <div className="border-2 border-dashed border-primary/40 rounded-lg p-4 mt-2 bg-primary/5 transition-all duration-200">
               <p className="text-xs text-center text-primary/80">
                 Drop task here
               </p>

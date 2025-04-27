@@ -51,7 +51,9 @@ const DashboardLayout = () => {
   // Derive selectedProject directly from URL using the utility function
   const selectedProject = React.useMemo(() => {
     const projectFromUrl = getProjectFromPath(location.pathname);
-    console.log(`[DashboardLayout] Current Path: ${location.pathname}, Derived Project: ${projectFromUrl}`);
+    console.log(
+      `[DashboardLayout] Current Path: ${location.pathname}, Derived Project: ${projectFromUrl}`
+    );
     // Update localStorage whenever the derived project changes
     localStorage.setItem("selectedProject", projectFromUrl);
     return projectFromUrl;
@@ -70,12 +72,15 @@ const DashboardLayout = () => {
           !response.success ||
           (response.success && response.data.length === 0)
         ) {
-          console.log("No projects found or fetch failed, attempting initialization...");
+          console.log(
+            "No projects found or fetch failed, attempting initialization..."
+          );
           const initResponse = await initializeProjects();
           if (initResponse.success) {
             toast({
               title: "Projects Initialized",
-              description: initResponse.data.message || "Default projects created.",
+              description:
+                initResponse.data.message || "Default projects created.",
             });
             response = await getProjects(); // Re-fetch after initialization
           } else {
@@ -95,14 +100,13 @@ const DashboardLayout = () => {
           ];
           setAllProjects(projectsWithInbox);
         } else if (isMounted && !response.success) {
-            console.error("Failed to load projects:", response.error);
-            setAllProjects(["Inbox"]); // Fallback
+          console.error("Failed to load projects:", response.error);
+          setAllProjects(["Inbox"]); // Fallback
         }
-
       } catch (error) {
         console.error("Error loading or initializing projects:", error);
         if (isMounted) {
-           setAllProjects(["Inbox"]); // Fallback on error
+          setAllProjects(["Inbox"]); // Fallback on error
         }
       } finally {
         if (isMounted) {
@@ -126,7 +130,7 @@ const DashboardLayout = () => {
       isMounted = false;
       window.removeEventListener("resize", handleResize);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]); // Removed dependency on 'navigate'
 
   // Navigate based on selected project
@@ -148,14 +152,18 @@ const DashboardLayout = () => {
 
   const handleOpenTaskForm = (project = null) => {
     // Use the *currently selected* project if no specific one is passed
-    setTaskFormProject(project || (projectObjects.find(p => p.name === selectedProject)?.name) || 'Inbox');
+    setTaskFormProject(
+      project ||
+        projectObjects.find((p) => p.name === selectedProject)?.name ||
+        "Inbox"
+    );
     setTaskFormOpen(true);
   };
-  
+
   // Close the task form and force a re-render of the task list
   const handleCloseTaskForm = () => {
     setTaskFormOpen(false);
-    
+
     // Force a re-render of the task list by updating a timestamp
     // This will ensure the task list is refreshed after a new task is added
     setLastTaskUpdate(Date.now());
@@ -185,7 +193,11 @@ const DashboardLayout = () => {
       if (response.success) {
         const newProject = response.data;
         setProjectObjects((prev) => [...prev, newProject]);
-        setAllProjects((prev) => [...prev, newProject.name].sort((a,b) => a === 'Inbox' ? -1 : b === 'Inbox' ? 1 : a.localeCompare(b))); // Keep Inbox first, sort others
+        setAllProjects((prev) =>
+          [...prev, newProject.name].sort((a, b) =>
+            a === "Inbox" ? -1 : b === "Inbox" ? 1 : a.localeCompare(b)
+          )
+        ); // Keep Inbox first, sort others
         toast({ title: "Project Created" });
         setNewProjectName("");
         setAddProjectOpen(false);
@@ -194,7 +206,11 @@ const DashboardLayout = () => {
       }
     } catch (error) {
       console.error("Error creating project:", error);
-      toast({ title: "Error Creating Project", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error Creating Project",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -207,11 +223,15 @@ const DashboardLayout = () => {
 
     const project = projectObjects.find((p) => p.name === projectName);
     if (!project?._id) {
-        toast({ title: "Project not found", description: `Could not find project ID for ${projectName}`, variant: "destructive" });
-        // Attempt deletion by name as a fallback? Risky.
-        // console.warn(`Attempting to delete project ${projectName} by name as ID was not found.`);
-        // const fallbackResponse = await deleteProjectByName(projectName);
-        return; 
+      toast({
+        title: "Project not found",
+        description: `Could not find project ID for ${projectName}`,
+        variant: "destructive",
+      });
+      // Attempt deletion by name as a fallback? Risky.
+      // console.warn(`Attempting to delete project ${projectName} by name as ID was not found.`);
+      // const fallbackResponse = await deleteProjectByName(projectName);
+      return;
     }
 
     try {
@@ -228,14 +248,17 @@ const DashboardLayout = () => {
       }
     } catch (error) {
       console.error("Error deleting project:", error);
-      toast({ title: "Error Deleting Project", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error Deleting Project",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50 dark:from-zinc-950 dark:to-indigo-950">
-
-      {/* Mobile Only: Sidebar as Sheet - Pass isOpen and onClose */} 
+      {/* Mobile Only: Sidebar as Sheet - Pass isOpen and onClose */}
       {isMobile && (
         <Sidebar
           selectedProject={selectedProject}
@@ -257,12 +280,12 @@ const DashboardLayout = () => {
         onSidebarToggle={toggleSidebar}
         onAddTask={handleOpenTaskForm}
         selectedProject={selectedProject} // Pass selectedProject for context if needed
-        className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border-b border-gray-200/40 dark:border-zinc-700/40 shadow-sm"
+        className="glass-navbar border-b border-gray-200/40 dark:border-zinc-700/40 shadow-sm"
       />
 
-      {/* Main Content Area */} 
+      {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Only: Permanent Sidebar */} 
+        {/* Desktop Only: Permanent Sidebar */}
         {!isMobile && (
           <Sidebar
             selectedProject={selectedProject}
@@ -277,16 +300,23 @@ const DashboardLayout = () => {
           />
         )}
 
-        {/* Content Outlet */} 
-        <main className="flex-1 overflow-auto bg-white/20 dark:bg-zinc-900/20 backdrop-blur-sm scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent hover:scrollbar-thumb-gray-300/20 dark:hover:scrollbar-thumb-gray-600/20">
+        {/* Content Outlet */}
+        <main className="flex-1 overflow-auto backdrop-blur-sm scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent hover:scrollbar-thumb-gray-300/20 dark:hover:scrollbar-thumb-gray-600/20 paper-texture">
           {/* Pass projects data and lastTaskUpdate timestamp down via context */}
-          <Outlet context={{ allProjects, projectObjects, selectedProject, lastTaskUpdate }} />
+          <Outlet
+            context={{
+              allProjects,
+              projectObjects,
+              selectedProject,
+              lastTaskUpdate,
+            }}
+          />
         </main>
       </div>
 
-      {/* TaskForm Dialog */} 
+      {/* TaskForm Dialog */}
       <Dialog open={taskFormOpen} onOpenChange={setTaskFormOpen}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto p-0 bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50 dark:from-slate-950 dark:via-gray-900 dark:to-slate-900 border-0 rounded-lg shadow-lg">
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto p-0 glass-card shadow-lg">
           <TaskForm
             availableProjects={allProjects}
             onTaskCreated={handleCloseTaskForm}
@@ -295,53 +325,54 @@ const DashboardLayout = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Project Dialog */} 
+      {/* Add Project Dialog */}
       <Dialog open={addProjectOpen} onOpenChange={setAddProjectOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50 dark:from-slate-950 dark:via-gray-900 dark:to-slate-900 border-0 rounded-lg shadow-lg">
-          <DialogHeader className="pb-4">
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center">
-              <FolderPlus className="mr-2 h-5 w-5 text-blue-600" />
-              Add Project
+        <DialogContent className="glass-card shadow-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderPlus
+                size={18}
+                className="text-primary animate-pulse-slow"
+              />
+              Add New Project
             </DialogTitle>
           </DialogHeader>
-          
-          <div className="p-4 pt-0 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="project-name" className="font-medium">
-                Project Name
-              </Label>
-              <Input
-                id="project-name"
-                type="text"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="Enter project name"
-                className="bg-white/50 dark:bg-gray-800/50"
-              />
-            </div>
-            
-            <DialogFooter className="pt-2">
-              <Button 
-                onClick={handleAddProject} 
-                disabled={!newProjectName.trim() || loadingProjects}
-                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
-              >
-                <span className="flex items-center justify-center">
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  Add Project
-                </span>
-              </Button>
-            </DialogFooter>
+
+          <div className="py-2">
+            <Label htmlFor="project-name" className="mb-2 block">
+              Project Name
+            </Label>
+            <Input
+              id="project-name"
+              placeholder="Enter project name..."
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              className="glass-input"
+            />
           </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAddProjectOpen(false)}
+              className="glass-button"
+            >
+              <X size={16} className="mr-2" /> Cancel
+            </Button>
+            <Button
+              onClick={handleAddProject}
+              className="glass-button glow-effect"
+            >
+              <Check size={16} className="mr-2" /> Create
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Removed Search/Filter Sheets - Functionality moved to TaskList */} 
-      
-      {/* Overlay for mobile when sidebar is open */} 
+      {/* Mobile Sidebar Backdrop */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/20 z-40 backdrop-blur-md transition-all duration-300"
           onClick={closeSidebar}
         />
       )}

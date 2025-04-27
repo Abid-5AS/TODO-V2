@@ -144,29 +144,50 @@ const DashboardPage = () => {
 
   return (
     <motion.div
-      className="py-4 px-2 sm:py-6 sm:px-4"
+      className="py-4 px-2 sm:py-6 sm:px-4 glass-morphism rounded-xl shadow-md"
       initial="hidden"
       animate="visible"
       variants={pageContentVariants}
       key={projectKey} // Add key to force re-render on project change
     >
-      <h1 className="text-2xl md:text-3xl font-bold mb-4 text-center bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">
+      <motion.h1
+        className="text-2xl md:text-3xl font-bold mb-4 text-center bg-gradient-to-r from-primary/90 via-purple-500/90 to-pink-500/90 bg-clip-text text-transparent animate-gradient-x"
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.2 }}
+      >
         {getDisplayName()}
-      </h1>
+      </motion.h1>
 
       {/* Show ViewToggle only for project routes */}
       {location.pathname.includes("/dashboard/project/") && (
-        <ViewToggle viewMode={viewMode} setViewMode={handleViewModeChange} />
+        <div className="flex justify-center mb-4">
+          <motion.div
+            className="glass-card inline-block p-1 rounded-lg"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <ViewToggle
+              viewMode={viewMode}
+              setViewMode={handleViewModeChange}
+            />
+          </motion.div>
+        </div>
       )}
 
-      <div className="mt-4">
+      <motion.div
+        className="mt-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+      >
         {viewMode === "list" ? (
           <TaskList key={`list-${projectKey}`} {...commonProps} />
         ) : (
           // Board view is implicitly selected if not list
           <ProjectKanbanBoard key={`board-${projectKey}`} {...commonProps} />
         )}
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

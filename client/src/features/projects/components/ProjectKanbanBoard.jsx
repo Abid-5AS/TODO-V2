@@ -205,14 +205,6 @@ const ProjectKanbanBoard = ({
       console.log(
         `[Dnd] Sorting within column ${sourceColumnId} (client-side sorting disabled). Task ${activeTaskId} over ${overId}.`
       );
-      // Example reordering (needs state management adjustments in useTasks or here):
-      // if (active.id !== over.id) {
-      //   setTasks((currentTasks) => {
-      //     const oldIndex = currentTasks.findIndex(t => t._id === active.id);
-      //     const newIndex = currentTasks.findIndex(t => t._id === over.id);
-      //     return arrayMove(currentTasks, oldIndex, newIndex);
-      //   });
-      // }
     }
   };
 
@@ -246,52 +238,57 @@ const ProjectKanbanBoard = ({
   // Render empty state
   if (!loading && tasks.length === 0) {
     return (
-      <div className="text-center p-8 mt-6 text-muted-foreground bg-gradient-to-r from-white/60 to-white/50 dark:from-zinc-900/60 dark:to-zinc-800/50 backdrop-blur-xl border border-gray-200/50 dark:border-zinc-700/50 rounded-xl shadow-lg mx-auto max-w-md transition-all duration-300">
+      <div className="text-center p-8 mt-6 text-muted-foreground bg-white/50 dark:bg-zinc-800/40 backdrop-blur-md rounded-xl shadow-md mx-auto max-w-md transition-all duration-300">
         <span className="text-zinc-700 dark:text-zinc-300 font-medium">
-          No tasks found for this project.
+          No tasks in project yet.
         </span>
+        <p className="mt-2 text-sm">
+          Add a task to this project to see it on the Kanban board.
+        </p>
       </div>
     );
   }
 
+  // Main render: Kanban board with 3 columns (todo, doing, completed)
   return (
-    <motion.div
-      className="w-full overflow-visible"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
     >
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
+      {/* Main board container */}
+      <motion.div
+        className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-4 px-2 h-full kanban-scrollbar dark:kanban-scrollbar-dark"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
       >
-        <div className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-4 px-1 md:px-2 h-full">
-          {/* Render columns using memoized groupedTasks */}
-          <KanbanColumn
-            id="todo"
-            title="To Do"
-            tasks={groupedTasks.todo || []}
-          />
-          <KanbanColumn
-            id="doing"
-            title="Doing"
-            tasks={groupedTasks.doing || []}
-          />
-          <KanbanColumn
-            id="completed"
-            title="Completed"
-            tasks={groupedTasks.completed || []}
-          />
-        </div>
+        {/* To Do Column */}
+        <KanbanColumn id="todo" title="To Do" tasks={groupedTasks.todo || []} />
 
-        <DragOverlay adjustScale={false} dropAnimation={null}>
-          {/* Render the task card being dragged */}
-          {activeTask ? <KanbanTaskCard task={activeTask} overlay /> : null}
+        {/* Doing Column */}
+        <KanbanColumn
+          id="doing"
+          title="Doing"
+          tasks={groupedTasks.doing || []}
+        />
+
+        {/* Completed Column */}
+        <KanbanColumn
+          id="completed"
+          title="Completed"
+          tasks={groupedTasks.completed || []}
+        />
+
+        {/* Drag overlay for the currently dragged task */}
+        <DragOverlay adjustScale={true}>
+          {activeId && activeTask ? (
+            <KanbanTaskCard task={activeTask} overlay={true} />
+          ) : null}
         </DragOverlay>
-      </DndContext>
-    </motion.div>
+      </motion.div>
+    </DndContext>
   );
 };
 
