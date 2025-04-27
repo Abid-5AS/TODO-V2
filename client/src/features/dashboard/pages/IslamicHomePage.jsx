@@ -3,7 +3,11 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MapPin, RefreshCw, Settings, Bug, Download, Loader2 } from "lucide-react";
+import { 
+  MapPin, RefreshCw, Settings, Bug, Download, Loader2, 
+  ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle,
+  Moon, Sun
+} from "lucide-react";
 import { useTitle } from "../../../hooks/useTitle";
 import { toast } from "sonner";
 
@@ -25,6 +29,74 @@ import ProhibitedTimesSection from "../components/islamic/ProhibitedTimesSection
 import IslamicCalendarSection from "../components/islamic/IslamicCalendarSection";
 import DailyQuranVerse from "../components/islamic/DailyQuranVerse";
 import DebugSection from "../components/islamic/DebugSection";
+
+// Accordion Component
+const Accordion = ({ title, icon, children, defaultOpen = false, className = "" }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  return (
+    <div className={`glass-card rounded-lg shadow-md overflow-hidden ${className}`}>
+      <div 
+        className="flex justify-between items-center p-4 cursor-pointer bg-gradient-to-r from-slate-50/80 to-slate-100/80 dark:from-slate-800/80 dark:to-slate-900/80 border-b border-slate-200/50 dark:border-slate-700/50"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center">
+          {icon}
+          <h2 className="text-lg font-semibold ml-2 text-slate-800 dark:text-white">{title}</h2>
+        </div>
+        {isOpen ? 
+          <ChevronUp className="h-5 w-5 text-slate-500 dark:text-slate-400" /> : 
+          <ChevronDown className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+        }
+      </div>
+      <motion.div 
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ 
+          height: isOpen ? "auto" : 0,
+          opacity: isOpen ? 1 : 0
+        }}
+        transition={{ duration: 0.3 }}
+        className="overflow-hidden"
+      >
+        <div className="p-4">
+          {children}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Tab interface component
+const TabInterface = ({ tabs, defaultTab = 0 }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  
+  return (
+    <div className="flex flex-col">
+      <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200/50 dark:border-slate-700/50 mb-4">
+        {tabs.map((tab, idx) => (
+          <button
+            key={idx}
+            onClick={() => setActiveTab(idx)}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+              activeTab === idx 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-muted-foreground hover:text-slate-800 dark:hover:text-white"
+            }`}
+          >
+            <div className="flex items-center">
+              {tab.icon}
+              <span className="ml-2">{tab.label}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      
+      <div>
+        {tabs[activeTab].content}
+      </div>
+    </div>
+  );
+};
 
 const IslamicHomePage = () => {
   useTitle("Islamic Home");
@@ -61,7 +133,7 @@ const IslamicHomePage = () => {
   } = useIslamicDate(location);
 
   // UI state
-  const [showDebug, setShowDebug] = useState(true);
+  const [showDebug, setShowDebug] = useState(false); // Default to hidden
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -140,16 +212,49 @@ const IslamicHomePage = () => {
     refreshPrayerTimes();
   };
 
+  // Secondary information tabs
+  const secondaryTabs = [
+    {
+      label: "Calendar",
+      icon: <Calendar size={16} className="text-violet-500" />,
+      content: (
+        <IslamicCalendarSection 
+          islamicDate={islamicDate}
+          itemVariants={itemVariants} 
+          isLoading={isIslamicDateLoading} 
+        />
+      )
+    },
+    {
+      label: "Prohibited Times",
+      icon: <AlertTriangle size={16} className="text-red-500" />,
+      content: (
+        <ProhibitedTimesSection 
+          prohibitedTimes={prohibitedTimes} 
+          itemVariants={itemVariants} 
+        />
+      )
+    }
+  ];
+
+  // Loading placeholder for main sections
+  const LoadingPlaceholder = ({ text, color = "blue" }) => (
+    <div className="glass-card p-5 rounded-lg shadow-md flex items-center justify-center h-[280px]">
+      <Loader2 className={`h-6 w-6 animate-spin text-${color}-500`} />
+      <span className="ml-2 text-muted-foreground">{text}</span>
+    </div>
+  );
+  
   // Render the dashboard
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-6 space-y-6">
       {/* Header with location and settings */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap md:flex-nowrap justify-between items-center gap-4 mb-2">
         <div
           className="flex items-center cursor-pointer hover:text-primary transition-colors"
           onClick={() => setShowLocationModal(true)}
         >
-          <MapPin size={18} className="mr-2" />
+          <MapPin size={18} className="mr-2 text-primary" />
           <h1 className="text-xl font-semibold">
             {location
               ? `${location.name}, ${location.country}`
@@ -157,149 +262,139 @@ const IslamicHomePage = () => {
           </h1>
         </div>
 
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 ml-auto">
           <button
-            className="p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="Refresh Data"
             onClick={handleRefreshDashboard}
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={16} />
           </button>
 
           <button
-            className="p-2 rounded-full hover:bg-muted/50 transition-colors"
+            className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="Prayer Time Settings"
             onClick={() => setShowSettingsModal(true)}
           >
-            <Settings size={18} />
+            <Settings size={16} />
           </button>
 
           <button
-            className={`p-2 rounded-full transition-colors ${
+            className={`p-2 rounded-md transition-colors ${
               showDebug
                 ? "bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300"
-                : "hover:bg-muted/50"
+                : "hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
             title="Toggle Debug Panel"
             onClick={() => setShowDebug(!showDebug)}
           >
-            <Bug size={18} />
+            <Bug size={16} />
           </button>
         </div>
       </div>
 
-      {/* Debug Section - Only shown when toggled */}
+      {/* Debug Accordion - Only shown when toggled */}
       {showDebug && (
-        <DebugSection
-          location={location}
-          prayerTimes={prayerTimes}
-          islamicDate={islamicDate}
-          settings={settings}
-          onRefresh={handleRefreshDashboard}
-          itemVariants={itemVariants}
-        />
+        <Accordion 
+          title="Debug Information" 
+          icon={<Bug size={18} className="text-amber-500" />}
+          defaultOpen={false}
+        >
+          <DebugSection
+            location={location}
+            prayerTimes={prayerTimes}
+            islamicDate={islamicDate}
+            settings={settings}
+            onRefresh={handleRefreshDashboard}
+            itemVariants={itemVariants}
+          />
+        </Accordion>
       )}
 
       {/* Main dashboard content */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Daily Quran Verse */}
+        {/* Daily Quran Verse - Always full width */}
         <motion.div
-          className="col-span-1 md:col-span-3"
+          className="mb-4"
           variants={itemVariants}
         >
-          <DailyQuranVerse />
+          <Accordion 
+            title="Daily Quran Verse" 
+            icon={<Moon size={18} className="text-blue-500" />}
+            defaultOpen={true}
+          >
+            <DailyQuranVerse />
+          </Accordion>
         </motion.div>
 
-        {/* Daily Prayer Overview Section - Conditionally render */}
-        {prayerTimes && !isPrayerTimesLoading ? (
+        {/* Grid View Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Daily Prayer Overview Section */}
           <motion.div
-            className="col-span-1 md:col-span-2"
+            className="md:col-span-2"
             variants={itemVariants}
           >
-            <DailyOverviewSection
-              prayerTimes={prayerTimes} // Pass guaranteed valid times
-              location={location}
-              formatTo12Hour={(time) =>
-                formatTo12Hour(time, settings?.use12HourFormat)
-              }
-              itemVariants={itemVariants}
-            />
+            {prayerTimes && !isPrayerTimesLoading ? (
+              <DailyOverviewSection
+                prayerTimes={prayerTimes}
+                location={location}
+                formatTo12Hour={(time) =>
+                  formatTo12Hour(time, settings?.use12HourFormat)
+                }
+                itemVariants={itemVariants}
+              />
+            ) : (
+              <LoadingPlaceholder text="Loading Overview..." color="emerald" />
+            )}
           </motion.div>
-        ) : (
-           // Optional: Show a placeholder while loading
-           <motion.div className="col-span-1 md:col-span-2" variants={itemVariants}>
-             <div className="glass-card p-5 rounded-lg shadow-md h-[310px] flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                <span className="ml-2 text-muted-foreground">Loading Overview...</span>
-             </div>
-           </motion.div>
-        )}
 
-        {/* Prayer Times Section */}
-        {/* Conditionally render or show loading state */}
-        {prayerTimes && !isPrayerTimesLoading ? (
+          {/* Prayer Times Section */}
           <motion.div 
-            className="col-span-1 row-span-2"
+            className="md:row-span-2"
             variants={itemVariants}
           >
-            <PrayerTimesSection
-              prayerTimes={prayerTimes}
-              activePrayer={activePrayer}
-              remainingTime={remainingTime}
-              isLoading={false} // Pass false since we checked loading state
-              itemVariants={itemVariants}
-            />
+            {prayerTimes && !isPrayerTimesLoading ? (
+              <PrayerTimesSection
+                prayerTimes={prayerTimes}
+                activePrayer={activePrayer}
+                remainingTime={remainingTime}
+                isLoading={false}
+                itemVariants={itemVariants}
+              />
+            ) : (
+              <LoadingPlaceholder text="Loading Prayer Times..." color="blue" />
+            )}
           </motion.div>
-        ) : (
-           <motion.div className="col-span-1 row-span-2" variants={itemVariants}>
-             <div className="glass-card p-5 rounded-lg shadow-md h-full flex items-center justify-center">
-               <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-                <span className="ml-2 text-muted-foreground">Loading Times...</span>
-             </div>
-           </motion.div>
-        )}
 
-        {/* Islamic Calendar Section */}
+          {/* Secondary Information Tabs */}
+          <motion.div 
+            className="md:col-span-2"
+            variants={itemVariants}
+          >
+            <div className="glass-card p-4 rounded-lg shadow-md border border-blue-200/20">
+              <TabInterface tabs={secondaryTabs} />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Prayer Tracking Section */}
         <motion.div 
-          className="col-span-1"
+          className="mt-4"
           variants={itemVariants}
         >
-          <IslamicCalendarSection
-            itemVariants={itemVariants}
-            isLoading={isIslamicDateLoading}
-          />
-        </motion.div>
-
-        {/* Prohibited Prayer Times Section */}
-        <motion.div 
-          className="col-span-1"
-          variants={itemVariants}
-        >
-          <ProhibitedTimesSection
-            prohibitedTimes={prohibitedTimes}
-            itemVariants={itemVariants}
-          />
-        </motion.div>
-
-        {/* Prayer Tracking Section - Placeholder */}
-        <motion.div 
-          className="col-span-1 md:col-span-3"
-          variants={itemVariants}
-        >
-          <div className="glass-card p-5 rounded-lg shadow-md border border-blue-200/20">
-            <h2 className="text-lg font-semibold mb-4 text-slate-800 dark:text-white flex items-center">
-              <Download className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2" />
-              Prayer Tracking
-            </h2>
+          <Accordion 
+            title="Prayer Tracking" 
+            icon={<Download size={18} className="text-blue-500" />}
+            defaultOpen={false}
+          >
             <div className="flex items-center justify-center h-[180px] text-gray-500 dark:text-gray-400 text-center">
               Coming soon - Track your prayer activities
             </div>
-          </div>
+          </Accordion>
         </motion.div>
       </motion.div>
 
