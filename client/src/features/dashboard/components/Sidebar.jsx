@@ -20,6 +20,7 @@ import {
   Trash2,
   HelpCircle, // Added Help icon
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { ScrollArea } from "../../../components/ui/scroll-area"; // Corrected path
 import { Button } from "../../../components/ui/button"; // Corrected path
@@ -47,6 +48,7 @@ const SidebarLink = React.memo(
     onDeleteClick,
     count,
     canDelete = false,
+    className,
   }) => (
     <motion.div
       whileHover={{ x: 3 }}
@@ -77,15 +79,16 @@ const SidebarLink = React.memo(
             >
               <Icon
                 size={16}
-                className={
+                className={cn(
                   active
                     ? "text-primary"
-                    : "text-muted-foreground group-hover/link:text-foreground"
-                }
+                    : "text-muted-foreground group-hover/link:text-foreground",
+                  className
+                )}
               />
             </div>
           )}
-          <span>{label}</span>
+          <span className={className}>{label}</span>
         </div>
         <div className="flex items-center flex-shrink-0 pl-1">
           {onAddClick && (
@@ -237,6 +240,14 @@ const Sidebar = ({
               label="Today"
               active={selectedProject === "today"}
               onClick={() => handleProjectSelect("today")}
+            />
+            <SidebarLink
+              to="/dashboard/overdue"
+              icon={AlertCircle}
+              label="Overdue"
+              active={selectedProject === "overdue"}
+              onClick={() => handleProjectSelect("overdue")}
+              className="text-red-500"
             />
             <SidebarLink
               to="/dashboard/upcoming"

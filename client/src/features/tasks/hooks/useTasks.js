@@ -18,7 +18,7 @@ import {
   deleteSubtask as apiDeleteSubtask,
 } from "../services/taskService";
 import { useDebounce } from "../../../hooks/useDebounce"; // Assuming useDebounce hook exists
-import { isToday, isUpcoming } from "../utils/taskUtils"; // Import utils
+import { isToday, isUpcoming, isOverdue } from "../utils/taskUtils"; // Import isOverdue
 import { toast } from "sonner";
 
 const SORT_OPTIONS = [
@@ -97,6 +97,11 @@ export const useTasks = (initialProject, allProjects = []) => {
       result = result.filter((task) => isToday(task.dueDate));
     } else if (projectContext === "upcoming") {
       result = result.filter((task) => isUpcoming(task.dueDate));
+    } else if (projectContext === "overdue") {
+      // Filter for incomplete tasks with a due date in the past
+      result = result.filter(
+        (task) => task.status !== "completed" && isOverdue(task.dueDate)
+      );
     } else if (projectContext === "completed") {
       result = result.filter((task) => task.status === "completed");
     } else if (
@@ -234,9 +239,10 @@ export const useTasks = (initialProject, allProjects = []) => {
         // Or if we're in Inbox and the task is for Inbox
         (projectContext === "Inbox" &&
           (!taskData.project || taskData.project === "Inbox")) ||
-        // Or if we're in Today/Upcoming view and the task has a due date
+        // Or if we're in Today/Upcoming/Overdue view and the task has a matching due date
         (projectContext === "today" && isToday(taskData.dueDate)) ||
         (projectContext === "upcoming" && isUpcoming(taskData.dueDate)) ||
+        (projectContext === "overdue" && isOverdue(taskData.dueDate)) ||
         // Or if we're in All Tasks view
         projectContext === "all";
 

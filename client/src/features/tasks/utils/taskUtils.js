@@ -31,3 +31,18 @@ export const isUpcoming = (dateStr) => {
     return false;
   }
 };
+
+export const isOverdue = (dateStr) => {
+  if (!dateStr) return false;
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set today to the beginning of the day
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0); // Set task due date to the beginning of the day
+
+    return d < today;
+  } catch (error) {
+    console.error("Error parsing date for isOverdue check:", dateStr, error);
+    return false;
+  }
+};

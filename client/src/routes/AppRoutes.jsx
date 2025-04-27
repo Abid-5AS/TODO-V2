@@ -2,11 +2,7 @@
 // Defines the main application routes using React Router.
 
 import React from "react";
-import {
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../features/auth/contexts/AuthContext";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import PublicRoute from "../features/auth/components/PublicRoute"; // We'll create this
@@ -32,19 +28,19 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Public Routes */} 
+      {/* Public Routes */}
       <Route element={<PublicRoute />}>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <>
-              <Navbar /> 
+              <Navbar />
               <Navigate to="/login" replace />
             </>
           }
         />
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <>
               <Navbar />
@@ -52,8 +48,8 @@ function AppRoutes() {
             </>
           }
         />
-        <Route 
-          path="/signup" 
+        <Route
+          path="/signup"
           element={
             <>
               <Navbar />
@@ -63,12 +59,13 @@ function AppRoutes() {
         />
       </Route>
 
-      {/* Protected Routes within DashboardLayout */} 
+      {/* Protected Routes within DashboardLayout */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/dashboard/today" replace />} />
           <Route path="today" element={<DashboardPage />} />
           <Route path="upcoming" element={<DashboardPage />} />
+          <Route path="overdue" element={<DashboardPage />} />
           <Route path="completed" element={<DashboardPage />} />
           <Route path="all" element={<DashboardPage />} />
           <Route path="project/:projectId" element={<DashboardPage />} />

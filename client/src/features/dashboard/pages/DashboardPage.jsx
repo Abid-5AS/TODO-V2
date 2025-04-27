@@ -47,6 +47,7 @@ const DashboardPage = () => {
       completed: "Completed",
       all: "All Tasks",
       inbox: "Inbox",
+      overdue: "Overdue",
     };
     if (specialRoutes[projectKey]) {
       return specialRoutes[projectKey];
@@ -78,7 +79,9 @@ const DashboardPage = () => {
       isProjectRoute &&
       allProjects.length > 0 &&
       !allProjects.includes(projectKey) &&
-      !["today", "upcoming", "completed", "all", "inbox"].includes(projectKey) // Exclude special views
+      !["today", "upcoming", "completed", "all", "inbox", "overdue"].includes(
+        projectKey
+      ) // Exclude special views
     ) {
       console.warn(
         `[DashboardPage Effect] Project "${projectKey}" not found in loaded projects (${allProjects.join(

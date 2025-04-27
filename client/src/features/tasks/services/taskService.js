@@ -1,29 +1,36 @@
 // src/features/tasks/services/taskService.js
 // Contains functions for task and subtask related API calls.
 
-import axiosInstance from '../../../api/axiosInstance';
+import axiosInstance from "../../../api/axiosInstance";
 
-// --- Task API Calls --- 
+// --- Task API Calls ---
 
 export const fetchTasks = async (params = {}) => {
   try {
     // Adapt the endpoint based on the 'project' parameter
-    let url = '/api/tasks';
+    let url = "/api/tasks";
     const queryParams = new URLSearchParams();
 
     if (params.project) {
-      const specialViews = ['today', 'upcoming', 'completed', 'all', 'inbox'];
+      const specialViews = [
+        "today",
+        "upcoming",
+        "completed",
+        "all",
+        "inbox",
+        "overdue",
+      ];
       if (specialViews.includes(params.project)) {
-         // If it's a special view, pass it as a query parameter
-         queryParams.append('view', params.project);
+        // If it's a special view, pass it as a query parameter
+        queryParams.append("view", params.project);
       } else {
-          // Otherwise, assume it's a specific project name/ID
-          queryParams.append('project', params.project);
+        // Otherwise, assume it's a specific project name/ID
+        queryParams.append("project", params.project);
       }
     } else {
-        // Default to 'today' if no project specified?
-        // queryParams.append('view', 'today');
-        // Or fetch all if no project is specified? Backend needs to handle this.
+      // Default to 'today' if no project specified?
+      // queryParams.append('view', 'today');
+      // Or fetch all if no project is specified? Backend needs to handle this.
     }
 
     // Add other potential query params like search, sort, filter if handled backend-side
@@ -40,18 +47,30 @@ export const fetchTasks = async (params = {}) => {
     const response = await axiosInstance.get(url);
     return response.data; // Expecting { success: boolean, data: Task[], message?: string }
   } catch (error) {
-    console.error("Fetch Tasks API error:", error.response?.data || error.message);
+    console.error(
+      "Fetch Tasks API error:",
+      error.response?.data || error.message
+    );
     // Return a standard error format
-    return { success: false, error: error.response?.data?.message || error.message || 'Failed to fetch tasks.' };
+    return {
+      success: false,
+      error:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch tasks.",
+    };
   }
 };
 
 export const createTask = async (taskData) => {
   try {
-    const response = await axiosInstance.post('/api/tasks', taskData);
+    const response = await axiosInstance.post("/api/tasks", taskData);
     return response.data; // Expecting { success: boolean, data: Task, message?: string }
   } catch (error) {
-    console.error("Create Task API error:", error.response?.data || error.message);
+    console.error(
+      "Create Task API error:",
+      error.response?.data || error.message
+    );
     throw error; // Re-throw for the form to catch
   }
 };
@@ -61,8 +80,17 @@ export const updateTask = async (taskId, updates) => {
     const response = await axiosInstance.put(`/api/tasks/${taskId}`, updates);
     return response.data; // Expecting { success: boolean, data?: Task, message?: string }
   } catch (error) {
-    console.error(`Update Task (${taskId}) API error:`, error.response?.data || error.message);
-     return { success: false, message: error.response?.data?.message || error.message || 'Failed to update task.' };
+    console.error(
+      `Update Task (${taskId}) API error:`,
+      error.response?.data || error.message
+    );
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update task.",
+    };
   }
 };
 
@@ -71,41 +99,85 @@ export const deleteTask = async (taskId) => {
     const response = await axiosInstance.delete(`/api/tasks/${taskId}`);
     return response.data; // Expecting { success: boolean, message?: string }
   } catch (error) {
-    console.error(`Delete Task (${taskId}) API error:`, error.response?.data || error.message);
-    return { success: false, message: error.response?.data?.message || error.message || 'Failed to delete task.' };
+    console.error(
+      `Delete Task (${taskId}) API error:`,
+      error.response?.data || error.message
+    );
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete task.",
+    };
   }
 };
 
-// --- Subtask API Calls --- 
+// --- Subtask API Calls ---
 
 export const addSubtask = async (taskId, subtaskData) => {
   try {
-    const response = await axiosInstance.post(`/api/tasks/${taskId}/subtasks`, subtaskData);
+    const response = await axiosInstance.post(
+      `/api/tasks/${taskId}/subtasks`,
+      subtaskData
+    );
     return response.data; // Expecting { success: boolean, data: Subtask, message?: string }
   } catch (error) {
-    console.error(`Add Subtask to (${taskId}) API error:`, error.response?.data || error.message);
-    return { success: false, message: error.response?.data?.message || error.message || 'Failed to add subtask.' };
+    console.error(
+      `Add Subtask to (${taskId}) API error:`,
+      error.response?.data || error.message
+    );
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to add subtask.",
+    };
   }
 };
 
 export const updateSubtask = async (taskId, subtaskId, updates) => {
   // Use the parent task's endpoint for updating subtasks
   try {
-    const response = await axiosInstance.put(`/api/tasks/${taskId}/subtasks/${subtaskId}`, updates);
+    const response = await axiosInstance.put(
+      `/api/tasks/${taskId}/subtasks/${subtaskId}`,
+      updates
+    );
     return response.data; // Expecting { success: boolean, data?: Subtask, message?: string }
   } catch (error) {
-    console.error(`Update Subtask (${subtaskId}) API error:`, error.response?.data || error.message);
-    return { success: false, message: error.response?.data?.message || error.message || 'Failed to update subtask.' };
+    console.error(
+      `Update Subtask (${subtaskId}) API error:`,
+      error.response?.data || error.message
+    );
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update subtask.",
+    };
   }
 };
 
 export const deleteSubtask = async (taskId, subtaskId) => {
   // Use the parent task's endpoint for deleting subtasks
   try {
-    const response = await axiosInstance.delete(`/api/tasks/${taskId}/subtasks/${subtaskId}`);
+    const response = await axiosInstance.delete(
+      `/api/tasks/${taskId}/subtasks/${subtaskId}`
+    );
     return response.data; // Expecting { success: boolean, message?: string }
   } catch (error) {
-    console.error(`Delete Subtask (${subtaskId}) API error:`, error.response?.data || error.message);
-    return { success: false, message: error.response?.data?.message || error.message || 'Failed to delete subtask.' };
+    console.error(
+      `Delete Subtask (${subtaskId}) API error:`,
+      error.response?.data || error.message
+    );
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete subtask.",
+    };
   }
 };
