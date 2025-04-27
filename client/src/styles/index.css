@@ -553,3 +553,9 @@ body.dark.bg-theme-gradient-vibrant,
   position: relative;
   background-color: transparent;
 }
+
+/* Add Arabic font class */
+.font-arabic {
+  font-family: "Amiri", "Scheherazade New", serif;
+  direction: rtl;
+}

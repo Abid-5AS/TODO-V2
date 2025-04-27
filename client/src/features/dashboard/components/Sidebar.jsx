@@ -1,7 +1,7 @@
 // src/features/dashboard/components/Sidebar.jsx
 // Renders the sidebar navigation for projects, views, settings, etc.
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Calendar,
@@ -21,6 +21,7 @@ import {
   HelpCircle, // Added Help icon
   Loader2,
   AlertCircle,
+  Moon,
 } from "lucide-react";
 import { ScrollArea } from "../../../components/ui/scroll-area"; // Corrected path
 import { Button } from "../../../components/ui/button"; // Corrected path
@@ -234,6 +235,68 @@ const Sidebar = ({
 
           {/* Standard Views Section */}
           <div className="space-y-0.5">
+            {/* Enhanced Islamic Home link with special green styling */}
+            <motion.div
+              whileHover={{
+                x: 5,
+                transition: { type: "spring", stiffness: 400, damping: 10 },
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="relative group/item mb-3"
+              initial={{ scale: 0.97 }}
+              animate={{
+                scale: [0.97, 1.02, 1],
+                transition: {
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                },
+              }}
+            >
+              <Link
+                to="/dashboard/islamic"
+                className={cn(
+                  "flex items-center justify-between py-2 px-3 rounded-lg text-sm group/link transition-all duration-200 relative overflow-hidden",
+                  location.pathname === "/dashboard/islamic"
+                    ? "text-white font-medium shadow-lg shadow-green-500/20 bg-gradient-to-r from-green-500 to-emerald-600"
+                    : "text-emerald-600 hover:text-emerald-700 bg-gradient-to-r from-green-100/60 to-emerald-50/60 dark:from-green-900/20 dark:to-emerald-800/20 dark:text-emerald-400 hover:bg-green-100/80 dark:hover:bg-green-900/30 border border-green-200/50 dark:border-green-800/30"
+                )}
+                onClick={() => handleNavigation("/dashboard/islamic")}
+              >
+                <div className="flex items-center gap-2 z-10">
+                  <div
+                    className={cn(
+                      "icon-animated",
+                      location.pathname === "/dashboard/islamic"
+                        ? "animate-pulse"
+                        : "group-hover/link:animate-pulse"
+                    )}
+                  >
+                    <Moon
+                      size={18}
+                      className={
+                        location.pathname === "/dashboard/islamic"
+                          ? "text-white"
+                          : "text-emerald-600 dark:text-emerald-400"
+                      }
+                    />
+                  </div>
+                  <span className="font-medium">Islamic Home</span>
+                </div>
+                {/* Animated particles for active state */}
+                {location.pathname === "/dashboard/islamic" && (
+                  <>
+                    <div className="absolute -top-1 -right-1 w-12 h-12 bg-white/20 rounded-full blur-xl animate-pulse-slow"></div>
+                    <div className="absolute -bottom-2 -left-1 w-10 h-10 bg-white/10 rounded-full blur-lg animate-pulse-slow"></div>
+                  </>
+                )}
+                {/* Sparkle effect on hover for inactive state */}
+                {location.pathname !== "/dashboard/islamic" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-200/0 via-green-200/30 to-green-200/0 -translate-x-full group-hover/link:translate-x-full transition-transform duration-1000"></div>
+                )}
+              </Link>
+            </motion.div>
+
             <SidebarLink
               to="/dashboard/today"
               icon={CheckCircle}

@@ -13,6 +13,7 @@ import DashboardLayout from "../features/dashboard/components/DashboardLayout";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import SettingsPage from "../features/settings/pages/SettingsPage";
 import StatsPage from "../features/stats/pages/StatsPage";
+import IslamicHomePage from "../features/dashboard/pages/IslamicHomePage";
 import Navbar from "../features/dashboard/components/Navbar"; // Public Navbar
 
 // Placeholder for Help page (could be moved to a 'help' feature later)
@@ -62,7 +63,8 @@ function AppRoutes() {
       {/* Protected Routes within DashboardLayout */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="/dashboard/today" replace />} />
+          <Route index element={<Navigate to="/dashboard/islamic" replace />} />
+          <Route path="islamic" element={<IslamicHomePage />} />
           <Route path="today" element={<DashboardPage />} />
           <Route path="upcoming" element={<DashboardPage />} />
           <Route path="overdue" element={<DashboardPage />} />
