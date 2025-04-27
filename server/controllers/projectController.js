@@ -7,7 +7,10 @@ const asyncHandler = require("../utils/asyncHandler");
 // @route   GET /api/projects
 // @access  Public
 exports.getProjects = asyncHandler(async (req, res) => {
-  const projects = await Project.find().sort({ position: 1, name: 1 });
+  const projects = await Project.find({ user: req.user._id }).sort({
+    position: 1,
+    name: 1,
+  });
   res.json({ success: true, data: projects });
 });
 
@@ -21,14 +24,19 @@ exports.createProject = asyncHandler(async (req, res) => {
     throw new AppError("Project name is required", 400);
   }
 
-  // Check if project with this name already exists
-  const existingProject = await Project.findOne({ name: name.trim() });
+  // Check if project with this name already exists for this user
+  const existingProject = await Project.findOne({
+    name: name.trim(),
+    user: req.user._id,
+  });
   if (existingProject) {
     throw new AppError("A project with this name already exists", 400);
   }
 
-  // Get the highest position to add new project at the end
-  const highestPosition = await Project.findOne().sort("-position");
+  // Get the highest position for this user
+  const highestPosition = await Project.findOne({ user: req.user._id }).sort(
+    "-position"
+  );
   const position = highestPosition ? highestPosition.position + 1 : 0;
 
   const project = await Project.create({
@@ -37,6 +45,7 @@ exports.createProject = asyncHandler(async (req, res) => {
     color: color || "",
     position,
     isDefault: false,
+    user: req.user._id,
   });
 
   res.status(201).json({
