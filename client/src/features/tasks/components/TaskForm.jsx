@@ -61,7 +61,8 @@ const TaskForm = ({
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState("");
   const [loading, setLoading] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSubtasksLoading, setAiSubtasksLoading] = useState(false);
+  const [aiDescriptionLoading, setAiDescriptionLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [aiDescription, setAiDescription] = useState("");
   const [error, setError] = useState(null);
@@ -188,7 +189,7 @@ const TaskForm = ({
   // AI suggestions
   const handleAISuggest = async () => {
     if (!form.title.trim()) return;
-    setAiLoading(true);
+    setAiSubtasksLoading(true);
     setAiSuggestions([]);
     try {
       const data = await getAISubtaskSuggestions(form.title);
@@ -204,13 +205,13 @@ const TaskForm = ({
        toast({ title: "AI Suggestion Failed", description: err.message, variant: "destructive" });
        setAiSuggestions([]);
     } finally {
-      setAiLoading(false);
+      setAiSubtasksLoading(false);
     }
   };
   
   const handleAIDescription = async () => {
     if (!form.title.trim()) return;
-    setAiLoading(true);
+    setAiDescriptionLoading(true);
     setAiDescription("");
     try {
       const data = await getAIDescriptionSuggestion(form.title);
@@ -221,7 +222,7 @@ const TaskForm = ({
        toast({ title: "AI Description Failed", description: err.message, variant: "destructive" });
        setAiDescription("");
     } finally {
-      setAiLoading(false);
+      setAiDescriptionLoading(false);
     }
   };
   
@@ -261,23 +262,23 @@ const TaskForm = ({
           <Button
             type="button"
             onClick={handleAIDescription}
-            disabled={aiLoading || !form.title.trim()}
+            disabled={aiDescriptionLoading || aiSubtasksLoading || !form.title.trim()}
             size="sm"
             variant="outline"
             className="bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-300 hover:bg-green-500/20"
           >
-            {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <Sparkles className="mr-1 h-4 w-4" />}
+            {aiDescriptionLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <Sparkles className="mr-1 h-4 w-4" />}
             AI Description
           </Button>
           <Button
             type="button"
             onClick={handleAISuggest}
-            disabled={aiLoading || !form.title.trim()}
+            disabled={aiSubtasksLoading || aiDescriptionLoading || !form.title.trim()}
             size="sm"
             variant="outline"
             className="bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20"
           >
-             {aiLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <Brain className="mr-1 h-4 w-4" />}
+             {aiSubtasksLoading ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <Brain className="mr-1 h-4 w-4" />}
             AI Subtasks
           </Button>
         </div>
