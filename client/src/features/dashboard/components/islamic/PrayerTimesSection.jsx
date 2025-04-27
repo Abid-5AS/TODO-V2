@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock, Loader2, SunIcon, SunriseIcon, SunsetIcon, MoonIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 // Helper function to format remaining time string "HH:MM:SS" into human-readable format
@@ -50,13 +50,14 @@ const PrayerTimesSection = ({
   if (!prayerTimes && loading) {
     return (
       <motion.div
-        className="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-lg flex flex-col"
+        className="glass-card p-5 rounded-lg shadow-md border border-blue-200/20 flex flex-col"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        variants={itemVariants}
       >
         <div className="flex items-center justify-center h-60">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-500 dark:text-teal-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 dark:text-blue-400" />
           <span className="ml-2 text-slate-600 dark:text-slate-300">
             Loading prayer times...
           </span>
@@ -71,7 +72,7 @@ const PrayerTimesSection = ({
       id: "fajr",
       name: "Fajr",
       description: "Dawn Prayer",
-      icon: "☀️",
+      icon: <SunriseIcon size={18} className="text-blue-600/90 dark:text-blue-400" />,
       startTime: prayerTimes?.Fajr || "--:--",
       endTime: prayerTimes?.Sunrise || "--:--",
     },
@@ -79,7 +80,7 @@ const PrayerTimesSection = ({
       id: "dhuhr",
       name: "Dhuhr",
       description: "Noon Prayer",
-      icon: "☀️",
+      icon: <SunIcon size={18} className="text-amber-500 dark:text-amber-400" />,
       startTime: prayerTimes?.Dhuhr || "--:--",
       endTime: prayerTimes?.Asr || "--:--",
     },
@@ -87,7 +88,7 @@ const PrayerTimesSection = ({
       id: "asr",
       name: "Asr",
       description: "Afternoon Prayer",
-      icon: "🌤️",
+      icon: <SunIcon size={18} className="text-orange-500 dark:text-orange-400" />,
       startTime: prayerTimes?.Asr || "--:--",
       endTime: prayerTimes?.Maghrib || "--:--",
     },
@@ -95,7 +96,7 @@ const PrayerTimesSection = ({
       id: "maghrib",
       name: "Maghrib",
       description: "Sunset Prayer",
-      icon: "🌅",
+      icon: <SunsetIcon size={18} className="text-purple-600 dark:text-purple-400" />,
       startTime: prayerTimes?.Maghrib || "--:--",
       endTime: prayerTimes?.Isha || "--:--",
     },
@@ -103,7 +104,7 @@ const PrayerTimesSection = ({
       id: "isha",
       name: "Isha",
       description: "Night Prayer",
-      icon: "🌙",
+      icon: <MoonIcon size={18} className="text-indigo-600 dark:text-indigo-400" />,
       startTime: prayerTimes?.Isha || "--:--",
       // Isha ends at midnight for calculation purposes
       endTime: prayerTimes?.Midnight || "--:--",
@@ -117,13 +118,11 @@ const PrayerTimesSection = ({
 
   return (
     <motion.div
-      className="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-lg flex flex-col"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      className="glass-card p-5 rounded-lg shadow-md border border-blue-200/20 flex flex-col h-full"
+      variants={itemVariants}
     >
       <div className="flex items-center mb-4">
-        <Clock className="h-5 w-5 text-teal-500 dark:text-teal-400 mr-2" />
+        <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
         <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
           Fard Prayer Times
         </h2>
@@ -137,16 +136,18 @@ const PrayerTimesSection = ({
           return (
             <motion.div
               key={prayer.id}
-              className={`flex items-center justify-between p-3 rounded-md ${
+              className={`flex items-center justify-between p-3 rounded-md backdrop-blur-sm ${
                 isActive
-                  ? "bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800"
-                  : "bg-slate-50 dark:bg-slate-700/30"
+                  ? "bg-blue-50/70 dark:bg-blue-900/30 border border-blue-200/50 dark:border-blue-800/50"
+                  : "bg-white/40 dark:bg-slate-800/30 border border-blue-100/20 dark:border-blue-900/20"
               }`}
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             >
               <div className="flex items-center">
-                <span className="text-xl mr-3">{prayer.icon}</span>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-100/50 dark:bg-blue-900/20 mr-3">
+                  {prayer.icon}
+                </div>
                 <div>
                   <h3 className="font-medium text-slate-800 dark:text-white">
                     {prayer.name}
@@ -172,7 +173,7 @@ const PrayerTimesSection = ({
 
                 {isActive && remainingTime && (
                   <motion.div
-                    className="text-xs font-medium text-teal-600 dark:text-teal-400 mt-1"
+                    className="text-xs font-medium text-blue-600 dark:text-blue-400 mt-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
@@ -186,7 +187,7 @@ const PrayerTimesSection = ({
         })}
       </div>
 
-      <div className="mt-4 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-md">
+      <div className="mt-4 text-xs text-slate-600 dark:text-slate-300 bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100/30 dark:border-blue-800/30">
         <p className="font-medium mb-1">Note:</p>
         <p>
           Times shown are for obligatory (Fard) prayers. Voluntary prayers can
