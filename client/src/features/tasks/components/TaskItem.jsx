@@ -202,25 +202,33 @@ const TaskItem = ({
         layout
         layoutId={`task-${task._id}`}
         className={cn(
-          "w-full mb-4 rounded-xl overflow-visible transition-shadow duration-300",
-          "shadow-md hover:shadow-xl",
+          "w-full mb-4 rounded-xl overflow-visible transition-shadow duration-200",
+          "shadow-md hover:shadow-lg",
           "bg-gradient-to-br from-white/90 to-blue-50/80 dark:from-zinc-900/80 dark:to-zinc-800/70",
           "border border-zinc-200/60 dark:border-zinc-700/60",
           "px-2 py-2 sm:px-4 sm:py-3",
           className
         )}
-        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        initial={{ opacity: 0, y: 5, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -10, scale: 0.97 }}
+        exit={{ opacity: 0, y: -5, scale: 0.99 }}
         whileHover={{
-          scale: 1.015,
-          boxShadow: "0 6px 32px 0 rgba(80,80,180,0.10)",
+          scale: 1.005, // Even smaller scale for faster effect
+          boxShadow: "0 4px 15px 0 rgba(80,80,180,0.06)",
         }}
         transition={{
-          duration: 0.3,
-          layout: { duration: 0.5, ease: "easeOut" },
+          duration: 0.15, // Faster animation
+          layout: {
+            duration: 0.15, // Faster layout transition
+            ease: "easeOut",
+            type: "tween",
+          },
         }}
-        style={{ transformOrigin: "center" }}
+        style={{
+          willChange: "transform, opacity",
+          transformOrigin: "center",
+          position: "relative", // Ensure position context for child elements
+        }}
       >
         <Accordion
           type="single"
@@ -271,7 +279,7 @@ const TaskItem = ({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     whileHover={{ scale: 1.005 }} // Subtle hover on display only
-                    className="task-display-container w-full"
+                    className="task-display-container w-full overflow-visible"
                     layout="preserve-aspect" // Better layout animation that preserves aspect ratio
                   >
                     <TaskDisplay
@@ -279,8 +287,9 @@ const TaskItem = ({
                       onToggleComplete={handleToggleComplete}
                       onEdit={handleEdit}
                       onDelete={handleDeleteClick}
-                      isAccordionOpen={accordionOpen} // Pass state to maybe change chevron
+                      isAccordionOpen={accordionOpen}
                       hasSubtasks={hasSubtasks}
+                      className="w-full overflow-visible" // Add width and overflow classes
                     />
                   </motion.div>
                 )}

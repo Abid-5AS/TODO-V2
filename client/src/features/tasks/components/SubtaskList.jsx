@@ -9,13 +9,13 @@ import { Trash2, CircleDashed, Check, Plus, Edit3, X } from "lucide-react"; // A
 import { useToast } from "../../../hooks/use-toast"; // Corrected path
 import { motion, AnimatePresence } from "framer-motion";
 
-const SubtaskList = ({ 
+const SubtaskList = ({
   taskId, // Parent task ID (though not strictly needed if using passed functions)
-  subtasks = [], 
-  onAddSubtask, 
-  onToggleSubtask, 
-  onUpdateSubtask, 
-  onDeleteSubtask 
+  subtasks = [],
+  onAddSubtask,
+  onToggleSubtask,
+  onUpdateSubtask,
+  onDeleteSubtask,
 }) => {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [editingSubtaskId, setEditingSubtaskId] = useState(null);
@@ -29,12 +29,19 @@ const SubtaskList = ({
     setIsAdding(true);
     try {
       // The passed function (onAddSubtask) should handle the API call and parent state update
-      await onAddSubtask(taskId, { title: newSubtaskTitle.trim(), status: "pending" });
+      await onAddSubtask(taskId, {
+        title: newSubtaskTitle.trim(),
+        status: "pending",
+      });
       setNewSubtaskTitle("");
       toast({ title: "Subtask added" });
     } catch (error) {
       console.error("Add subtask failed:", error);
-      toast({ title: "Error adding subtask", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error adding subtask",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsAdding(false);
     }
@@ -45,10 +52,19 @@ const SubtaskList = ({
     setIsUpdating(subtaskId);
     try {
       await onToggleSubtask(taskId, subtaskId, { status: newStatus });
-      toast({ title: newStatus === "completed" ? "Subtask completed" : "Subtask marked pending" });
+      toast({
+        title:
+          newStatus === "completed"
+            ? "Subtask completed"
+            : "Subtask marked pending",
+      });
     } catch (error) {
       console.error("Toggle subtask failed:", error);
-      toast({ title: "Error updating subtask", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error updating subtask",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsUpdating(null);
     }
@@ -67,20 +83,29 @@ const SubtaskList = ({
   const handleUpdateTitle = async (subtaskId) => {
     if (!editingSubtaskTitle.trim() || !editingSubtaskId) return;
     // Check if title actually changed
-    const originalSubtask = subtasks.find(st => st._id === subtaskId);
-    if (originalSubtask && originalSubtask.title === editingSubtaskTitle.trim()) {
-        cancelEditing(); // No change, just cancel edit mode
-        return;
+    const originalSubtask = subtasks.find((st) => st._id === subtaskId);
+    if (
+      originalSubtask &&
+      originalSubtask.title === editingSubtaskTitle.trim()
+    ) {
+      cancelEditing(); // No change, just cancel edit mode
+      return;
     }
 
     setIsUpdating(subtaskId);
     try {
-      await onUpdateSubtask(taskId, subtaskId, { title: editingSubtaskTitle.trim() });
+      await onUpdateSubtask(taskId, subtaskId, {
+        title: editingSubtaskTitle.trim(),
+      });
       cancelEditing();
       toast({ title: "Subtask updated" });
     } catch (error) {
       console.error("Update subtask title failed:", error);
-      toast({ title: "Error updating subtask", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error updating subtask",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsUpdating(null);
     }
@@ -94,32 +119,37 @@ const SubtaskList = ({
       toast({ title: "Subtask deleted" });
     } catch (error) {
       console.error("Delete subtask failed:", error);
-      toast({ title: "Error deleting subtask", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error deleting subtask",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       // Parent state update will remove the item, no need to setIsUpdating(null)
       // unless the delete fails, in which case it's handled in the catch.
       // If delete succeeds, the component might unmount or rerender without this ID.
-       setIsUpdating(null); // Reset on error
+      setIsUpdating(null); // Reset on error
     }
   };
 
   // Animation for list items
   const subtaskItemVariants = {
-    hidden: { opacity: 0, y: -10, scale: 0.98 },
+    hidden: { opacity: 0, height: 0 },
     visible: {
-      opacity: 1, y: 0, scale: 1,
-      transition: { type: "spring", stiffness: 500, damping: 30 }
+      opacity: 1,
+      height: "auto",
+      transition: { duration: 0.15, ease: "easeOut" },
     },
-    exit: { opacity: 0, x: -20, transition: { duration: 0.2 } }
+    exit: { opacity: 0, height: 0, transition: { duration: 0.1 } },
   };
 
   return (
     <div className="space-y-2 mt-1">
-      <AnimatePresence initial={false}> {/* initial=false prevents initial animation on load */} 
+      <AnimatePresence initial={false} mode="wait">
         {subtasks.map((st, idx) => (
           <motion.div
             key={st._id || `subtask-${idx}`}
-            layout // Enable layout animation
+            layout={false} // Disable layout animation
             variants={subtaskItemVariants}
             initial="hidden"
             animate="visible"
@@ -133,7 +163,11 @@ const SubtaskList = ({
               className="h-6 w-6 rounded-full flex-shrink-0 hover:bg-muted/50 dark:hover:bg-zinc-700/40"
               onClick={() => handleToggle(st._id, st.status || "pending")}
               disabled={isUpdating === st._id}
-              aria-label={st.status === "completed" ? "Mark as pending" : "Mark as completed"}
+              aria-label={
+                st.status === "completed"
+                  ? "Mark as pending"
+                  : "Mark as completed"
+              }
             >
               {st.status === "completed" ? (
                 <Check className="h-4 w-4 text-green-500" />
@@ -141,7 +175,7 @@ const SubtaskList = ({
                 <CircleDashed className="h-4 w-4 text-muted-foreground" />
               )}
             </Button>
-            
+
             {editingSubtaskId === st._id ? (
               <Input
                 type="text"
@@ -158,7 +192,11 @@ const SubtaskList = ({
               />
             ) : (
               <span
-                className={`flex-1 text-sm cursor-pointer py-1 px-2 rounded ${st.status === "completed" ? "line-through text-muted-foreground/80" : "text-foreground"}`}
+                className={`flex-1 text-sm cursor-pointer py-1 px-2 rounded ${
+                  st.status === "completed"
+                    ? "line-through text-muted-foreground/80"
+                    : "text-foreground"
+                }`}
                 onClick={() => startEditing(st)}
                 title="Click to edit"
               >
@@ -166,16 +204,38 @@ const SubtaskList = ({
               </span>
             )}
 
-            {/* Edit/Delete Buttons */} 
+            {/* Edit/Delete Buttons */}
             <div className="flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
-             {editingSubtaskId === st._id ? (
-               <>
-                 <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10" onClick={() => handleUpdateTitle(st._id)} disabled={isUpdating === st._id}><Check size={16} /></Button>
-                 <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-muted/50" onClick={cancelEditing}><X size={16} /></Button>
-               </>
-             ) : (
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => startEditing(st)}><Edit3 size={14} /></Button>
-             )}
+              {editingSubtaskId === st._id ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-primary hover:bg-primary/10"
+                    onClick={() => handleUpdateTitle(st._id)}
+                    disabled={isUpdating === st._id}
+                  >
+                    <Check size={16} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:bg-muted/50"
+                    onClick={cancelEditing}
+                  >
+                    <X size={16} />
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-primary"
+                  onClick={() => startEditing(st)}
+                >
+                  <Edit3 size={14} />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -187,12 +247,11 @@ const SubtaskList = ({
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-            
           </motion.div>
         ))}
       </AnimatePresence>
 
-      {/* Add Subtask Input */} 
+      {/* Add Subtask Input */}
       <div className="flex space-x-2 pt-1">
         <Input
           type="text"
@@ -211,7 +270,7 @@ const SubtaskList = ({
           variant="outline"
           className="bg-background/70 hover:bg-muted"
         >
-          <Plus className="h-4 w-4 mr-1"/>
+          <Plus className="h-4 w-4 mr-1" />
           Add
         </Button>
       </div>

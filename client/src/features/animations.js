@@ -6,41 +6,39 @@ export const listContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05, // Stagger animation for each item
-      delayChildren: 0.1, // Delay before starting stagger
+      staggerChildren: 0.01, // Further reduced stagger time
+      delayChildren: 0.01, // Minimal delay
     },
   },
 };
 
 export const taskItemVariants = {
-  hidden: { y: 15, opacity: 0, scale: 0.98 },
+  hidden: { y: 5, opacity: 0, scale: 0.99 },
   visible: {
     y: 0,
     opacity: 1,
     scale: 1,
-    transition: { 
-      type: "spring", 
-      stiffness: 450,
-      damping: 30,
-      // duration: 0.4, 
-      // ease: "easeOut" 
+    transition: {
+      type: "tween",
+      duration: 0.15, // Even faster animation
+      ease: "easeOut",
     },
   },
   exit: {
     opacity: 0,
-    scale: 0.95,
+    scale: 0.99,
     // x: -30, // Optional: slide out effect
-    transition: { duration: 0.2, ease: "easeIn" },
+    transition: { duration: 0.1, ease: "easeIn" },
   },
 };
 
 export const sidebarVariants = {
   open: {
     x: 0,
-    width: '16rem', // Corresponds to w-64
+    width: "16rem", // Corresponds to w-64
     opacity: 1,
     transition: {
-      type: 'spring',
+      type: "spring",
       stiffness: 300,
       damping: 30,
       staggerChildren: 0.07,
@@ -49,10 +47,10 @@ export const sidebarVariants = {
   },
   closed: {
     x: -50,
-    width: '16rem', // Keep width for calculation, hide with x/opacity
+    width: "16rem", // Keep width for calculation, hide with x/opacity
     opacity: 0,
     transition: {
-      type: 'spring',
+      type: "spring",
       stiffness: 400,
       damping: 40,
     },

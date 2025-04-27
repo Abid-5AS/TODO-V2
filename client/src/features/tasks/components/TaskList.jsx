@@ -151,9 +151,9 @@ const TaskList = ({
         {/* Make toolbar sticky */}
         <motion.div
           className="flex flex-col md:flex-row gap-3 md:items-center bg-gradient-to-r from-white/80 to-white/70 dark:from-zinc-900/70 dark:to-zinc-800/60 rounded-xl p-4 shadow-lg backdrop-blur-xl border border-gray-200/50 dark:border-zinc-700/50 transition-all duration-300"
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+          transition={{ duration: 0.2 }}
         >
           <div className="flex-grow relative">
             <Input
@@ -207,7 +207,7 @@ const TaskList = ({
           className="text-center p-8 mt-6 text-muted-foreground bg-gradient-to-r from-white/60 to-white/50 dark:from-zinc-900/60 dark:to-zinc-800/50 backdrop-blur-xl border border-gray-200/50 dark:border-zinc-700/50 rounded-xl shadow-lg mx-auto max-w-md transition-all duration-300"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.2 }}
         >
           <span className="text-zinc-700 dark:text-zinc-300 font-medium">
             No tasks found {search ? `matching "${search}"` : ""}{" "}
@@ -227,14 +227,14 @@ const TaskList = ({
           initial="hidden"
           animate="visible"
         >
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="wait">
             {" "}
-            {/* Use popLayout for smoother transitions */}
+            {/* Changed for better performance */}
             {tasks.map((task) => (
               <motion.li
                 key={task._id}
                 variants={taskItemVariants}
-                layout // Enable layout animation
+                layout={false} // Disable layout animation for performance
                 className="relative z-0" // Base z-index, TaskItem can increase on hover/drag
                 style={{ overflow: "visible" }}
               >
