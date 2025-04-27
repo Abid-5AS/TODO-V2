@@ -73,9 +73,12 @@ const IslamicHomePage = () => {
       setCurrentTime(new Date());
     }, 60000); // Update every minute instead of every second
 
+    // Immediately update time when location changes
+    setCurrentTime(new Date());
+
     // Clear interval on component unmount
     return () => clearInterval(intervalId);
-  }, []); // Empty dependency array: run only once on mount
+  }, [location]); // Add location as a dependency to refresh when location changes
 
   // Handle dashboard refresh
   const handleRefreshDashboard = () => {

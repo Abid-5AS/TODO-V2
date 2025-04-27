@@ -32,6 +32,28 @@ export const usePrayerTimes = (location, settings) => {
     return `${year}-${month}-${day}`;
   };
 
+  // Helper to determine the timezone offset from a location
+  const getTimezoneFromLocation = (location) => {
+    if (!location) return "";
+    
+    // If location has a stored timezone, use it
+    if (location.timezone) return location.timezone;
+    
+    // For certain well-known locations, we can hardcode the timezone
+    if (location.name === 'Singapore' || location.country === 'Singapore') {
+      return "Asia/Singapore";
+    }
+    else if (location.name === 'Dhaka' || location.country === 'Bangladesh') {
+      return "Asia/Dhaka";
+    }
+    
+    // Default timezone information
+    const browserOffset = -new Date().getTimezoneOffset() / 60; // Browser offset in hours
+    const sign = browserOffset >= 0 ? "+" : "-";
+    const hours = Math.abs(Math.floor(browserOffset));
+    return `Etc/GMT${sign}${hours}`;
+  };
+
   // Memoize the fallback prayer times object
   const memoizedFallbackTimes = useMemo(() => {
     return calculateFallbackPrayerTimes(0, 0);
@@ -44,7 +66,7 @@ export const usePrayerTimes = (location, settings) => {
     const lat = location?.lat || 0;
     const lng = location?.lon || location?.lng || 0;
     const todayStr = getTodayDateString();
-    const cacheKey = `prayerTimes_${lat}_${lng}_${todayStr}`;
+    const cacheKey = `prayerTimes_${lat}_${lng}_${todayStr}_${getTimezoneFromLocation(location)}`;
 
     // 1. Try loading from cache first
     const cachedData = getLocalStorageItem(cacheKey);
@@ -271,7 +293,7 @@ export const usePrayerTimes = (location, settings) => {
     const lat = location?.lat || 0;
     const lng = location?.lon || location?.lng || 0;
     const todayStr = getTodayDateString();
-    const cacheKey = `prayerTimes_${lat}_${lng}_${todayStr}`;
+    const cacheKey = `prayerTimes_${lat}_${lng}_${todayStr}_${getTimezoneFromLocation(location)}`;
     localStorage.removeItem(cacheKey); // Remove current cache
     console.log("Cache cleared, refreshing prayer times for", cacheKey);
     loadPrayerTimes(); // Reload (will fetch from API)

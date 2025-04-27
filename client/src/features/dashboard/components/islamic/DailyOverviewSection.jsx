@@ -1,10 +1,16 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, MapPin, Sunrise, Sunset, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 
 // Calculate sun position as percentage of the day
 const calculateSunPosition = (currentTime, prayerTimes) => {
   if (!prayerTimes) return 50; // Default to middle if no prayer times
+  
+  // Ensure currentTime is a Date object
+  if (!(currentTime instanceof Date)) {
+    console.warn("currentTime is not a Date object, creating a new Date");
+    currentTime = new Date();
+  }
 
   // Convert all times to minutes for easy calculation
   const timeToMinutes = (timeStr) => {
@@ -54,6 +60,98 @@ const calculateSunPosition = (currentTime, prayerTimes) => {
   }
 };
 
+// Helper to determine the timezone offset from a location (e.g. Singapore is GMT+8)
+const getTimezoneOffsetFromLocation = (location) => {
+  // Default timezone offset (in hours)
+  let timezoneOffset = 0;
+  
+  // Extract timezone from location if available
+  if (location) {
+    // Try to extract from timezone if stored
+    if (location.timezone) {
+      const match = location.timezone.match(/GMT([+-])(\d+)/);
+      if (match) {
+        timezoneOffset = parseInt(match[2]) * (match[1] === '+' ? 1 : -1);
+      }
+    }
+    // For certain well-known locations, we can hardcode the offset
+    else if (location.country) {
+      if (location.name === 'Singapore' || location.country === 'Singapore') {
+        timezoneOffset = 8; // Singapore is GMT+8
+      }
+      else if (location.name === 'Dhaka' || location.country === 'Bangladesh') {
+        timezoneOffset = 6; // Bangladesh is GMT+6
+      }
+    }
+  }
+  return timezoneOffset;
+};
+
+// Helper function to get timezone from location
+const getTimezoneFromLocation = (location) => {
+  if (!location) return "UTC";
+  
+  // If location has a stored timezone, use it
+  if (location.timezone) return location.timezone;
+  
+  // For certain well-known locations, we can hardcode the timezone
+  if (location.name === 'Singapore' || location.country === 'Singapore') {
+    return "Asia/Singapore";
+  }
+  else if (location.name === 'Dhaka' || location.country === 'Bangladesh') {
+    return "Asia/Dhaka";
+  }
+  
+  // Default timezone information based on browser
+  const browserOffset = -new Date().getTimezoneOffset() / 60; // Browser offset in hours
+  const sign = browserOffset >= 0 ? "+" : "-";
+  const hours = Math.abs(Math.floor(browserOffset));
+  return `Etc/GMT${sign}${hours}`;
+};
+
+// Helper function to get time adjusted for location
+const getLocationTime = (date, location) => {
+  if (!location) return date;
+  
+  try {
+    const timezone = getTimezoneFromLocation(location);
+    
+    // Return the date object in the correct timezone for internal calculations
+    // This preserves the Date object type needed for calculations
+    return date;
+  } catch (error) {
+    console.error("Error adjusting time for location:", error);
+    // Fallback to browser's local time
+    return date;
+  }
+};
+
+// Format location time as a readable string (separate display function)
+const formatLocationTime = (date, location) => {
+  if (!location) return "";
+  
+  try {
+    const timezone = getTimezoneFromLocation(location);
+    const options = { timeZone: timezone };
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      ...options,
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    });
+    
+    return formatter.format(date);
+  } catch (error) {
+    console.error("Error formatting time for location:", error);
+    // Fallback to browser's local time without seconds
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: 'numeric',
+      hour12: true 
+    });
+  }
+};
+
 const DailyOverviewSection = ({
   prayerTimes,
   currentTime,
@@ -61,8 +159,17 @@ const DailyOverviewSection = ({
   formatTo12Hour,
   itemVariants,
 }) => {
-  // Ensure we have a valid currentTime
-  const time = currentTime || new Date();
+  // Use internal state to track the local time
+  const [localTime, setLocalTime] = useState(new Date());
+
+  // Update local time every minute
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setLocalTime(new Date());
+    }, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Format a prayer time safely
   const formatPrayerTime = (timeName) => {
@@ -84,7 +191,51 @@ const DailyOverviewSection = ({
     );
   };
 
-  const sunPosition = calculateSunPosition(time, prayerTimes || {});
+  // Use provided currentTime or adjusted localTime based on location
+  const baseTime = currentTime || localTime;
+  const locationTime = getLocationTime(baseTime, location);
+  const formattedLocationTime = formatLocationTime(baseTime, location);
+  const sunPosition = calculateSunPosition(locationTime, prayerTimes || {});
+
+  // Format the display time and date based on the location's timezone 
+  const formatDateForLocation = () => {
+    const options = { 
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    
+    try {
+      if (location) {
+        const timezone = getTimezoneFromLocation(location);
+        return baseTime.toLocaleDateString('en-US', { ...options, timeZone: timezone });
+      }
+    } catch (error) {
+      console.error("Error formatting date:", error);
+    }
+    
+    return baseTime.toLocaleDateString(undefined, options);
+  };
+
+  const formatTimeForLocation = () => {
+    const options = {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    };
+    
+    try {
+      if (location) {
+        const timezone = getTimezoneFromLocation(location);
+        return baseTime.toLocaleTimeString('en-US', { ...options, timeZone: timezone });
+      }
+    } catch (error) {
+      console.error("Error formatting time:", error);
+    }
+    
+    return baseTime.toLocaleTimeString([], options);
+  };
 
   return (
     <motion.section variants={itemVariants} className="md:col-span-2">
@@ -174,15 +325,10 @@ const DailyOverviewSection = ({
         {/* Current Time Display - Using location-based time */}
         <div className="text-center mb-2">
           <div className="text-sm text-muted-foreground">
-            {time.toLocaleDateString()}
+            {formatDateForLocation()}
           </div>
           <div className="text-2xl font-mono font-bold text-primary">
-            {time.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            })}
+            {formatTimeForLocation()}
           </div>
           <div className="text-xs text-muted-foreground">
             {location ? `Time in ${getLocationName()}` : "Local time"}

@@ -18,11 +18,11 @@ function IslamicCalendarSection({ itemVariants }) {
 
   const renderContent = () => {
     if (isLoading) {
-      return (
+    return (
         <div className="flex flex-col items-center justify-center w-full h-48">
           <Spinner size="md" color="blue" />
           <p className="text-blue-500 mt-2">Loading Islamic calendar...</p>
-        </div>
+          </div>
       );
     }
 
@@ -32,10 +32,10 @@ function IslamicCalendarSection({ itemVariants }) {
           <p>Error loading Islamic calendar</p>
           <p className="text-sm">{error}</p>
         </div>
-      );
-    }
+    );
+  }
 
-    return (
+  return (
       <div className="flex flex-col space-y-4">
         {/* Current Islamic Date */}
         <div className="flex justify-between items-center">
@@ -46,14 +46,14 @@ function IslamicCalendarSection({ itemVariants }) {
           <span className="text-md font-semibold bg-blue-100/40 backdrop-blur-sm text-blue-800 px-3 py-1 rounded">
             {islamicDate?.day} {safelyGetValue(islamicDate?.month)} {islamicDate?.year}H
           </span>
-        </div>
+          </div>
 
         {/* Hijri and Gregorian Calendar */}
         <div className="flex items-center">
           <ClockIcon className="h-5 w-5 text-blue-500 mr-2" />
           <span className="text-slate-600">{islamicDate?.gregorian || "Today"}</span>
         </div>
-        
+
         {/* Upcoming Events */}
         {islamicDate?.upcomingEvents && islamicDate.upcomingEvents.length > 0 && (
           <div className="mt-2">
@@ -74,7 +74,7 @@ function IslamicCalendarSection({ itemVariants }) {
             <div className="flex items-center mb-1">
               <StarIcon className="h-4 w-4 text-amber-500 mr-1" />
               <h4 className="font-medium text-slate-800">Islamic Holidays</h4>
-            </div>
+        </div>
             <ul className="list-disc list-inside text-sm text-slate-600 pl-1">
               {islamicDate.holidays.slice(0, 2).map((holiday, idx) => (
                 <li key={idx}>

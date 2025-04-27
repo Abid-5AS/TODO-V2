@@ -67,41 +67,9 @@ const DashboardLayout = () => {
       try {
         const { settings } = await getAppearanceSettings();
         setAppearanceSettings(settings);
-
-        // Apply background theme
-        if (settings.backgroundTheme) {
-          const root = document.documentElement;
-          // Remove any existing theme classes
-          const themeClasses = [
-            "bg-theme-waves",
-            "bg-theme-dots",
-            "bg-theme-gradient-soft",
-            "bg-theme-gradient-vibrant",
-          ];
-          themeClasses.forEach((className) => {
-            root.classList.remove(className);
-          });
-
-          // Add the selected theme class if not default
-          if (settings.backgroundTheme !== "default") {
-            root.classList.add(`bg-theme-${settings.backgroundTheme}`);
-          }
-        }
-
-        // Apply UI density
-        if (settings.uiDensity) {
-          const body = document.body;
-          // Remove existing density classes
-          body.classList.remove("ui-compact", "ui-comfortable", "ui-spacious");
-          // Add the selected density class
-          body.classList.add(`ui-${settings.uiDensity}`);
-        }
-
-        // Apply animations setting
-        document.body.classList.toggle(
-          "reduce-animations",
-          settings.reduceAnimations
-        );
+        
+        // We're no longer applying these settings
+        console.log("Appearance settings loaded but backgroundTheme, uiDensity, and reduceAnimations are no longer applied");
       } catch (error) {
         console.error("Error loading appearance settings:", error);
       }

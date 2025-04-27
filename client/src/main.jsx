@@ -10,6 +10,9 @@ import "./styles/index.css";
 
 // Initialize appearance settings before rendering
 initializeAppearanceSettings()
+  .then(() => {
+    console.warn("Notice: backgroundTheme, uiDensity, and reduceAnimations settings are deprecated and no longer applied automatically.");
+  })
   .catch((error) => {
     console.error("Failed to initialize appearance settings:", error);
     // Continue rendering the app even if settings fail to load

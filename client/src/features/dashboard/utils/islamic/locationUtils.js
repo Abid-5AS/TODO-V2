@@ -13,17 +13,20 @@ export const fetchTimezone = async (lat, lon) => {
   }
 
   try {
-    const response = await axios.get(
-      `https://worldtimeapi.org/api/timezone/Etc/GMT${
-        new Date().getTimezoneOffset() >= 0 ? "-" : "+"
-      }${Math.abs(Math.floor(new Date().getTimezoneOffset() / 60))}`
-    );
-    return response.data.timezone;
-  } catch (error) {
-    console.error("Error fetching timezone:", error);
-    // Use browser timezone as fallback
+    // Calculate timezone offset in hours
     const offset = -new Date().getTimezoneOffset() / 60;
-    return `Etc/GMT${offset >= 0 ? "+" : "-"}${Math.abs(Math.floor(offset))}`;
+    const sign = offset >= 0 ? "+" : "-";
+    const hours = Math.abs(Math.floor(offset));
+    
+    // Format the timezone string - e.g., "Etc/GMT+8" for Singapore
+    const timezone = `Etc/GMT${sign}${hours}`;
+    
+    console.log(`Using browser timezone: ${timezone} for location: ${lat},${lon}`);
+    return timezone;
+  } catch (error) {
+    console.error("Error determining timezone:", error);
+    // Simple fallback
+    return "UTC";
   }
 };
 

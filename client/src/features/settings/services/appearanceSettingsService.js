@@ -122,52 +122,20 @@ export const applyAppearanceSettings = (settings) => {
     root.style.setProperty("--sidebar-ring", `oklch(0.623 0.214 ${hue})`);
   }
 
-  // Apply background theme
+  // Store backgroundTheme in settings but don't apply it
   if (settings.backgroundTheme !== undefined) {
     const bgTheme = settings.backgroundTheme || "default";
-
-    // First remove ALL theme-related classes to avoid conflicts
-    const bgClasses = [
-      "bg-theme-waves",
-      "bg-theme-dots",
-      "bg-theme-gradient-soft",
-      "bg-theme-gradient-vibrant",
-    ];
-
-    // Apply to root, html, and body elements for maximum compatibility
-    [document.documentElement, document.body].forEach((element) => {
-      // Remove existing classes
-      bgClasses.forEach((className) => {
-        element.classList.remove(className);
-      });
-
-      // Add new class if not default
-      if (bgTheme !== "default") {
-        element.classList.add(`bg-theme-${bgTheme}`);
-      }
-    });
-
-    console.log(`Applied background theme: ${bgTheme}`);
+    console.log(`Background theme ${bgTheme} is stored but no longer applied automatically`);
   }
 
-  // Apply UI density setting
+  // Store UI density setting but don't apply it
   if (settings.uiDensity) {
-    const densityClasses = ["ui-compact", "ui-comfortable", "ui-spacious"];
-
-    // Apply to body to ensure it cascades to all content
-    document.body.classList.remove(...densityClasses);
-    document.body.classList.add(`ui-${settings.uiDensity}`);
-
-    console.log(`Applied UI density: ${settings.uiDensity}`);
+    console.log(`UI density ${settings.uiDensity} is stored but no longer applied automatically`);
   }
 
-  // Apply animation preferences
+  // Store animation preferences but don't apply them
   if (settings.reduceAnimations !== undefined) {
-    document.body.classList.toggle(
-      "reduce-animations",
-      settings.reduceAnimations
-    );
-    console.log(`Applied reduced animations: ${settings.reduceAnimations}`);
+    console.log(`Reduced animations setting ${settings.reduceAnimations} is stored but no longer applied automatically`);
   }
 
   // Apply any custom colors if they exist
