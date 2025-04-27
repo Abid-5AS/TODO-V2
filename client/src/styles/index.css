@@ -1,0 +1,168 @@
+/* src/styles/index.css */
+/* Main CSS file, imports Tailwind base, components, utilities and custom styles. */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./card-theme.css"; /* Import custom card theme */
+
+/* Apply custom dark variant selector if needed (though TW `dark:` prefix is standard) */
+/* @custom-variant dark (&:is(.dark *)); */
+
+/* Disable scroll anchoring to prevent page jumps on re-renders */
+html, body {
+  overflow-anchor: none;
+  height: 100%; /* Ensure body takes full height */
+  overscroll-behavior: none; /* Prevent pull-to-refresh effects */
+}
+
+#root {
+  height: 100%; /* Ensure root div takes full height */
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem; /* Slightly smaller radius */
+    --background: oklch(0.98 0.01 90 / <alpha-value>); /* Soft warm background */
+    --foreground: oklch(0.141 0.005 285.823 / <alpha-value>);
+    --card: oklch(1 0 0 / <alpha-value>); /* Pure white card background */
+    --card-foreground: oklch(0.141 0.005 285.823 / <alpha-value>);
+    --popover: oklch(1 0 0 / <alpha-value>);
+    --popover-foreground: oklch(0.141 0.005 285.823 / <alpha-value>);
+    --primary: oklch(0.623 0.214 259.815 / <alpha-value>); /* Indigo */
+    --primary-rgb: 79, 70, 229;
+    --primary-foreground: oklch(0.97 0.014 254.604 / <alpha-value>);
+    --secondary: oklch(0.95 0.01 95 / <alpha-value>); /* Lighter gray */
+    --secondary-foreground: oklch(0.21 0.006 285.885 / <alpha-value>);
+    --muted: oklch(0.96 0.008 90 / <alpha-value>); /* Even lighter gray */
+    --muted-foreground: oklch(0.552 0.016 285.938 / <alpha-value>);
+    --accent: oklch(0.95 0.01 95 / <alpha-value>);
+    --accent-foreground: oklch(0.21 0.006 285.885 / <alpha-value>);
+    --destructive: oklch(0.577 0.245 27.325 / <alpha-value>); /* Red */
+    --border: oklch(0.90 0.01 90 / <alpha-value>); /* Slightly darker border */
+    --input: oklch(0.92 0.004 286.32 / <alpha-value>); /* Input border */
+    --ring: oklch(0.623 0.214 259.815 / 0.5); /* Primary ring with opacity */
+
+    /* Chart Colors */
+    --chart-1: oklch(0.577 0.245 27.325 / <alpha-value>); /* Destructive Red */
+    --chart-2: oklch(0.76 0.18 55 / <alpha-value>); /* Orange/Yellow */
+    --chart-3: oklch(0.65 0.18 250 / <alpha-value>); /* Blue/Purple */
+    --chart-4: oklch(0.7 0.15 150 / <alpha-value>); /* Green */
+    --chart-5: oklch(0.8 0.1 200 / <alpha-value>); /* Teal/Cyan */
+
+     /* Custom Variants */
+    --success: oklch(0.65 0.18 145 / <alpha-value>); /* Green for success */
+    --success-foreground: oklch(0.1 0.05 145 / <alpha-value>);
+    --warning: oklch(0.76 0.18 55 / <alpha-value>); /* Orange/Yellow for warning */
+    --warning-foreground: oklch(0.2 0.08 55 / <alpha-value>);
+  }
+
+  .dark {
+    --background: oklch(0.141 0.005 285.823 / <alpha-value>); /* Dark background */
+    --foreground: oklch(0.96 0.005 90 / <alpha-value>); /* Light foreground */
+    --card: oklch(0.18 0.005 285.885 / <alpha-value>); /* Darker card */
+    --card-foreground: oklch(0.96 0.005 90 / <alpha-value>);
+    --popover: oklch(0.18 0.005 285.885 / <alpha-value>);
+    --popover-foreground: oklch(0.96 0.005 90 / <alpha-value>);
+    --primary: oklch(0.64 0.245 262.881 / <alpha-value>); /* Brighter primary */
+    --primary-rgb: 99, 102, 241;
+    --primary-foreground: oklch(0.1 0.05 265 / <alpha-value>); /* Darker primary foreground */
+    --secondary: oklch(0.2 0.006 286.033 / <alpha-value>); /* Darker secondary */
+    --secondary-foreground: oklch(0.96 0.005 90 / <alpha-value>);
+    --muted: oklch(0.2 0.006 286.033 / <alpha-value>);
+    --muted-foreground: oklch(0.65 0.015 286.067 / <alpha-value>);
+    --accent: oklch(0.2 0.006 286.033 / <alpha-value>);
+    --accent-foreground: oklch(0.96 0.005 90 / <alpha-value>);
+    --destructive: oklch(0.65 0.2 22 / <alpha-value>); /* Slightly less intense red */
+    --border: oklch(1 0 0 / 0.15); /* Slightly more visible border */
+    --input: oklch(1 0 0 / 0.12); /* Input background */
+    --ring: oklch(0.64 0.243 264.376 / 0.5); /* Primary ring with opacity */
+
+    /* Chart Colors Dark */
+    --chart-1: oklch(0.65 0.2 22 / <alpha-value>); /* Red */
+    --chart-2: oklch(0.76 0.18 55 / <alpha-value>); /* Orange/Yellow */
+    --chart-3: oklch(0.7 0.2 255 / <alpha-value>); /* Blue/Purple */
+    --chart-4: oklch(0.7 0.16 148 / <alpha-value>); /* Green */
+    --chart-5: oklch(0.8 0.12 200 / <alpha-value>); /* Teal/Cyan */
+
+    /* Custom Variants Dark */
+    --success: oklch(0.6 0.18 145 / <alpha-value>); /* Darker Green */
+    --success-foreground: oklch(0.9 0.05 145 / <alpha-value>);
+    --warning: oklch(0.7 0.18 55 / <alpha-value>); /* Darker Orange/Yellow */
+    --warning-foreground: oklch(0.95 0.08 55 / <alpha-value>);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* Subtle background gradients */
+    background-image:
+      radial-gradient(at 10% 30%, oklch(var(--primary) / 0.03) 0px, transparent 50%),
+      radial-gradient(at 80% 20%, oklch(var(--chart-5) / 0.03) 0px, transparent 50%),
+      radial-gradient(at 30% 70%, oklch(var(--chart-3) / 0.03) 0px, transparent 50%),
+      radial-gradient(at 90% 80%, oklch(var(--chart-1) / 0.03) 0px, transparent 50%);
+    background-size: 150% 150%;
+    background-attachment: fixed;
+  }
+  .dark body {
+     background-image:
+      radial-gradient(at 10% 30%, oklch(var(--primary) / 0.06) 0px, transparent 45%),
+      radial-gradient(at 80% 20%, oklch(var(--chart-5) / 0.05) 0px, transparent 45%),
+      radial-gradient(at 30% 70%, oklch(var(--chart-3) / 0.06) 0px, transparent 45%),
+      radial-gradient(at 90% 80%, oklch(var(--chart-1) / 0.05) 0px, transparent 45%);
+  }
+}
+
+/* Scrollbar styling */
+/* Works on Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+/* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent; /* Creates padding around thumb */
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+   background-color: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Add transition for smoother appearance */
+*::-webkit-scrollbar-thumb {
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* Custom animation */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+@keyframes pulse-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .6; }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

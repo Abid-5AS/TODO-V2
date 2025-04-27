@@ -1,0 +1,49 @@
+/* src/styles/card-theme.css */
+/* Defines custom styles potentially used by Card components or specific feature cards. */
+
+/* Example: If you had specific dark card styles not covered by Tailwind */
+/* .card-dark {
+  background-color: rgba(30, 41, 59, 0.8);
+  border-color: rgba(71, 85, 105, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.card-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+} */
+
+/* Task Edit Form specific styling (can be integrated into Tailwind theme if preferred) */
+/* Base styles (applied in both light/dark unless overridden) */
+.task-edit-form {
+  @apply rounded-lg shadow-lg border border-border/50;
+  /* Gradient background with backdrop blur */
+  background: linear-gradient(135deg, oklch(var(--card) / 0.8) 0%, oklch(var(--card) / 0.9) 100%);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+/* Input/Textarea/Select styles within the edit form */
+.task-edit-form input,
+.task-edit-form textarea,
+.task-edit-form select,
+.task-edit-form [data-slot="select-trigger"] /* Target Radix Select Trigger */
+{
+  @apply bg-background/70 dark:bg-input/50 border-input/80 transition-all duration-200;
+}
+
+.task-edit-form input:focus,
+.task-edit-form textarea:focus,
+.task-edit-form [data-slot="select-trigger"][data-state="open"],
+.task-edit-form [data-slot="select-trigger"]:focus /* Target Radix Select Trigger focus */
+{
+   @apply border-primary ring-1 ring-primary/50;
+}
+
+.task-edit-form label {
+  @apply text-sm font-medium text-foreground/90 dark:text-foreground/90;
+}
