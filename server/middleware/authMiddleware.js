@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 require("dotenv").config();
 
-const protect = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   let token;
 
   // Check for token in Authorization header (Bearer token)
@@ -51,4 +51,4 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+module.exports = { authenticateToken };

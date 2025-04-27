@@ -14,6 +14,7 @@ import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import SettingsPage from "../features/settings/pages/SettingsPage";
 import StatsPage from "../features/stats/pages/StatsPage";
 import IslamicHomePage from "../features/dashboard/pages/IslamicHomePage";
+import PrayerDashboardPage from "../features/prayer/pages/PrayerDashboardPage"; // Import the new PrayerDashboardPage
 import Navbar from "../features/dashboard/components/Navbar"; // Public Navbar
 import ErrorBoundary from "../components/ErrorBoundary"; // Import the ErrorBoundary component
 import ErrorPage from "../pages/ErrorPage";
@@ -71,6 +72,14 @@ function AppRoutes() {
             element={
               <ErrorBoundary showDetails={false}>
                 <IslamicHomePage />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="prayers"
+            element={
+              <ErrorBoundary showDetails={false}>
+                <PrayerDashboardPage />
               </ErrorBoundary>
             }
           />

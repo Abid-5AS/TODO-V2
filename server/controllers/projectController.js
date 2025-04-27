@@ -185,8 +185,13 @@ exports.deleteProjectByName = asyncHandler(async (req, res) => {
 // @route   POST /api/projects/initialize
 // @access  Public
 exports.initializeProjects = asyncHandler(async (req, res) => {
-  // Get distinct project names from tasks
-  const distinctProjects = await Task.distinct("project");
+  // Ensure user is authenticated and has an ID
+  if (!req.user || !req.user._id) {
+    throw new AppError("User not authenticated", 401);
+  }
+
+  // Get distinct project names from tasks for this user
+  const distinctProjects = await Task.distinct("project", { user: req.user._id });
 
   // Initialize default projects if they don't exist
   const defaultProjects = ["Inbox"];
@@ -200,8 +205,11 @@ exports.initializeProjects = asyncHandler(async (req, res) => {
   for (const projectName of allProjects) {
     if (!projectName) continue; // Skip empty project names
 
-    // Check if project already exists
-    const existingProject = await Project.findOne({ name: projectName });
+    // Check if project already exists for this user
+    const existingProject = await Project.findOne({ 
+      name: projectName,
+      user: req.user._id 
+    });
 
     if (!existingProject) {
       // Create new project
@@ -211,6 +219,7 @@ exports.initializeProjects = asyncHandler(async (req, res) => {
         position: position++,
         isDefault,
         updatedAt: new Date(),
+        user: req.user._id // Add the user field
       });
 
       results.push({

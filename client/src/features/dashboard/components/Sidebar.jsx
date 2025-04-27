@@ -22,6 +22,7 @@ import {
   Loader2,
   AlertCircle,
   Moon,
+  Heart, // Import Heart icon for Prayer Dashboard (replaced Pray which doesn't exist)
 } from "lucide-react";
 import { ScrollArea } from "../../../components/ui/scroll-area"; // Corrected path
 import { Button } from "../../../components/ui/button"; // Corrected path
@@ -294,6 +295,38 @@ const Sidebar = ({
                 {location.pathname !== "/dashboard/islamic" && (
                   <div className="absolute inset-0 bg-gradient-to-r from-green-200/0 via-green-200/30 to-green-200/0 -translate-x-full group-hover/link:translate-x-full transition-transform duration-1000"></div>
                 )}
+              </Link>
+            </motion.div>
+
+            <motion.div
+              whileHover={{
+                x: 5,
+                transition: { type: "spring", stiffness: 400, damping: 10 },
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="relative group/item mb-3"
+            >
+              <Link
+                to="/dashboard/prayers"
+                className={cn(
+                  "flex items-center py-1.5 px-3 rounded-lg text-sm transition-all duration-200",
+                  location.pathname === "/dashboard/prayers"
+                    ? "backdrop-blur-sm font-medium shadow-sm glass-button text-emerald-500 dark:text-emerald-400"
+                    : "text-muted-foreground hover:bg-muted/60 dark:hover:bg-zinc-800/50 hover:text-emerald-500 dark:hover:text-emerald-400"
+                )}
+                onClick={() => isMobile && onClose && onClose()}
+              >
+                <div className="flex gap-2 items-center">
+                  <Heart
+                    size={16}
+                    className={cn(
+                      location.pathname === "/dashboard/prayers"
+                        ? "text-emerald-500 dark:text-emerald-400"
+                        : "text-muted-foreground group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+                    )}
+                  />
+                  <span>Prayer Tracker</span>
+                </div>
               </Link>
             </motion.div>
 

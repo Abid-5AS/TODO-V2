@@ -1,6 +1,6 @@
 const express = require("express");
 const Task = require("../models/Task");
-const { protect } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../middleware/authMiddleware");
 const {
   getTasks,
   createTask,
@@ -14,7 +14,7 @@ const {
 
 const router = express.Router();
 
-router.use(protect);
+router.use(authenticateToken);
 
 // --- Route: GET /api/tasks ---
 // @desc    Get all tasks for the logged-in user (optionally filter by search query)

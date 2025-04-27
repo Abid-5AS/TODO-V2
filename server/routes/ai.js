@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../middleware/authMiddleware");
 const {
   toggleProvider,
   getProviderStatus,
@@ -10,7 +10,7 @@ const {
 const router = express.Router();
 
 // Apply auth middleware to all routes
-router.use(protect);
+router.use(authenticateToken);
 
 // Route: POST /api/ai/toggle-provider
 router.post("/toggle-provider", toggleProvider);

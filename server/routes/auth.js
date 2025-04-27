@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../middleware/authMiddleware");
 const {
   signup,
   signin,
@@ -23,7 +23,7 @@ router.post("/signin", signin);
 // --- Route: GET /api/auth/me
 // @desc    Get current logged-in user info
 // @access  Private (Requires token)
-router.get("/me", protect, getMe);
+router.get("/me", authenticateToken, getMe);
 
 // --- Google OAuth ---
 // @desc    Initiate Google OAuth flow

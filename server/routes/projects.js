@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../middleware/authMiddleware");
 const {
   getProjects,
   createProject,
@@ -12,7 +12,7 @@ const {
 } = require("../controllers/projectController");
 
 // Protect all project routes
-router.use(protect);
+router.use(authenticateToken);
 
 // Get all projects and create a new project
 router.route("/").get(getProjects).post(createProject);

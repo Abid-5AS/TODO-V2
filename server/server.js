@@ -44,10 +44,12 @@ app.get("/", (req, res) => {
 });
 
 // --- Mount Routers ---
+const prayerLogRoutes = require('./routes/prayerLogRoutes');
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/tasks", require("./routes/tasks"));
 app.use("/api/ai", require("./routes/ai"));
 app.use("/api/projects", require("./routes/projects"));
+app.use('/api/prayer-logs', prayerLogRoutes);
 
 // --- Global Error Handler ---
 // Replace the old generic handler with the new one

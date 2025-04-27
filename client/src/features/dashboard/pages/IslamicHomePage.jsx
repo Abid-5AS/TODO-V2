@@ -4,9 +4,8 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { 
-  MapPin, RefreshCw, Settings, Bug, Download, Loader2, 
-  ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle,
-  Moon, Sun
+  MapPin, RefreshCw, Settings, Bug, Clock, AlertTriangle,
+  Moon, Sun, ChevronDown, ChevronUp, Calendar, Loader2
 } from "lucide-react";
 import { useTitle } from "../../../hooks/useTitle";
 import { toast } from "sonner";
@@ -380,22 +379,6 @@ const IslamicHomePage = () => {
             </div>
           </motion.div>
         </div>
-
-        {/* Prayer Tracking Section */}
-        <motion.div 
-          className="mt-4"
-          variants={itemVariants}
-        >
-          <Accordion 
-            title="Prayer Tracking" 
-            icon={<Download size={18} className="text-blue-500" />}
-            defaultOpen={false}
-          >
-            <div className="flex items-center justify-center h-[180px] text-gray-500 dark:text-gray-400 text-center">
-              Coming soon - Track your prayer activities
-            </div>
-          </Accordion>
-        </motion.div>
       </motion.div>
 
       {/* Location Selection Modal */}
