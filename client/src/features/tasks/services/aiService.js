@@ -21,7 +21,7 @@ export const getAISubtaskSuggestions = async (taskTitle) => {
 
 export const getAIDescriptionSuggestion = async (taskTitle) => {
   try {
-    const response = await axiosInstance.post('/api/ai/suggest-description', { title: taskTitle });
+    const response = await axiosInstance.post('/api/ai/expand-description', { title: taskTitle });
     // Assuming the backend returns { success: true, description: '...' }
      if (response.data.success) {
       return response.data;
