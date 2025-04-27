@@ -216,9 +216,9 @@ const TaskItem = ({
                 taskId={task._id}
                 subtasks={task.subtasks}
                 onAddSubtask={onOptimisticAddSubtask}
-                onToggleSubtask={(subtaskId, data) => onOptimisticUpdateSubtask(task._id, subtaskId, data)}
-                onUpdateSubtask={(subtaskId, data) => onOptimisticUpdateSubtask(task._id, subtaskId, data)}
-                onDeleteSubtask={(subtaskId) => onOptimisticDeleteSubtask(task._id, subtaskId)}
+                onToggleSubtask={onOptimisticUpdateSubtask}
+                onUpdateSubtask={onOptimisticUpdateSubtask}
+                onDeleteSubtask={onOptimisticDeleteSubtask}
               />
             </AccordionContent>
           )}

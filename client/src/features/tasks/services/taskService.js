@@ -88,10 +88,10 @@ export const addSubtask = async (taskId, subtaskData) => {
   }
 };
 
-export const updateSubtask = async (subtaskId, updates) => {
-  // Assuming a dedicated endpoint for updating subtasks by their own ID
+export const updateSubtask = async (taskId, subtaskId, updates) => {
+  // Use the parent task's endpoint for updating subtasks
   try {
-    const response = await axiosInstance.put(`/api/subtasks/${subtaskId}`, updates);
+    const response = await axiosInstance.put(`/api/tasks/${taskId}/subtasks/${subtaskId}`, updates);
     return response.data; // Expecting { success: boolean, data?: Subtask, message?: string }
   } catch (error) {
     console.error(`Update Subtask (${subtaskId}) API error:`, error.response?.data || error.message);
@@ -99,10 +99,10 @@ export const updateSubtask = async (subtaskId, updates) => {
   }
 };
 
-export const deleteSubtask = async (subtaskId) => {
-  // Assuming a dedicated endpoint for deleting subtasks by their own ID
+export const deleteSubtask = async (taskId, subtaskId) => {
+  // Use the parent task's endpoint for deleting subtasks
   try {
-    const response = await axiosInstance.delete(`/api/subtasks/${subtaskId}`);
+    const response = await axiosInstance.delete(`/api/tasks/${taskId}/subtasks/${subtaskId}`);
     return response.data; // Expecting { success: boolean, message?: string }
   } catch (error) {
     console.error(`Delete Subtask (${subtaskId}) API error:`, error.response?.data || error.message);

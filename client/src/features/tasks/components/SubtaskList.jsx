@@ -44,7 +44,7 @@ const SubtaskList = ({
     const newStatus = currentStatus === "completed" ? "pending" : "completed";
     setIsUpdating(subtaskId);
     try {
-      await onToggleSubtask(subtaskId, { status: newStatus });
+      await onToggleSubtask(taskId, subtaskId, { status: newStatus });
       toast({ title: newStatus === "completed" ? "Subtask completed" : "Subtask marked pending" });
     } catch (error) {
       console.error("Toggle subtask failed:", error);
@@ -75,7 +75,7 @@ const SubtaskList = ({
 
     setIsUpdating(subtaskId);
     try {
-      await onUpdateSubtask(subtaskId, { title: editingSubtaskTitle.trim() });
+      await onUpdateSubtask(taskId, subtaskId, { title: editingSubtaskTitle.trim() });
       cancelEditing();
       toast({ title: "Subtask updated" });
     } catch (error) {
@@ -90,7 +90,7 @@ const SubtaskList = ({
     if (!window.confirm("Delete this subtask?")) return;
     setIsUpdating(subtaskId);
     try {
-      await onDeleteSubtask(subtaskId);
+      await onDeleteSubtask(taskId, subtaskId);
       toast({ title: "Subtask deleted" });
     } catch (error) {
       console.error("Delete subtask failed:", error);

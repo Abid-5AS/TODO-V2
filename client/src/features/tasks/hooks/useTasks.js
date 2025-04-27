@@ -230,7 +230,7 @@ export const useTasks = (initialProject, allProjects = []) => {
       )
     );
     try {
-      const result = await apiUpdateSubtask(subtaskId, updates);
+      const result = await apiUpdateSubtask(taskId, subtaskId, updates);
       if (!result.success) throw new Error(result.message || 'Failed to update subtask');
        // Optional: update with response data
        // setTasks(prevTasks => prevTasks.map(task => task._id === taskId ? {...task, subtasks: (task.subtasks || []).map(st => st._id === subtaskId ? result.data : st)} : task));
@@ -253,7 +253,7 @@ export const useTasks = (initialProject, allProjects = []) => {
       )
     );
     try {
-      const result = await apiDeleteSubtask(subtaskId);
+      const result = await apiDeleteSubtask(taskId, subtaskId);
       if (!result.success) throw new Error(result.message || 'Failed to delete subtask');
       // Removal done
     } catch (err) {
