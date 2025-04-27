@@ -7,7 +7,7 @@ import { Badge } from "../../../components/ui/badge"; // Corrected path
 import { Button } from "../../../components/ui/button"; // Corrected path
 import { AccordionTrigger } from "../../../components/ui/accordion"; // Keep trigger separate
 import { getPriorityVariant } from "../../../lib/utils"; // Corrected path
-import { Check, CircleDashed, CircleDotDashed, ChevronDown, Edit, Trash2 } from "lucide-react";
+import { Check, CircleDashed, CircleDotDashed, ChevronDown, Edit, Trash2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
 const TaskDisplay = ({ task, onToggleComplete, onEdit, onDelete, isAccordionOpen, hasSubtasks }) => {

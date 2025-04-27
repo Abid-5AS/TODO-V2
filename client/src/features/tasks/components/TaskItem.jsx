@@ -10,6 +10,7 @@ import {
 } from "../../../components/ui/accordion"; // Corrected path
 import { useToast } from "../../../hooks/use-toast"; // Corrected path
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "../../../lib/utils"; // Import the cn utility function
 
 import TaskDisplay from "./TaskDisplay";
 import TaskEditForm from "./TaskEditForm";
