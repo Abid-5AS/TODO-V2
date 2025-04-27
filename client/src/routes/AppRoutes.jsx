@@ -15,6 +15,8 @@ import SettingsPage from "../features/settings/pages/SettingsPage";
 import StatsPage from "../features/stats/pages/StatsPage";
 import IslamicHomePage from "../features/dashboard/pages/IslamicHomePage";
 import Navbar from "../features/dashboard/components/Navbar"; // Public Navbar
+import ErrorBoundary from "../components/ErrorBoundary"; // Import the ErrorBoundary component
+import ErrorPage from "../pages/ErrorPage";
 
 // Placeholder for Help page (could be moved to a 'help' feature later)
 const HelpPage = () => (
@@ -64,7 +66,14 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/dashboard/islamic" replace />} />
-          <Route path="islamic" element={<IslamicHomePage />} />
+          <Route
+            path="islamic"
+            element={
+              <ErrorBoundary showDetails={false}>
+                <IslamicHomePage />
+              </ErrorBoundary>
+            }
+          />
           <Route path="today" element={<DashboardPage />} />
           <Route path="upcoming" element={<DashboardPage />} />
           <Route path="overdue" element={<DashboardPage />} />
@@ -81,11 +90,19 @@ function AppRoutes() {
       {/* OAuth Success Route (Public but redirects) */}
       <Route path="/oauth-success" element={<OAuthSuccess />} />
 
+      {/* Error Routes */}
+      <Route path="/404" element={<ErrorPage statusCode={404} />} />
+      <Route path="/error" element={<ErrorPage />} />
+
       {/* Fallback Redirect */}
       <Route
         path="*"
         element={
-          <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
+          isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Navigate to="/404" replace />
+          )
         }
       />
     </Routes>

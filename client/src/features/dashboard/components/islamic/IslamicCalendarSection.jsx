@@ -3,6 +3,21 @@ import { Moon, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 const IslamicCalendarSection = ({ islamicDate, itemVariants }) => {
+  if (!islamicDate) {
+    return (
+      <motion.section variants={itemVariants}>
+        <div className="glass-card h-full p-5 rounded-lg shadow-md border border-primary/20">
+          <h2 className="text-lg font-semibold mb-4 flex items-center">
+            <Moon size={18} className="mr-2" /> Islamic Calendar
+          </h2>
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+            Loading Islamic date...
+          </div>
+        </div>
+      </motion.section>
+    );
+  }
+
   return (
     <motion.section variants={itemVariants}>
       <div className="glass-card h-full p-5 rounded-lg shadow-md border border-primary/20">
@@ -12,7 +27,7 @@ const IslamicCalendarSection = ({ islamicDate, itemVariants }) => {
 
         <div className="flex flex-col items-center mb-4">
           <div className="text-2xl font-bold text-primary mb-1">
-            {islamicDate.date}
+            {islamicDate.format}
           </div>
           <div className="text-sm text-muted-foreground">
             {islamicDate.gregorian}
@@ -47,7 +62,7 @@ const IslamicCalendarSection = ({ islamicDate, itemVariants }) => {
         <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-3 rounded-lg">
           <div className="flex justify-between items-center">
             <span className="text-sm">Current Hijri Year</span>
-            <span className="font-bold">{islamicDate.hijriYear} AH</span>
+            <span className="font-bold">{islamicDate.year} AH</span>
           </div>
         </div>
       </div>

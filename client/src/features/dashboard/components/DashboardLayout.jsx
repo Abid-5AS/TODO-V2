@@ -162,13 +162,13 @@ const DashboardLayout = () => {
           ];
           setAllProjects(projectsWithInbox);
         } else if (isMounted && !response.success) {
-          console.error("Failed to load projects:", response.error);
-          setAllProjects(["Inbox"]); // Fallback
+            console.error("Failed to load projects:", response.error);
+            setAllProjects(["Inbox"]); // Fallback
         }
       } catch (error) {
         console.error("Error loading or initializing projects:", error);
         if (isMounted) {
-          setAllProjects(["Inbox"]); // Fallback on error
+           setAllProjects(["Inbox"]); // Fallback on error
         }
       } finally {
         if (isMounted) {
@@ -192,7 +192,7 @@ const DashboardLayout = () => {
       isMounted = false;
       window.removeEventListener("resize", handleResize);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]); // Removed dependency on 'navigate'
 
   // Navigate based on selected project
@@ -221,11 +221,11 @@ const DashboardLayout = () => {
     );
     setTaskFormOpen(true);
   };
-
+  
   // Close the task form and force a re-render of the task list
   const handleCloseTaskForm = () => {
     setTaskFormOpen(false);
-
+    
     // Force a re-render of the task list by updating a timestamp
     // This will ensure the task list is refreshed after a new task is added
     setLastTaskUpdate(Date.now());
@@ -290,10 +290,10 @@ const DashboardLayout = () => {
         description: `Could not find project ID for ${projectName}`,
         variant: "destructive",
       });
-      // Attempt deletion by name as a fallback? Risky.
-      // console.warn(`Attempting to delete project ${projectName} by name as ID was not found.`);
-      // const fallbackResponse = await deleteProjectByName(projectName);
-      return;
+        // Attempt deletion by name as a fallback? Risky.
+        // console.warn(`Attempting to delete project ${projectName} by name as ID was not found.`);
+        // const fallbackResponse = await deleteProjectByName(projectName);
+        return; 
     }
 
     try {
@@ -320,7 +320,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50 dark:from-zinc-950 dark:to-indigo-950">
-      {/* Mobile Only: Sidebar as Sheet - Pass isOpen and onClose */}
+      {/* Mobile Only: Sidebar as Sheet - Pass isOpen and onClose */} 
       {isMobile && (
         <Sidebar
           selectedProject={selectedProjectMemo}
@@ -345,9 +345,9 @@ const DashboardLayout = () => {
         className="glass-navbar border-b border-gray-200/40 dark:border-zinc-700/40 shadow-sm"
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area */} 
       <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Only: Permanent Sidebar */}
+        {/* Desktop Only: Permanent Sidebar */} 
         {!isMobile && (
           <Sidebar
             selectedProject={selectedProjectMemo}
@@ -362,7 +362,7 @@ const DashboardLayout = () => {
           />
         )}
 
-        {/* Content Outlet */}
+        {/* Content Outlet */} 
         <main className="flex-1 overflow-auto backdrop-blur-sm paper-texture">
           {/* Pass projects data and lastTaskUpdate timestamp down via context */}
           <Outlet
@@ -376,7 +376,7 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      {/* TaskForm Dialog */}
+      {/* TaskForm Dialog */} 
       <Dialog open={taskFormOpen} onOpenChange={setTaskFormOpen}>
         <DialogContent className="sm:max-w-[550px] glass-card relative shadow-lg p-0">
           <TaskForm
@@ -387,7 +387,7 @@ const DashboardLayout = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Project Dialog */}
+      {/* Add Project Dialog */} 
       <Dialog open={addProjectOpen} onOpenChange={setAddProjectOpen}>
         <DialogContent className="glass-card relative shadow-lg sm:max-w-[450px] p-0">
           <DialogHeader className="px-6 pt-6 pb-2">
@@ -399,24 +399,24 @@ const DashboardLayout = () => {
               Add New Project
             </DialogTitle>
           </DialogHeader>
-
+          
           <div className="px-6 py-4">
             <Label
               htmlFor="project-name"
               className="mb-2 block text-sm font-medium"
             >
-              Project Name
-            </Label>
-            <Input
-              id="project-name"
+                Project Name
+              </Label>
+              <Input
+                id="project-name"
               placeholder="Enter project name..."
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
               className="glass-input"
               autoFocus
-            />
-          </div>
-
+              />
+            </div>
+            
           <DialogFooter className="border-t border-border/20 px-6 py-4">
             <Button
               variant="outline"
@@ -425,13 +425,13 @@ const DashboardLayout = () => {
             >
               <X size={16} className="mr-2" /> Cancel
             </Button>
-            <Button
-              onClick={handleAddProject}
+              <Button 
+                onClick={handleAddProject} 
               className="glass-button glow-effect"
-            >
+              >
               <Check size={16} className="mr-2" /> Create
-            </Button>
-          </DialogFooter>
+              </Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 

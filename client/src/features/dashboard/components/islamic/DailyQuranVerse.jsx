@@ -157,16 +157,10 @@ const DailyQuranVerse = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="glass-card p-5 rounded-lg shadow-md overflow-hidden relative border border-primary/20"
+      className="glass-card p-5 rounded-lg shadow-md relative border border-primary/20 overflow-hidden"
     >
-      {/* Decorative top border */}
+      {/* Gradient top border instead of absolute divs */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 to-primary"></div>
-
-      {/* Decorative corner accents */}
-      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-primary/40"></div>
-      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-primary/40"></div>
-      <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-primary/40"></div>
-      <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-primary/40"></div>
 
       {/* Title with icon inside the container */}
       <div className="flex items-center mb-4">

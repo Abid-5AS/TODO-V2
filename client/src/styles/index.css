@@ -340,7 +340,7 @@ body.dark.bg-theme-gradient-vibrant,
   --card-shadow: 0 0 0 1px oklch(0.2 0.05 var(--hue));
   --scrollbar-thumb: oklch(0.5 0.05 var(--hue) / 0.3);
   --scrollbar-thumb-hover: oklch(0.5 0.05 var(--hue) / 0.5);
-
+  
   /* Add dark mode background with subtle gradients */
   background-image: radial-gradient(
       at 10% 30%,

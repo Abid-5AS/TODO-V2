@@ -2,6 +2,58 @@ import React from "react";
 import { Clock, MapPin, Sunrise, Sunset, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 
+// Calculate sun position as percentage of the day
+const calculateSunPosition = (currentTime, prayerTimes) => {
+  if (!prayerTimes) return 50; // Default to middle if no prayer times
+
+  // Convert all times to minutes for easy calculation
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Get minutes since midnight for current time
+  const currentHours = currentTime.getHours();
+  const currentMinutes = currentTime.getMinutes();
+  const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+
+  // Get minutes for fajr, sunrise, and maghrib
+  const fajrMinutes = timeToMinutes(prayerTimes.Fajr || prayerTimes.fajr);
+  const sunriseMinutes = timeToMinutes(
+    prayerTimes.Sunrise || prayerTimes.sunrise
+  );
+  const maghribMinutes = timeToMinutes(
+    prayerTimes.Maghrib || prayerTimes.maghrib
+  );
+
+  // Calculate total daylight minutes
+  const daylightMinutes = maghribMinutes - sunriseMinutes;
+  if (daylightMinutes <= 0) return 50; // Fallback if calculation fails
+
+  // If before sunrise or after maghrib, use special calculation
+  if (currentTimeInMinutes < sunriseMinutes) {
+    // Night before sunrise (from fajr to sunrise)
+    const nightBeforeDuration = sunriseMinutes - fajrMinutes;
+    if (nightBeforeDuration <= 0) return 0; // Prevent division by zero
+
+    const progressSinceFajr = currentTimeInMinutes - fajrMinutes;
+    return Math.max(
+      0,
+      Math.min(25, (progressSinceFajr / nightBeforeDuration) * 25)
+    );
+  } else if (currentTimeInMinutes > maghribMinutes) {
+    // Night after maghrib
+    return (
+      75 + Math.min(25, ((currentTimeInMinutes - maghribMinutes) / 180) * 25)
+    );
+  } else {
+    // Daytime (sunrise to maghrib)
+    const progressSinceSunrise = currentTimeInMinutes - sunriseMinutes;
+    return 25 + Math.min(50, (progressSinceSunrise / daylightMinutes) * 50);
+  }
+};
+
 const DailyOverviewSection = ({
   prayerTimes,
   currentTime,
@@ -9,33 +61,30 @@ const DailyOverviewSection = ({
   formatTo12Hour,
   itemVariants,
 }) => {
-  // Calculate sun position as a percentage based on current time
-  const calculateSunPosition = () => {
-    const now = currentTime;
-    const sunriseTime = timeStringToDate(prayerTimes.sunrise);
-    const sunsetTime = timeStringToDate(prayerTimes.sunset);
+  // Ensure we have a valid currentTime
+  const time = currentTime || new Date();
 
-    // Return 0 if before sunrise, 100 if after sunset
-    if (now < sunriseTime) return 0;
-    if (now > sunsetTime) return 100;
-
-    // Calculate position percentage between sunrise and sunset
-    const totalDayDuration = sunsetTime - sunriseTime;
-    const elapsedTime = now - sunriseTime;
-    return (elapsedTime / totalDayDuration) * 100;
+  // Format a prayer time safely
+  const formatPrayerTime = (timeName) => {
+    if (!prayerTimes) return "--:--";
+    const time = prayerTimes[timeName] || prayerTimes[timeName.toLowerCase()];
+    return time ? formatTo12Hour(time) : "--:--";
   };
 
-  // Convert time string to Date object
-  const timeStringToDate = (timeStr) => {
-    const now = new Date();
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const date = new Date(now);
-    date.setHours(hours, minutes, 0, 0);
-    return date;
+  // Handle location display safely
+  const getLocationName = () => {
+    if (!location) return "Location not set";
+    return (
+      location.name ||
+      location.address?.city ||
+      location.address?.town ||
+      location.address?.village ||
+      location.display_name?.split(",")[0] ||
+      "Unknown location"
+    );
   };
 
-  // Get sun position from 0-100%
-  const sunPosition = calculateSunPosition();
+  const sunPosition = calculateSunPosition(time, prayerTimes || {});
 
   return (
     <motion.section variants={itemVariants} className="md:col-span-2">
@@ -47,89 +96,88 @@ const DailyOverviewSection = ({
           {location && (
             <div className="flex items-center text-sm text-muted-foreground">
               <MapPin size={14} className="mr-1" />
-              <span>{location.displayName}</span>
+              <span>{getLocationName()}</span>
             </div>
           )}
         </div>
 
-        {/* Sun arc visualization */}
-        <div className="relative h-40 mb-6 bg-gradient-to-b from-blue-50/20 to-transparent dark:from-blue-950/10 rounded-t-full overflow-hidden">
-          {/* Sky background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-100/30 to-orange-100/10 dark:from-blue-900/20 dark:to-amber-900/10 rounded-t-full"></div>
+        {/* Sun arc visualization - with more pronounced curve */}
+        <div className="relative h-44 mb-6 bg-gradient-to-b from-blue-50/20 to-transparent dark:from-blue-950/10 rounded-t-full overflow-hidden">
+          {/* Sky background with enhanced gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-100/30 via-amber-100/10 to-orange-100/10 dark:from-blue-900/20 dark:via-amber-900/10 dark:to-orange-900/10 rounded-t-full"></div>
 
-          {/* Sun path - semi-circle arc */}
-          <div className="absolute bottom-0 left-0 w-full h-full">
-            <svg viewBox="0 0 100 50" className="w-full h-full">
-              {/* Dotted path line */}
+          {/* Horizon line */}
+          <div className="absolute bottom-0 w-full h-[1px] bg-gray-300/20 dark:bg-gray-700/20"></div>
+
+          {/* Sun path - semi-circle arc with more pronounced curve */}
+          <div className="absolute bottom-0 w-full h-full">
+            <svg
+              viewBox="0 0 100 60"
+              preserveAspectRatio="none"
+              className="w-full h-full"
+            >
+              {/* More pronounced path curve */}
               <path
-                d="M0,50 Q50,0 100,50"
+                d="M0,60 Q50,-30 100,60"
                 fill="none"
-                stroke="rgba(255,200,100,0.3)"
-                strokeWidth="0.5"
+                stroke="rgba(255,180,80,0.4)"
+                strokeWidth="0.9"
                 strokeDasharray="1,1"
-              />
-
-              {/* Actual sun position on path */}
-              <circle
-                cx={sunPosition}
-                cy={50 - Math.sin((Math.PI * sunPosition) / 100) * 50}
-                r="2"
-                fill="orange"
-                className="animate-pulse-slow"
+                className="filter drop-shadow-sm"
               />
             </svg>
 
-            {/* The Sun */}
+            {/* The Sun - a single, properly sized sun */}
             <div
               className="absolute"
               style={{
                 left: `${sunPosition}%`,
-                bottom: `${Math.sin((Math.PI * sunPosition) / 100) * 100}%`,
+                bottom: `${Math.sin((Math.PI * sunPosition) / 100) * 75}%`,
                 transform: "translate(-50%, 50%)",
               }}
             >
               <div className="relative">
-                <div className="absolute -top-3 -left-3 w-6 h-6 bg-yellow-500/20 rounded-full animate-pulse"></div>
+                <div className="absolute -top-2 -left-2 w-5 h-5 bg-yellow-500/20 rounded-full animate-pulse"></div>
                 <Sun
-                  size={18}
-                  className="text-amber-500 filter drop-shadow-md"
+                  size={16}
+                  className="text-amber-500 filter drop-shadow-lg"
                 />
               </div>
             </div>
           </div>
 
-          {/* Prayer times labels */}
-          <div className="absolute bottom-0 w-full flex justify-between px-4 pb-1">
+          {/* Prayer times labels - repositioned for better visibility */}
+          <div className="absolute bottom-2 w-full flex justify-between px-2">
             <div className="text-xs flex flex-col items-center">
-              <Sunrise size={12} className="text-amber-600 mb-1" />
-              <span className="font-mono font-medium text-amber-700 dark:text-amber-400">
-                {formatTo12Hour(prayerTimes.sunrise)}
+              <Sunrise size={14} className="text-amber-600 mb-1" />
+              <span className="font-mono font-medium text-amber-700 dark:text-amber-400 bg-white/40 dark:bg-black/40 px-1.5 py-0.5 rounded">
+                {formatPrayerTime("Sunrise")}
               </span>
             </div>
 
             <div className="text-xs flex flex-col items-center">
-              <Sun size={12} className="text-amber-600 mb-1" />
-              <span className="font-mono font-medium text-amber-700 dark:text-amber-400">
-                {formatTo12Hour(prayerTimes.dhuhr)}
+              <Sun size={14} className="text-amber-600 mb-1" />
+              <span className="font-mono font-medium text-amber-700 dark:text-amber-400 bg-white/40 dark:bg-black/40 px-1.5 py-0.5 rounded">
+                {formatPrayerTime("Dhuhr")}
               </span>
             </div>
 
             <div className="text-xs flex flex-col items-center">
-              <Sunset size={12} className="text-amber-600 mb-1" />
-              <span className="font-mono font-medium text-amber-700 dark:text-amber-400">
-                {formatTo12Hour(prayerTimes.sunset)}
+              <Sunset size={14} className="text-amber-600 mb-1" />
+              <span className="font-mono font-medium text-amber-700 dark:text-amber-400 bg-white/40 dark:bg-black/40 px-1.5 py-0.5 rounded">
+                {formatPrayerTime("Maghrib")}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Current Time Display */}
+        {/* Current Time Display - Using location-based time */}
         <div className="text-center mb-2">
           <div className="text-sm text-muted-foreground">
-            {currentTime.toLocaleDateString()}
+            {time.toLocaleDateString()}
           </div>
           <div className="text-2xl font-mono font-bold text-primary">
-            {currentTime.toLocaleTimeString([], {
+            {time.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",
@@ -137,7 +185,7 @@ const DailyOverviewSection = ({
             })}
           </div>
           <div className="text-xs text-muted-foreground">
-            Auto-updates daily based on your location
+            {location ? `Time in ${getLocationName()}` : "Local time"}
           </div>
         </div>
       </div>

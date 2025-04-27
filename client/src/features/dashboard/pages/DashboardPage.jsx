@@ -96,8 +96,8 @@ const DashboardPage = () => {
   const handleViewModeChange = (mode) => {
     const isProjectRoute = location.pathname.includes("/dashboard/project/");
     if (mode === "board" && !isProjectRoute) {
-      toast.info("Board view is only available for specific projects.");
-      return;
+        toast.info("Board view is only available for specific projects.");
+        return;
     }
     console.log(`[DashboardPage] Changing view mode to: ${mode}`);
     setViewMode(mode);
@@ -106,9 +106,9 @@ const DashboardPage = () => {
 
   const handleTaskCountChange = useCallback(
     (count) => {
-      // This function is called by TaskList/Board to report the current task count
-      setTaskCount(count);
-      console.log(`[DashboardPage] Task count for ${projectKey}: ${count}`);
+    // This function is called by TaskList/Board to report the current task count
+    setTaskCount(count);
+    console.log(`[DashboardPage] Task count for ${projectKey}: ${count}`);
     },
     [projectKey]
   );
@@ -146,11 +146,11 @@ const DashboardPage = () => {
   };
 
   return (
-    <motion.div
+    <motion.div 
       className="py-4 px-2 sm:py-6 sm:px-4 bg-theme relative rounded-xl shadow-md"
-      initial="hidden"
+      initial="hidden" 
       animate="visible"
-      variants={pageContentVariants}
+      variants={pageContentVariants} 
       key={projectKey} // Add key to force re-render on project change
     >
       <motion.h1
@@ -161,7 +161,7 @@ const DashboardPage = () => {
         {getDisplayName()}
       </motion.h1>
 
-      {/* Show ViewToggle only for project routes */}
+      {/* Show ViewToggle only for project routes */} 
       {location.pathname.includes("/dashboard/project/") && (
         <div className="flex justify-center mb-4">
           <motion.div

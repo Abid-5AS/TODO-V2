@@ -37,6 +37,7 @@
     "date-fns": "^3.6.0",
     "framer-motion": "^12.9.2",
     "lucide-react": "^0.503.0",
+    "moment-timezone": "^0.5.48",
     "postcss": "^8.4.38",
     "react": "19.1.0",
     "react-day-picker": "^8.10.1",
