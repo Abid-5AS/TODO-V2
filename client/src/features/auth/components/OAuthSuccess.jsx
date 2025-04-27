@@ -20,12 +20,12 @@ const OAuthSuccess = () => {
         try {
           const user = await fetchUserProfile();
           if (user) {
-            // Use the login function which properly updates the auth state
-            await login({ user: user, token: token }); // Pass both user and token
-            // Navigation is handled by the login effect in AuthContext
-            // navigate("/dashboard", { replace: true });
+            await login({ user: user, token: token });
+            navigate("/dashboard", { replace: true }); // Redirect after successful login
           } else {
-            console.error("OAuth Error: Could not fetch user profile after getting token.");
+            console.error(
+              "OAuth Error: Could not fetch user profile after getting token."
+            );
             navigate("/login");
           }
         } catch (error) {
@@ -39,7 +39,7 @@ const OAuthSuccess = () => {
     };
 
     processOAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, login]); // Dependencies: navigate, login
 
   return (
@@ -49,7 +49,7 @@ const OAuthSuccess = () => {
         <p className="text-gray-600">
           Please wait while we complete the authentication.
         </p>
-         <div className="w-8 h-8 border-4 border-t-blue-500 border-b-blue-500 rounded-full animate-spin mx-auto mt-4"></div>
+        <div className="w-8 h-8 border-4 border-t-blue-500 border-b-blue-500 rounded-full animate-spin mx-auto mt-4"></div>
       </div>
     </div>
   );
