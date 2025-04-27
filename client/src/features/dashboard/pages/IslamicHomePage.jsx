@@ -26,7 +26,6 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
-import DailyQuranVerse from "../components/DailyQuranVerse";
 import { useTitle } from "../../../hooks/useTitle";
 import { toast } from "sonner";
 
@@ -37,6 +36,7 @@ import DailyOverviewSection from "../components/islamic/DailyOverviewSection";
 import PrayerTimesSection from "../components/islamic/PrayerTimesSection";
 import ProhibitedTimesSection from "../components/islamic/ProhibitedTimesSection";
 import IslamicCalendarSection from "../components/islamic/IslamicCalendarSection";
+import DailyQuranVerse from "../components/islamic/DailyQuranVerse";
 
 const IslamicHomePage = () => {
   useTitle("Islamic Home");
@@ -571,9 +571,6 @@ const IslamicHomePage = () => {
       >
         {/* Quran Verse Section */}
         <motion.section variants={itemVariants} className="md:col-span-2">
-          <h2 className="text-lg font-semibold mb-2 flex items-center">
-            <span className="mr-2">☪</span> Daily Quran Verse
-          </h2>
           <DailyQuranVerse />
         </motion.section>
 

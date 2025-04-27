@@ -1,15 +1,14 @@
-// src/features/dashboard/components/DailyQuranVerse.jsx
-// Component that displays a randomly selected Quran verse each day
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CalendarIcon, ExternalLinkIcon } from "lucide-react";
+import { CalendarIcon, RefreshCw, BookOpen } from "lucide-react";
 import axios from "axios";
+import { toast } from "sonner";
 
 const DailyQuranVerse = () => {
   const [verse, setVerse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fallback verses in case API fails
   const fallbackVerses = [
@@ -44,72 +43,89 @@ const DailyQuranVerse = () => {
     },
   ];
 
+  const fetchDailyVerse = async (forceRefresh = false) => {
+    // Check if we already have a verse for today in localStorage
+    const today = new Date().toDateString();
+    const savedVerse = localStorage.getItem("quranVerse");
+    const savedDate = localStorage.getItem("quranVerseDate");
+
+    // If we have a cached verse from today and not forcing refresh, use it
+    if (savedVerse && savedDate === today && !forceRefresh) {
+      setVerse(JSON.parse(savedVerse));
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise fetch a new verse
+    try {
+      setLoading(true);
+      if (forceRefresh) {
+        setRefreshing(true);
+      }
+
+      // Get a random surah (1-114) and ayah
+      const surahNum = Math.floor(Math.random() * 114) + 1;
+
+      // Fetch the surah to determine number of ayahs
+      const surahResponse = await axios.get(
+        `https://api.alquran.cloud/v1/surah/${surahNum}/en.asad`
+      );
+
+      const numberOfAyahs = surahResponse.data.data.numberOfAyahs;
+      const ayahNum = Math.floor(Math.random() * numberOfAyahs) + 1;
+
+      // Now fetch the specific verse
+      const verseResponse = await axios.get(
+        `https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.asad`
+      );
+
+      // Get Arabic version too
+      const arabicResponse = await axios.get(
+        `https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/ar.alafasy`
+      );
+
+      const verseData = {
+        text: verseResponse.data.data.text,
+        arabicText: arabicResponse.data.data.text,
+        surah: verseResponse.data.data.surah.englishName,
+        ayah: verseResponse.data.data.numberInSurah,
+        surahNum: surahNum,
+      };
+
+      // Save to state and localStorage
+      setVerse(verseData);
+      localStorage.setItem("quranVerse", JSON.stringify(verseData));
+      localStorage.setItem("quranVerseDate", today);
+
+      if (forceRefresh) {
+        toast.success("Quran verse refreshed successfully");
+      }
+    } catch (err) {
+      console.error("Error fetching Quran verse:", err);
+
+      // Use fallback verses if API fails
+      const randomIndex = Math.floor(Math.random() * fallbackVerses.length);
+      const fallbackVerse = fallbackVerses[randomIndex];
+
+      setVerse(fallbackVerse);
+      localStorage.setItem("quranVerse", JSON.stringify(fallbackVerse));
+      localStorage.setItem("quranVerseDate", today);
+
+      if (forceRefresh) {
+        toast.error("Could not refresh verse. Using fallback verse.");
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Handle manual refresh of the verse
+  const handleRefreshVerse = () => {
+    fetchDailyVerse(true);
+  };
+
   useEffect(() => {
-    const fetchDailyVerse = async () => {
-      // Check if we already have a verse for today in localStorage
-      const today = new Date().toDateString();
-      const savedVerse = localStorage.getItem("quranVerse");
-      const savedDate = localStorage.getItem("quranVerseDate");
-
-      // If we have a cached verse from today, use it
-      if (savedVerse && savedDate === today) {
-        setVerse(JSON.parse(savedVerse));
-        setLoading(false);
-        return;
-      }
-
-      // Otherwise fetch a new verse
-      try {
-        setLoading(true);
-
-        // Get a random surah (1-114) and ayah
-        const surahNum = Math.floor(Math.random() * 114) + 1;
-
-        // Fetch the surah to determine number of ayahs
-        const surahResponse = await axios.get(
-          `https://api.alquran.cloud/v1/surah/${surahNum}/en.asad`
-        );
-
-        const numberOfAyahs = surahResponse.data.data.numberOfAyahs;
-        const ayahNum = Math.floor(Math.random() * numberOfAyahs) + 1;
-
-        // Now fetch the specific verse
-        const verseResponse = await axios.get(
-          `https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.asad`
-        );
-
-        // Get Arabic version too
-        const arabicResponse = await axios.get(
-          `https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/ar.alafasy`
-        );
-
-        const verseData = {
-          text: verseResponse.data.data.text,
-          arabicText: arabicResponse.data.data.text,
-          surah: verseResponse.data.data.surah.englishName,
-          ayah: verseResponse.data.data.numberInSurah,
-          surahNum: surahNum,
-        };
-
-        // Save to state and localStorage
-        setVerse(verseData);
-        localStorage.setItem("quranVerse", JSON.stringify(verseData));
-        localStorage.setItem("quranVerseDate", today);
-      } catch (err) {
-        console.error("Error fetching Quran verse:", err);
-
-        // Use fallback verses if API fails
-        const randomIndex = Math.floor(Math.random() * fallbackVerses.length);
-        const fallbackVerse = fallbackVerses[randomIndex];
-
-        setVerse(fallbackVerse);
-        localStorage.setItem("quranVerse", JSON.stringify(fallbackVerse));
-        localStorage.setItem("quranVerseDate", today);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDailyVerse();
   }, []);
 
@@ -152,15 +168,21 @@ const DailyQuranVerse = () => {
       <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-primary/40"></div>
       <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-primary/40"></div>
 
-      {/* Small decorative icon */}
-      <motion.div
-        className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-background dark:bg-background text-primary"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.3, type: "spring" }}
+      {/* Title with icon inside the container */}
+      <div className="flex items-center mb-4">
+        <BookOpen size={20} className="mr-2 text-primary" />
+        <h2 className="text-lg font-semibold">Daily Quran Verse</h2>
+      </div>
+
+      {/* Refresh button */}
+      <button
+        onClick={handleRefreshVerse}
+        disabled={refreshing}
+        className="absolute top-2 right-2 p-2 text-xs bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
+        title="Get new verse"
       >
-        <span className="px-2 text-lg">☪</span>
-      </motion.div>
+        <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+      </button>
 
       {/* Arabic text with staggered animation */}
       <motion.h3
