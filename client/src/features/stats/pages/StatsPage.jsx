@@ -68,19 +68,21 @@ const cardVariants = {
 
 // Colors for priority chart
 const priorityColors = {
-  High: "hsl(var(--chart-1))",    // Reddish
-  Medium: "hsl(var(--chart-2))",  // Orange/Yellowish
-  Low: "hsl(var(--chart-3))",     // Bluish
+  High: "#e11d48",    // Red
+  Medium: "#f59e0b",  // Amber
+  Low: "#3b82f6",     // Blue
 };
-const defaultChartColor = "hsl(var(--chart-4))"; // Default color
+const defaultChartColor = "#8b5cf6"; // Purple - Default color
 
 // Colors for project chart (generate dynamically later if needed)
 const projectChartColors = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "#e11d48", // Red
+    "#f59e0b", // Amber
+    "#3b82f6", // Blue
+    "#8b5cf6", // Purple
+    "#10b981", // Emerald
+    "#06b6d4", // Cyan
+    "#ec4899", // Pink
 ];
 
 const StatsPage = () => {
