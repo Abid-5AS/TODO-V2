@@ -35,11 +35,11 @@ const AISettings = () => {
       setIsLoading(true);
       const response = await getAIProviderStatus();
       if (response.success) {
-        setIsLocalAI(response.data.useLocalAI);
-        setConnectionStatus(response.data.status || "unknown");
-        console.log("fetchProviderStatus: LocalAI=", response.data.useLocalAI, "Status=", response.data.status);
+        setIsLocalAI(response.useLocalAI);
+        setConnectionStatus(response.status || "unknown");
+        console.log("fetchProviderStatus: LocalAI=", response.useLocalAI, "Status=", response.status);
 
-        if (response.data.useLocalAI && response.data.status === "disconnected") {
+        if (response.useLocalAI && response.status === "disconnected") {
           setStatusMessage({
             type: "warning",
             message: "Local AI (LM Studio) appears offline. Ensure it's running.",
@@ -47,7 +47,7 @@ const AISettings = () => {
         } else {
           setStatusMessage(null); // Clear message if connected or using cloud
         }
-        return response.data.status || "unknown";
+        return response.status || "unknown";
       } else {
         throw new Error(response.error || "Failed to fetch AI status");
       }
@@ -76,10 +76,10 @@ const AISettings = () => {
       const response = await toggleAIProvider(newValue);
       if (response.success) {
         setIsLocalAI(newValue);
-        setConnectionStatus(response.data.status || 'unknown'); // Update status from toggle response
+        setConnectionStatus(response.status || 'unknown'); // Update status from toggle response
         toast({ title: `Switched to ${newValue ? 'Local AI' : 'Cloud AI'}` });
          // Re-check status message conditions
-         if (newValue && response.data.status === 'disconnected') {
+         if (newValue && response.status === 'disconnected') {
             setStatusMessage({
                 type: "warning",
                 message: "Switched to Local AI, but LM Studio appears offline.",
