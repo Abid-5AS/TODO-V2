@@ -224,7 +224,7 @@ export const useIslamicDate = (location) => {
         } catch (parseError) {
           console.error("Error parsing stored holiday data:", parseError);
           localStorage.removeItem(HOLIDAY_STORAGE_KEY);
-        }
+      }
       }
 
       if (!holidayData) {

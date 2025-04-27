@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Church } from 'lucide-react';
 import DailyPrayerTracker from '../components/DailyPrayerTracker';
 import PrayerCalendarView from '../components/PrayerCalendarView';
 import PrayerStatsDisplay from '../components/PrayerStatsDisplay';
@@ -35,7 +35,7 @@ const PrayerDashboardPage = () => {
       {/* Page Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-          <Heart className="mr-2 h-8 w-8" />
+          <Church className="mr-2 h-8 w-8" />
           Prayer Tracker
         </h1>
         <p className="text-muted-foreground mt-2">

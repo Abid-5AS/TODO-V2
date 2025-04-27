@@ -1,12 +1,63 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Award, Percent, CheckCircle, BarChart2 } from 'lucide-react';
+import { Flame, Award, Percent, CheckCircle, BarChart2, Calendar, HelpCircle } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { usePrayerLog } from '../hooks/usePrayerLog';
+import { usePrayerLog } from '../hooks/usePrayerLog.jsx';
 import { Skeleton } from '../../../components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 
 const PrayerStatsDisplay = () => {
-  const { stats, loading, error } = usePrayerLog();
+  const { stats, loading, error, calendarData, lastUpdated, refreshAllData } = usePrayerLog();
+
+  // Force refresh when component mounts or when prayers are updated
+  useEffect(() => {
+    if (lastUpdated) {
+      console.log(`[PrayerStatsDisplay] lastUpdated changed: ${lastUpdated}`);
+      
+      // Use a small timeout to ensure the refresh happens after all state updates
+      const refreshTimer = setTimeout(() => {
+        console.log(`[PrayerStatsDisplay] Refreshing stats data`);
+        refreshAllData();
+      }, 150); // Slightly longer timeout than calendar to ensure sequential updates
+      
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [lastUpdated, refreshAllData]);
+
+  // Calculate consistency metrics
+  const consistencyMetrics = useMemo(() => {
+    if (!calendarData || Object.keys(calendarData).length === 0) {
+      return {
+        completionRate: 0,
+        daysWithCompletePrayers: 0,
+        totalDaysLogged: 0
+      };
+    }
+
+    // Count days with all 5 prayers logged
+    const daysWithCompletePrayers = Object.values(calendarData).filter(count => count >= 5).length;
+    const totalDaysLogged = Object.keys(calendarData).length;
+    
+    // Calculate completion percentage (% of logged days with all 5 prayers)
+    const perfectDayRate = totalDaysLogged > 0 
+      ? Math.round((daysWithCompletePrayers / totalDaysLogged) * 100) 
+      : 0;
+    
+    // Overall completion rate based on total prayers
+    const completionRate = Math.min(
+      100,
+      stats.totalPrayersLogged > 0
+        ? Math.round((stats.totalPrayersLogged / (stats.totalPrayersLogged + 50)) * 100)
+        : 0
+    );
+
+    return {
+      completionRate,
+      perfectDayRate,
+      daysWithCompletePrayers,
+      totalDaysLogged
+    };
+  }, [calendarData, stats.totalPrayersLogged]);
 
   if (error?.stats) {
     return (
@@ -15,14 +66,6 @@ const PrayerStatsDisplay = () => {
       </div>
     );
   }
-
-  // Calculate a rough completion percentage (could be more sophisticated)
-  const completionRate = Math.min(
-    100,
-    stats.totalPrayersLogged > 0
-      ? Math.round((stats.totalPrayersLogged / (stats.totalPrayersLogged + 50)) * 100)
-      : 0
-  );
 
   // Animation variants for the stat cards
   const containerVariants = {
@@ -48,6 +91,17 @@ const PrayerStatsDisplay = () => {
     },
   };
 
+  // Get streak text
+  const getStreakText = () => {
+    if (stats.currentStreak === 0) {
+      return "Start a streak by completing all 5 prayers today!";
+    } else if (stats.currentStreak === 1) {
+      return "You've prayed all 5 prayers for 1 day. Keep going!";
+    } else {
+      return `${stats.currentStreak} consecutive days with all 5 prayers completed!`;
+    }
+  };
+
   return (
     <div className="prayer-stats glass-card p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
       {/* Header */}
@@ -55,6 +109,21 @@ const PrayerStatsDisplay = () => {
         <h2 className="text-lg font-semibold flex items-center text-emerald-700 dark:text-emerald-400">
           <BarChart2 size={18} className="mr-2" /> Prayer Statistics
         </h2>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
+                <HelpCircle size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-xs">
+              <p className="text-xs">
+                Your streak counts days where you complete all 5 daily prayers.
+                Missing even one prayer resets your streak. Yesterday counts if you haven't logged today yet.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {loading.stats ? (
@@ -79,7 +148,7 @@ const PrayerStatsDisplay = () => {
             variants={itemVariants}
           >
             <div className="text-orange-500 dark:text-orange-400 mb-2">
-              <Flame size={32} />
+              <Flame size={32} className={stats.currentStreak > 0 ? "animate-pulse" : ""} />
             </div>
             <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">
               {stats.currentStreak}
@@ -88,9 +157,7 @@ const PrayerStatsDisplay = () => {
               Current Streak
             </div>
             <div className="text-xs text-orange-500/70 dark:text-orange-400/70 text-center mt-1">
-              {stats.currentStreak > 0 
-                ? `${stats.currentStreak} consecutive day${stats.currentStreak !== 1 ? 's' : ''} with all prayers` 
-                : 'Start a streak by completing all prayers today!'}
+              {getStreakText()}
             </div>
           </motion.div>
 
@@ -110,12 +177,12 @@ const PrayerStatsDisplay = () => {
             </div>
             <div className="text-xs text-blue-500/70 dark:text-blue-400/70 text-center mt-1">
               {stats.longestStreak > 0 
-                ? `${stats.longestStreak} consecutive day${stats.longestStreak !== 1 ? 's' : ''} record` 
-                : 'Complete all prayers today to start a streak!'}
+                ? `Your personal best: ${stats.longestStreak} consecutive day${stats.longestStreak !== 1 ? 's' : ''}` 
+                : 'Complete all prayers today to start your record!'}
             </div>
           </motion.div>
 
-          {/* Completion Rate */}
+          {/* Total Prayers Logged */}
           <motion.div 
             className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 dark:from-emerald-950/40 dark:to-green-950/40 dark:border-emerald-900/30"
             variants={itemVariants}
@@ -130,8 +197,16 @@ const PrayerStatsDisplay = () => {
               Total Prayers Logged
             </div>
             <div className="text-xs text-emerald-500/70 dark:text-emerald-400/70 text-center mt-1">
-              Keep up the great work!
+              {stats.totalPrayersLogged > 0 
+                ? `${Math.floor(stats.totalPrayersLogged / 5)} days worth of prayers recorded` 
+                : 'Start logging your prayers today!'}
             </div>
+            {/* 
+              Days worth of prayers = Total Completed Prayers ÷ 5
+              This calculation divides the total number of completed prayers by 5 (since there are 5 prayers per day)
+              to estimate how many "full days" of prayers have been recorded, regardless of which specific days they were logged on.
+              Example: 17 completed prayers = 3.4 days = "3 days worth of prayers"
+            */}
           </motion.div>
         </motion.div>
       )}
@@ -145,7 +220,7 @@ const PrayerStatsDisplay = () => {
               Consistency Score
             </span>
             <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-              {completionRate}%
+              {consistencyMetrics.completionRate}%
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -153,11 +228,45 @@ const PrayerStatsDisplay = () => {
               className={cn(
                 "h-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 dark:from-emerald-500 dark:to-emerald-400",
               )}
-              style={{ width: `${completionRate}%` }}
+              style={{ width: `${consistencyMetrics.completionRate}%` }}
             ></div>
           </div>
           <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
             Based on your prayer logging activity
+          </div>
+          
+          {consistencyMetrics.totalDaysLogged > 0 && (
+            <div className="mt-3 flex justify-between items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Perfect days: {consistencyMetrics.daysWithCompletePrayers} of {consistencyMetrics.totalDaysLogged} ({consistencyMetrics.perfectDayRate}%)
+              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
+                      <HelpCircle size={12} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs">
+                      Perfect days are days where you completed all 5 prayers.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Streak information */}
+      {!loading.stats && stats.currentStreak > 0 && (
+        <div className="mt-4 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
+          <div className="flex items-start">
+            <Calendar size={16} className="mr-2 mt-1 text-orange-500 dark:text-orange-400" />
+            <div className="text-xs text-orange-700 dark:text-orange-300">
+              <span className="font-medium">Keep your streak alive!</span> Remember to complete all five prayers daily. Your streak counts days where you complete all prayers.
+            </div>
           </div>
         </div>
       )}
@@ -165,4 +274,4 @@ const PrayerStatsDisplay = () => {
   );
 };
 
-export default PrayerStatsDisplay; 
+export default React.memo(PrayerStatsDisplay); 

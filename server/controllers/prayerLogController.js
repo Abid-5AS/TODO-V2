@@ -129,7 +129,8 @@ exports.getMonthlyCalendarData = async (req, res) => {
     const startOfMonth = moment.utc(monthString, 'YYYY-MM').startOf('month').toDate();
     const endOfMonth = moment.utc(monthString, 'YYYY-MM').endOf('month').toDate();
 
-    const results = await PrayerLog.aggregate([
+    // First, get total counts per day (for backward compatibility)
+    const countResults = await PrayerLog.aggregate([
       {
         $match: {
           user_id: new mongoose.Types.ObjectId(user_id), // Ensure user_id is ObjectId
@@ -155,13 +156,70 @@ exports.getMonthlyCalendarData = async (req, res) => {
        }
     ]);
 
+    // Now, get detailed prayer type information per day
+    const detailedResults = await PrayerLog.aggregate([
+      {
+        $match: {
+          user_id: new mongoose.Types.ObjectId(user_id),
+          prayer_date: { $gte: startOfMonth, $lte: endOfMonth },
+          status: 'Completed',
+        },
+      },
+      {
+        $group: {
+          _id: { 
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$prayer_date', timezone: 'UTC' } },
+            prayer: '$prayer_name'
+          },
+          count: { $sum: 1 },
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.date',
+          prayers: { 
+            $push: { 
+              prayer: '$_id.prayer', 
+              count: '$count' 
+            } 
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id',
+          prayers: 1
+        }
+      },
+      {
+        $sort: { date: 1 }
+      }
+    ]);
+
     // Convert array result to a map { 'YYYY-MM-DD': count }
-    const calendarData = results.reduce((acc, day) => {
+    const calendarData = countResults.reduce((acc, day) => {
       acc[day.date] = day.count;
       return acc;
     }, {});
 
-    res.status(200).json({ success: true, data: calendarData });
+    // Create detailed prayer map
+    const detailedData = detailedResults.reduce((acc, day) => {
+      // Convert prayer array to object for easier access
+      const prayerObj = {};
+      day.prayers.forEach(p => {
+        prayerObj[p.prayer] = p.count;
+      });
+      
+      acc[day.date] = prayerObj;
+      return acc;
+    }, {});
+
+    res.status(200).json({ 
+      success: true, 
+      data: calendarData,
+      detailedData: detailedData
+    });
 
   } catch (error) {
     console.error('Error fetching monthly calendar data:', error);
@@ -178,6 +236,15 @@ exports.getPrayerStats = async (req, res) => {
         return res.status(401).json({ success: false, message: 'User not authenticated' });
     }
 
+    // Get today's and yesterday's date strings for comparison
+    const now = moment.utc();
+    const todayStr = now.format('YYYY-MM-DD');
+    const yesterdayStr = moment.utc().subtract(1, 'days').format('YYYY-MM-DD');
+    
+    // Calculate current hour in UTC to determine if we're early in the day
+    const currentHourUTC = now.hour();
+    const isEarlyInDay = currentHourUTC < 12; // Before noon UTC
+
     // Fetch all 'Completed' logs for the user, grouped by date, sorted
     const dailyCounts = await PrayerLog.aggregate([
       {
@@ -190,6 +257,7 @@ exports.getPrayerStats = async (req, res) => {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$prayer_date', timezone: 'UTC' } },
           count: { $sum: 1 },
+          prayers: { $push: "$prayer_name" },
         },
       },
       {
@@ -199,7 +267,8 @@ exports.getPrayerStats = async (req, res) => {
           $project: {
               _id: 0,
               date: '$_id',
-              count: 1
+              count: 1,
+              prayers: 1,
           }
       }
     ]);
@@ -209,95 +278,170 @@ exports.getPrayerStats = async (req, res) => {
     let longestStreak = 0;
     let tempCurrentStreak = 0;
     let previousDate = null;
-    const oneDay = 24 * 60 * 60 * 1000; // milliseconds in a day
-    let totalPrayersLogged = 0;
+    let totalPrayersLogged = 0; // Note: This only counts prayers with 'Completed' status, not 'Missed' ones
+    let daysWithAllPrayers = 0;
+    let totalDaysLogged = 0;
+    let fajrCount = 0;
+    let dhuhrCount = 0;
+    let asrCount = 0;
+    let maghribCount = 0;
+    let ishaCount = 0;
 
-    // Get today's date string (UTC) for comparison
-    const todayStr = moment.utc().format('YYYY-MM-DD');
-
-    dailyCounts.forEach((day) => {
-      totalPrayersLogged += day.count;
-
-      if (day.count >= 5) { // Consider a day as part of a streak if 5 prayers are completed
-        const currentDate = moment.utc(day.date, 'YYYY-MM-DD');
-        
-        if (previousDate && currentDate.diff(previousDate, 'days') === 1) {
-          // Consecutive day
-          tempCurrentStreak++;
-        } else {
-          // Streak broken or first day of potential streak
-          tempCurrentStreak = 1;
-        }
-
-        if (tempCurrentStreak > longestStreak) {
-          longestStreak = tempCurrentStreak;
-        }
-        previousDate = currentDate;
-
-        // Check if this potential streak includes today
-        if (day.date === todayStr) {
-          currentStreak = tempCurrentStreak;
-        } else {
-            // If the last day in the loop wasn't today, check if yesterday was the end of the streak
-             const yesterdayStr = moment.utc().subtract(1, 'days').format('YYYY-MM-DD');
-             if(day.date === yesterdayStr) {
-                 currentStreak = tempCurrentStreak;
-             } else {
-                 // If the loop finishes and the last day wasn't today or yesterday, the current streak is 0
-                 // unless the last iteration updated it.
-                 // We need to check if the very *last* day processed was yesterday to confirm the streak.
-                 if (dailyCounts.indexOf(day) === dailyCounts.length - 1 && day.date !== todayStr) {
-                    // If the last logged day isn't today, the current streak running up *to* today is 0
-                    // unless the last day *was* yesterday.
-                    if (day.date !== yesterdayStr) {
-                        currentStreak = 0;
-                    }
-                 }
-             }
-        }
-
-      } else {
-        // Day with < 5 prayers breaks the streak
-        tempCurrentStreak = 0;
-        previousDate = moment.utc(day.date, 'YYYY-MM-DD'); // Still update previousDate
-        // If today breaks the streak, currentStreak becomes 0
-        if (day.date === todayStr) {
-            currentStreak = 0;
-        }
+    // Check if we have entries for all days
+    const dateEntries = new Map();
+    dailyCounts.forEach(day => {
+      dateEntries.set(day.date, {
+        count: day.count,
+        prayers: day.prayers,
+      });
+      // Increment the total prayers logged by the count of completed prayers for this day
+      // 'Missed' prayers do not contribute to this count as we only fetched 'Completed' prayers in the aggregation above
+      totalPrayersLogged += day.count; 
+      totalDaysLogged++;
+      
+      // Count prayer types
+      if (day.prayers) {
+        day.prayers.forEach(prayer => {
+          const prayerLower = prayer.toLowerCase();
+          if (prayerLower === 'fajr') fajrCount++;
+          else if (prayerLower === 'dhuhr') dhuhrCount++;
+          else if (prayerLower === 'asr') asrCount++;
+          else if (prayerLower === 'maghrib') maghribCount++;
+          else if (prayerLower === 'isha') ishaCount++;
+        });
       }
     });
 
-    // Final check: if the loop ended, and the last day wasn't today, the current streak is 0
-    // (unless it was yesterday, handled above)
-    if (dailyCounts.length > 0 && dailyCounts[dailyCounts.length - 1].date !== todayStr && currentStreak !== 0) {
-       const lastDate = moment.utc(dailyCounts[dailyCounts.length - 1].date, 'YYYY-MM-DD');
-       if (moment.utc().diff(lastDate, 'days') > 1) {
-            currentStreak = 0;
-       }
+    // Process dates in ascending order
+    const sortedDates = Array.from(dateEntries.keys()).sort();
+    
+    // Check if all 5 prayers are completed
+    const hasAllFivePrayers = (date) => {
+      const entry = dateEntries.get(date);
+      if (!entry) return false;
+      
+      // Simple count check
+      if (entry.count >= 5) return true;
+      
+      // For more accuracy, we could check that all 5 prayer names are present
+      // This handles duplicate entries for the same prayer
+      const prayers = entry.prayers || [];
+      const uniquePrayers = new Set(prayers.map(p => p.toLowerCase()));
+      const requiredPrayers = new Set(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']);
+      
+      // Check if all required prayers are in the uniquePrayers set
+      for (const prayer of requiredPrayers) {
+        if (!uniquePrayers.has(prayer)) return false;
+      }
+      
+      return true;
+    };
+    
+    for (let i = 0; i < sortedDates.length; i++) {
+      const dateStr = sortedDates[i];
+      
+      // Consider a day complete only if all 5 prayers are logged
+      const isCompletedDay = hasAllFivePrayers(dateStr);
+      
+      if (isCompletedDay) {
+        daysWithAllPrayers++;
+      }
+      
+      if (!isCompletedDay) {
+        // Reset streak on incomplete days
+        tempCurrentStreak = 0;
+        continue;
+      }
+      
+      if (previousDate === null) {
+        // First completed day
+        tempCurrentStreak = 1;
+      } else {
+        // Check if this date is consecutive with the previous one
+        const currentDate = moment.utc(dateStr, 'YYYY-MM-DD');
+        const prevDate = moment.utc(previousDate, 'YYYY-MM-DD');
+        
+        if (currentDate.diff(prevDate, 'days') === 1) {
+          // Consecutive day
+          tempCurrentStreak++;
+        } else {
+          // Non-consecutive day, reset streak
+          tempCurrentStreak = 1;
+        }
+      }
+      
+      // Update longest streak if current temporary streak is longer
+      if (tempCurrentStreak > longestStreak) {
+        longestStreak = tempCurrentStreak;
+      }
+      
+      // Update previous date
+      previousDate = dateStr;
     }
-    // If there are no logs at all, current streak is 0
-    if (dailyCounts.length === 0) {
-        currentStreak = 0;
+    
+    // Determine current streak based on the final temp streak
+    
+    // If last logged day was yesterday or today, current streak is temp streak
+    const lastLoggedDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
+    
+    if (lastLoggedDate === todayStr && hasAllFivePrayers(todayStr)) {
+      // Today is logged with all 5 prayers
+      currentStreak = tempCurrentStreak;
+    } 
+    else if (lastLoggedDate === yesterdayStr && hasAllFivePrayers(yesterdayStr)) {
+      // Yesterday is the last logged day with all 5 prayers
+      // If it's early in the day, don't break the streak yet
+      if (isEarlyInDay) {
+        // It's early, so give them the benefit of the doubt
+        currentStreak = tempCurrentStreak;
+      } else {
+        // Get partial data for today
+        const todayEntry = dateEntries.get(todayStr);
+        const todayCount = todayEntry ? todayEntry.count : 0;
+        
+        // If they've logged any prayers today, maintain streak
+        // This allows for partial completion while the day is still in progress
+        if (todayCount > 0) {
+          currentStreak = tempCurrentStreak;
+        } else {
+          // No activity today and it's late in the day - streak may be at risk
+          currentStreak = tempCurrentStreak;
+        }
+      }
+    } 
+    else if (lastLoggedDate && moment.utc(lastLoggedDate, 'YYYY-MM-DD').isBefore(moment.utc(yesterdayStr, 'YYYY-MM-DD'))) {
+      // Last logged day is before yesterday, streak is broken
+      currentStreak = 0;
     }
-
-
-    // Note: Completion Rate calculation is complex. What's the denominator?
-    // Option 1: Total days since first log? Might be inaccurate if user skipped days.
-    // Option 2: Total prayers possible since first log (days * 5)? Better but assumes consistent usage.
-    // Let's omit completion rate for now unless a clear definition is provided.
-
+    
+    // Calculate completion rates and percentages
+    const perfectDayPercentage = totalDaysLogged > 0 
+      ? Math.round((daysWithAllPrayers / totalDaysLogged) * 100) 
+      : 0;
+      
+    // Calculate per-prayer completion rates
+    const prayerCompletionStats = {
+      Fajr: fajrCount,
+      Dhuhr: dhuhrCount,
+      Asr: asrCount,
+      Maghrib: maghribCount,
+      Isha: ishaCount
+    };
+    
     res.status(200).json({
       success: true,
       data: {
         currentStreak,
         longestStreak,
         totalPrayersLogged,
-        // completionRate: /* Add logic if defined */
+        totalDaysLogged,
+        daysWithAllPrayers,
+        perfectDayPercentage,
+        prayerCompletionStats
       },
     });
-
   } catch (error) {
-    console.error('Error fetching prayer stats:', error);
-    res.status(500).json({ success: false, message: 'Server error fetching prayer stats', error: error.message });
+    console.error('Error calculating prayer stats:', error);
+    res.status(500).json({ success: false, message: 'Server error calculating prayer stats', error: error.message });
   }
 }; 
