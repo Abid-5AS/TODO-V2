@@ -38,10 +38,10 @@ const KanbanTaskCard = ({ task, overlay }) => {
     "p-3 rounded-lg shadow-sm transition-all duration-200 touch-none will-change-transform";
   // Specific styles for normal card
   const normalCardClasses =
-    "bg-white/80 dark:bg-zinc-800/70 border-0 hover:shadow-md hover:scale-[1.03] hover:bg-white/90 dark:hover:bg-zinc-800/80 hover:z-10 relative";
+    "bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-sm border-0 hover:shadow-md hover:scale-[1.03] hover:bg-blue-100/40 dark:hover:bg-blue-900/30 hover:z-10 relative";
   // Specific styles for overlay (dragged) card
   const overlayCardClasses =
-    "bg-white/90 dark:bg-zinc-800/90 border-0 shadow-md scale-[1.05]";
+    "bg-blue-100/40 dark:bg-blue-900/30 backdrop-blur-sm border-0 shadow-md scale-[1.05]";
 
   return (
     <motion.div

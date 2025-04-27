@@ -333,7 +333,7 @@ const StatsPage = () => {
           initial="hidden"
           animate="visible"
           whileHover="hover"
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
         >
           <CardHeader className="pb-1 pt-3 px-3">
             <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
@@ -352,7 +352,7 @@ const StatsPage = () => {
           initial="hidden"
           animate="visible"
           whileHover="hover"
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
         >
           <CardHeader className="pb-1 pt-3 px-3">
             <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
@@ -371,7 +371,7 @@ const StatsPage = () => {
           initial="hidden"
           animate="visible"
           whileHover="hover"
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
         >
           <CardHeader className="pb-1 pt-3 px-3">
             <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
@@ -390,7 +390,7 @@ const StatsPage = () => {
           initial="hidden"
           animate="visible"
           whileHover="hover"
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
         >
           <CardHeader className="pb-1 pt-3 px-3">
             <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
@@ -409,7 +409,7 @@ const StatsPage = () => {
           initial="hidden"
           animate="visible"
           whileHover="hover"
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
         >
           <CardHeader className="pb-1 pt-3 px-3">
             <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
@@ -433,7 +433,7 @@ const StatsPage = () => {
           initial="hidden"
           animate="visible"
           whileHover="hover"
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-full flex flex-col"
         >
           <CardHeader className="pb-1 pt-3 px-3">
             <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
@@ -470,7 +470,7 @@ const StatsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-auto mb-4">
         {/* Priority Pie Chart */}
         <MotionCard
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-auto"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-auto"
           variants={cardVariants}
           custom={6}
           initial="hidden"
@@ -487,7 +487,7 @@ const StatsPage = () => {
           </CardHeader>
           <CardContent className="px-0 py-0">
             <ChartContainer
-              className="h-[250px] w-full"
+              className="h-[300px] w-full"
               config={priorityChartConfig}
             >
               <RechartsPieChart
@@ -499,8 +499,8 @@ const StatsPage = () => {
                   nameKey="priority"
                   cx="50%"
                   cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={120}
                   paddingAngle={3}
                   isAnimationActive={true}
                   label={({ priority, count }) =>
@@ -574,7 +574,7 @@ const StatsPage = () => {
 
         {/* Project Bar Chart */}
         <MotionCard
-          className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm h-auto"
+          className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm h-auto"
           variants={cardVariants}
           custom={7}
           initial="hidden"
@@ -591,7 +591,7 @@ const StatsPage = () => {
           </CardHeader>
           <CardContent className="px-1 py-0">
             <ChartContainer
-              className="h-[250px] w-full"
+              className="h-[300px] w-full"
               config={projectChartConfig}
             >
               <BarChart
@@ -655,7 +655,7 @@ const StatsPage = () => {
         initial="hidden"
         animate="visible"
         whileHover="hover"
-        className="overflow-visible bg-card/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-border/50 shadow-sm mb-2"
+        className="overflow-visible bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-xl border border-border/50 shadow-sm mb-2"
       >
         <CardHeader className="pb-2 pt-3 px-4">
           <CardTitle className="text-base font-medium">
@@ -676,7 +676,7 @@ const StatsPage = () => {
                   delay:
                     0.1 + statsData.dueDateAnalysis.indexOf(category) * 0.05,
                 }}
-                className="flex flex-col items-center p-2 rounded-lg bg-muted/30 border border-border/50 text-center space-y-1"
+                className="flex flex-col items-center p-2 rounded-lg bg-blue-100/20 dark:bg-blue-900/10 border border-border/50 text-center space-y-1"
               >
                 <div className={`p-1.5 rounded-full ${category.iconClass}`}>
                   <Clock className={`h-3.5 w-3.5 ${category.textClass}`} />
