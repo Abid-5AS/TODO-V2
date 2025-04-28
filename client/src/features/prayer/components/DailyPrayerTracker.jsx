@@ -142,9 +142,9 @@ const DailyPrayerTracker = () => {
   // --- End Debug Log ---
 
   return (
-    <div className="prayer-tracker glass-card p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
+    <div className="prayer-tracker glass-card p-4 sm:p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
       {/* Header with date navigation */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
         <h2 className="text-lg font-semibold flex items-center text-emerald-700 dark:text-emerald-400">
           <Calendar size={18} className="mr-2" /> Daily Prayer Tracker
         </h2>
@@ -182,11 +182,11 @@ const DailyPrayerTracker = () => {
       </div>
 
       {/* Current date display */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-4 sm:mb-6">
         <div className="text-sm text-muted-foreground">
           {format(currentDate, 'EEEE')}
         </div>
-        <div className="text-2xl font-bold">
+        <div className="text-xl sm:text-2xl font-bold">
           {format(currentDate, 'MMMM d, yyyy')}
         </div>
         
@@ -219,7 +219,7 @@ const DailyPrayerTracker = () => {
                 key={prayer}
                 whileHover={{ scale: isDisabled ? 1.0 : 1.01 }}
                 className={cn(
-                  "flex flex-wrap md:flex-nowrap items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200",
+                  "flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200 gap-3",
                   isDisabled && "opacity-70",
                   dailyStatus[prayer]?.toLowerCase() === 'completed'
                     ? "bg-green-50 border border-green-100 dark:bg-green-900/20 dark:border-green-900/30"
@@ -228,33 +228,30 @@ const DailyPrayerTracker = () => {
                     : "bg-white/50 border border-gray-100 dark:bg-gray-800/20 dark:border-gray-700/20 hover:bg-gray-50 dark:hover:bg-gray-800/30"
                 )}
               >
-                <div className="flex items-center flex-1">
-                  <div className="mr-4 p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                <div className="flex items-center w-full sm:w-auto">
+                  <div className="mr-3 p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
                     <Clock className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className={cn("text-lg font-medium", prayerHasPassed && dailyStatus[prayer] === null && "text-muted-foreground")}>
-                          {prayer}
-                        </h3>
-                        <p className="text-sm text-muted-foreground flex flex-wrap items-center">
-                          <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                            {formatPrayerTime(prayer)}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
+                    <h3 className={cn("text-md sm:text-lg font-medium", prayerHasPassed && dailyStatus[prayer] === null && "text-muted-foreground")}>
+                      {prayer}
+                    </h3>
+                    <p className="text-sm text-muted-foreground flex flex-wrap items-center">
+                      <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                        {formatPrayerTime(prayer)}
+                      </span>
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 mt-2 md:mt-0">
-                  <div className="pr-3">{getStatusBadge(dailyStatus[prayer])}</div>
-                  <div className="flex space-x-2">
+                <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end w-full sm:w-auto gap-2 sm:gap-3">
+                  <div className="w-full sm:w-auto sm:pr-3">{getStatusBadge(dailyStatus[prayer])}</div>
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto">
                     <Button
                       variant="default"
                       size="sm"
                       className={cn(
+                        "flex-1 sm:flex-none justify-center",
                         dailyStatus[prayer]?.toLowerCase() === 'completed' 
                           ? "bg-green-600 hover:bg-green-700 text-white" 
                           : "bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -273,6 +270,7 @@ const DailyPrayerTracker = () => {
                       variant="outline"
                       size="sm"
                       className={cn(
+                        "flex-1 sm:flex-none justify-center",
                         dailyStatus[prayer]?.toLowerCase() === 'missed' 
                           ? "bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/30" 
                           : "border-red-200 text-red-700 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/10"

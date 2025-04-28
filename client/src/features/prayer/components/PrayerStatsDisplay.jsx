@@ -103,9 +103,9 @@ const PrayerStatsDisplay = () => {
   };
 
   return (
-    <div className="prayer-stats glass-card p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
+    <div className="prayer-stats glass-card p-4 sm:p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
         <h2 className="text-lg font-semibold flex items-center text-emerald-700 dark:text-emerald-400">
           <BarChart2 size={18} className="mr-2" /> Prayer Statistics
         </h2>
@@ -128,7 +128,7 @@ const PrayerStatsDisplay = () => {
 
       {loading.stats ? (
         // Loading skeleton
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="p-4 rounded-lg bg-white/20 dark:bg-black/10">
               <Skeleton className="h-16 w-full" />
@@ -137,20 +137,20 @@ const PrayerStatsDisplay = () => {
         </div>
       ) : (
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {/* Current Streak */}
           <motion.div 
-            className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-100 dark:from-orange-950/40 dark:to-yellow-950/40 dark:border-orange-900/30"
+            className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-100 dark:from-orange-950/40 dark:to-yellow-950/40 dark:border-orange-900/30"
             variants={itemVariants}
           >
-            <div className="text-orange-500 dark:text-orange-400 mb-2">
-              <Flame size={32} className={stats.currentStreak > 0 ? "animate-pulse" : ""} />
+            <div className="text-orange-500 dark:text-orange-400 mb-1 sm:mb-2">
+              <Flame size={28} className={stats.currentStreak > 0 ? "animate-pulse" : ""} />
             </div>
-            <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">
+            <div className="text-2xl sm:text-3xl font-bold text-orange-700 dark:text-orange-300">
               {stats.currentStreak}
             </div>
             <div className="text-sm text-orange-600 dark:text-orange-400 text-center mt-1">
@@ -163,13 +163,13 @@ const PrayerStatsDisplay = () => {
 
           {/* Longest Streak */}
           <motion.div 
-            className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 dark:from-blue-950/40 dark:to-indigo-950/40 dark:border-blue-900/30"
+            className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 dark:from-blue-950/40 dark:to-indigo-950/40 dark:border-blue-900/30"
             variants={itemVariants}
           >
-            <div className="text-blue-500 dark:text-blue-400 mb-2">
-              <Award size={32} />
+            <div className="text-blue-500 dark:text-blue-400 mb-1 sm:mb-2">
+              <Award size={28} />
             </div>
-            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-300">
               {stats.longestStreak}
             </div>
             <div className="text-sm text-blue-600 dark:text-blue-400 text-center mt-1">
@@ -184,13 +184,13 @@ const PrayerStatsDisplay = () => {
 
           {/* Total Prayers Logged */}
           <motion.div 
-            className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 dark:from-emerald-950/40 dark:to-green-950/40 dark:border-emerald-900/30"
+            className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 dark:from-emerald-950/40 dark:to-green-950/40 dark:border-emerald-900/30 sm:col-span-2 lg:col-span-1"
             variants={itemVariants}
           >
-            <div className="text-emerald-500 dark:text-emerald-400 mb-2">
-              <CheckCircle size={32} />
+            <div className="text-emerald-500 dark:text-emerald-400 mb-1 sm:mb-2">
+              <CheckCircle size={28} />
             </div>
-            <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-700 dark:text-emerald-300">
               {stats.totalPrayersLogged}
             </div>
             <div className="text-sm text-emerald-600 dark:text-emerald-400 text-center mt-1">
@@ -213,8 +213,8 @@ const PrayerStatsDisplay = () => {
 
       {/* Completion Progress Bar */}
       {!loading.stats && (
-        <div className="mt-6 p-4 rounded-lg bg-white/50 dark:bg-black/20 border border-gray-100 dark:border-gray-800/50">
-          <div className="flex justify-between items-center mb-2">
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-white/50 dark:bg-black/20 border border-gray-100 dark:border-gray-800/50">
+          <div className="flex flex-wrap justify-between items-center mb-2 gap-1">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
               <Percent size={16} className="mr-1 text-emerald-500 dark:text-emerald-400" />
               Consistency Score
@@ -236,7 +236,7 @@ const PrayerStatsDisplay = () => {
           </div>
           
           {consistencyMetrics.totalDaysLogged > 0 && (
-            <div className="mt-3 flex justify-between items-center">
+            <div className="mt-3 flex flex-wrap justify-between items-center gap-1">
               <span className="text-xs text-gray-600 dark:text-gray-400">
                 Perfect days: {consistencyMetrics.daysWithCompletePrayers} of {consistencyMetrics.totalDaysLogged} ({consistencyMetrics.perfectDayRate}%)
               </span>
@@ -261,9 +261,9 @@ const PrayerStatsDisplay = () => {
 
       {/* Streak information */}
       {!loading.stats && stats.currentStreak > 0 && (
-        <div className="mt-4 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
+        <div className="mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
           <div className="flex items-start">
-            <Calendar size={16} className="mr-2 mt-1 text-orange-500 dark:text-orange-400" />
+            <Calendar size={16} className="mr-2 mt-1 text-orange-500 dark:text-orange-400 flex-shrink-0" />
             <div className="text-xs text-orange-700 dark:text-orange-300">
               <span className="font-medium">Keep your streak alive!</span> Remember to complete all five prayers daily. Your streak counts days where you complete all prayers.
             </div>
