@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { BookText, RefreshCw, Loader2, Copy, Check, Share2 } from "lucide-react";
-import { fetchDailyQuranVerse } from "../../services"; // Updated import path relative to new location
+import axios from 'axios';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button"; // Using absolute path
 import { Skeleton } from "@/components/ui/skeleton"; // Using absolute path
@@ -16,6 +16,23 @@ const getTodayDateString = () => {
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+// Implement fetchDailyQuranVerse directly in the component since we removed it from services
+const fetchDailyQuranVerse = async () => {
+  try {
+    const response = await axios.get(`/api/quran/daily-verse`);
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error("Error fetching daily Quran verse:", error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 };
 
 const DAILY_VERSE_CACHE_KEY = "dailyQuranVerseData";

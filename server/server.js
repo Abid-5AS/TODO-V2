@@ -51,9 +51,6 @@ app.use("/api/ai", require("./routes/ai"));
 app.use("/api/projects", require("./routes/projects"));
 app.use('/api/prayer-logs', prayerLogRoutes);
 
-// Mount Quran routes
-app.use("/api/quran", require("./routes/quranRoutes"));
-
 // --- Global Error Handler ---
 // Replace the old generic handler with the new one
 app.use(globalErrorHandler);

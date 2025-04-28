@@ -77,24 +77,4 @@ export const savePrayerSettings = async (settings) => {
       error: error.message
     };
   }
-};
-
-/**
- * Fetches daily Quran verse
- * @returns {Promise<Object>} - The Quran verse data
- */
-export const fetchDailyQuranVerse = async () => {
-  try {
-    const response = await axios.get(`/api/quran/daily-verse`);
-    return {
-      success: true,
-      data: response.data
-    };
-  } catch (error) {
-    console.error("Error fetching daily Quran verse:", error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
 }; 

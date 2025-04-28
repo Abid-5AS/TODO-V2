@@ -30,8 +30,8 @@ import {
   DebugSection
 } from '@/features/islamic/components';
 
-// Import Quran components from the new quran sub-feature
-import { DailyQuranVerse, QuranTrackerSection } from '@/features/islamic/quran/components';
+// Import Quran components from the quran sub-feature
+import { DailyQuranVerse } from '@/features/islamic/quran/components';
 
 // Accordion Component
 const Accordion = ({ title, icon, children, defaultOpen = false, className = "" }) => {
@@ -235,15 +235,6 @@ const IslamicHomePage = () => {
         <ProhibitedTimesSection 
           prohibitedTimes={prohibitedTimes} 
           itemVariants={itemVariants} 
-        />
-      )
-    },
-    {
-      label: "Quran Tracker",
-      icon: <BookOpen size={16} className="text-green-500" />,
-      content: (
-        <QuranTrackerSection 
-          itemVariants={itemVariants}
         />
       )
     }
