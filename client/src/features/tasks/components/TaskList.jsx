@@ -171,19 +171,19 @@ const TaskList = ({
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Select value={filter} onValueChange={handleFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-lg backdrop-blur-sm border-0 focus:ring-2 focus:ring-primary/60 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start bg-white/80 dark:bg-zinc-800/60">
+              <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-lg backdrop-blur-xl border border-white/20 dark:border-gray-700/30 focus:ring-2 focus:ring-primary/60 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start bg-white/10 dark:bg-zinc-800/20 shadow-sm">
                 <Filter
                   size={16}
                   className="text-muted-foreground icon-animated"
                 />
                 <SelectValue placeholder="Filter by..." />
               </SelectTrigger>
-              <SelectContent className="border-0 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md">
+              <SelectContent className="border border-white/20 dark:border-gray-700/30 bg-white/30 dark:bg-zinc-800/30 backdrop-blur-xl shadow-lg">
                 {FILTER_OPTIONS.map((opt) => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className="transition-all duration-200 hover:bg-muted/20"
+                    className="transition-all duration-200 hover:bg-white/20 dark:hover:bg-zinc-700/20"
                   >
                     {opt.label}
                   </SelectItem>
@@ -191,19 +191,19 @@ const TaskList = ({
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={handleSort}>
-              <SelectTrigger className="w-full sm:w-[160px] h-10 min-w-[110px] rounded-lg backdrop-blur-sm border-0 focus:ring-2 focus:ring-primary/60 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start bg-white/80 dark:bg-zinc-800/60">
+              <SelectTrigger className="w-full sm:w-[160px] h-10 min-w-[110px] rounded-lg backdrop-blur-xl border border-white/20 dark:border-gray-700/30 focus:ring-2 focus:ring-primary/60 text-sm flex items-center gap-2 text-zinc-800 dark:text-white justify-start bg-white/10 dark:bg-zinc-800/20 shadow-sm">
                 <ArrowUpWideNarrow
                   size={16}
                   className="text-muted-foreground icon-animated"
                 />
                 <SelectValue placeholder="Sort by..." />
               </SelectTrigger>
-              <SelectContent className="border-0 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md">
+              <SelectContent className="border border-white/20 dark:border-gray-700/30 bg-white/30 dark:bg-zinc-800/30 backdrop-blur-xl shadow-lg">
                 {SORT_OPTIONS.map((opt) => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className="transition-all duration-200 hover:bg-muted/20"
+                    className="transition-all duration-200 hover:bg-white/20 dark:hover:bg-zinc-700/20"
                   >
                     {opt.label}
                   </SelectItem>

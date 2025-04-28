@@ -654,7 +654,7 @@ const TaskForm = ({
           <Button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
+            className="w-full sm:w-auto backdrop-blur-xl border border-white/20 dark:border-gray-700/30 bg-white/10 dark:bg-zinc-800/20 text-zinc-800 dark:text-white shadow-sm hover:bg-white/20 dark:hover:bg-zinc-800/30 transition-all duration-200"
           >
             {loading ? (
               <span className="flex items-center justify-center">
