@@ -20,7 +20,8 @@ import {
   CheckCircle,
   ListTodo,
   Moon,
-  CheckSquare
+  CheckSquare,
+  BarChart2
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
@@ -49,7 +50,13 @@ const Sidebar = ({
   ];
 
   const handleProjectClick = (projectId) => {
-    onSelectProject(projectId);
+    // Special case for stats - only navigate, don't set as selected project
+    if (projectId === "stats") {
+      navigate("/dashboard/stats");
+    } else {
+      onSelectProject(projectId);
+    }
+    
     if (isMobile) {
       onClose();
     }
@@ -128,7 +135,24 @@ const Sidebar = ({
             <ChevronRight className="ml-auto h-5 w-5" />
           )}
         </Button>
-                </div>
+        <Button
+          key="stats"
+          variant={selectedProject === "stats" ? "secondary" : "ghost"}
+          className={cn(
+            "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
+            selectedProject === "stats" ?
+              "bg-gradient-to-r from-blue-500/20 to-sky-500/20 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500 pl-4" :
+              "text-foreground/80 hover:text-blue-600 dark:hover:text-blue-400"
+          )}
+          onClick={() => handleProjectClick("stats")}
+        >
+          <BarChart2 className="mr-3 h-5 w-5 text-blue-500" />
+          Stats
+          {selectedProject === "stats" && (
+            <ChevronRight className="ml-auto h-5 w-5" />
+          )}
+        </Button>
+      </div>
 
       {/* Special Routes (Original Quick Access) */}
       <div className="px-4 py-2">

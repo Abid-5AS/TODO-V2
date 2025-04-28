@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { 
   MapPin, RefreshCw, Settings, Bug, Clock, AlertTriangle,
-  Moon, Sun, ChevronDown, ChevronUp, Calendar, Loader2
+  Moon, Sun, ChevronDown, ChevronUp, Calendar, Loader2, BookOpen
 } from "lucide-react";
 import { useTitle } from "@/hooks/useTitle";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ import {
 } from '@/features/islamic/components';
 
 // Import Quran components from the new quran sub-feature
-import { DailyQuranVerse } from '@/features/islamic/quran/components';
+import { DailyQuranVerse, QuranTrackerSection } from '@/features/islamic/quran/components';
 
 // Accordion Component
 const Accordion = ({ title, icon, children, defaultOpen = false, className = "" }) => {
@@ -75,7 +75,7 @@ const TabInterface = ({ tabs, defaultTab = 0 }) => {
   
   return (
     <div className="flex flex-col">
-      <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200/50 dark:border-slate-700/50 mb-4">
+      <div className="flex flex-wrap border-b border-slate-200/50 dark:border-slate-700/50 mb-4">
         {tabs.map((tab, idx) => (
           <button
             key={idx}
@@ -237,6 +237,15 @@ const IslamicHomePage = () => {
           itemVariants={itemVariants} 
         />
       )
+    },
+    {
+      label: "Quran Tracker",
+      icon: <BookOpen size={16} className="text-green-500" />,
+      content: (
+        <QuranTrackerSection 
+          itemVariants={itemVariants}
+        />
+      )
     }
   ];
 
@@ -320,18 +329,12 @@ const IslamicHomePage = () => {
         initial="hidden"
         animate="visible"
       >
-        {/* Daily Quran Verse - Always full width */}
+        {/* Daily Quran Verse - Render directly without Accordion */}
         <motion.div
           className="mb-4"
           variants={itemVariants}
         >
-          <Accordion 
-            title="Daily Quran Verse" 
-            icon={<Moon size={18} className="text-blue-500" />}
-            defaultOpen={true}
-          >
-            <DailyQuranVerse />
-          </Accordion>
+          <DailyQuranVerse /> 
         </motion.div>
 
         {/* Grid View Layout */}

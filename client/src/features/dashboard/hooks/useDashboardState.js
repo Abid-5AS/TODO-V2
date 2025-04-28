@@ -77,11 +77,13 @@ export const useDashboardState = () => {
   
   // Handle project selection
   const handleSelectProject = useCallback((projectId) => {
-    const specialRoutes = ['today', 'upcoming', 'completed', 'all', 'inbox', 'overdue'];
+    const specialRoutes = ['today', 'upcoming', 'completed', 'all', 'inbox', 'overdue', 'stats'];
     if (projectId === 'islamic') {
       navigate(`/dashboard/islamic`);
     } else if (projectId === 'prayers') {
       navigate(`/dashboard/prayers`);
+    } else if (projectId === 'stats') {
+      navigate(`/dashboard/stats`);
     } else if (specialRoutes.includes(projectId)) {
       navigate(`/dashboard/${projectId}`);
     } else {
