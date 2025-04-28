@@ -1,10 +1,10 @@
 // src/features/settings/components/AISettings.jsx
 // Component for managing AI provider settings (Local vs Cloud).
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react"; // Keep useEffect for initial check/cleanup if needed, remove useState/useCallback
 import { motion } from "framer-motion";
-import { Switch } from "../../../components/ui/switch"; // Corrected path
-import { Label } from "../../../components/ui/label"; // Corrected path
+import { Switch } from "@/components/ui/switch"; // Updated path
+import { Label } from "@/components/ui/label"; // Updated path
 import {
   Card,
   CardHeader,
@@ -12,129 +12,44 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "../../../components/ui/card"; // Corrected path
-import { Badge } from "../../../components/ui/badge"; // Corrected path
-import { Button } from "../../../components/ui/button"; // Corrected path
-import { Alert, AlertTitle, AlertDescription } from "../../../components/ui/alert"; // Corrected path
-import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { getAIProviderStatus, toggleAIProvider } from "../services/aiSettingsService"; // Use feature-specific service
-import { useToast } from "../../../hooks/use-toast"; // Corrected path
+} from "@/components/ui/card"; // Updated path
+import { Badge } from "@/components/ui/badge"; // Updated path
+import { Button } from "@/components/ui/button"; // Updated path
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Updated path
+import { Loader2, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+// Remove unused service imports if hook handles them
+// import { getAIProviderStatus, toggleAIProvider } from "../services/aiSettingsService"; 
+import { useAISettings } from "../hooks/useAISettings"; // Import the custom hook - relative path is okay
+// Remove useToast if the hook handles it entirely
+// import { useToast } from "@/hooks/use-toast"; // This line was already commented out, but updating path if uncommented
 
 const AISettings = () => {
-  const { toast } = useToast();
-  const [isLocalAI, setIsLocalAI] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isToggling, setIsToggling] = useState(false);
-  const [statusMessage, setStatusMessage] = useState(null); // For general errors/warnings
-  const [connectionStatus, setConnectionStatus] = useState("unknown"); // "connected", "disconnected", "unknown"
-  const [connectionCheckResult, setConnectionCheckResult] = useState(null); // For check connection button result
+  // Use the custom hook to manage state and logic
+  const {
+    isLocalAI,
+    isLoading,
+    isToggling,
+    statusMessage, // Now a string directly from the hook
+    connectionStatus,
+    connectionCheckResult, // Now an object { status, message, details? }
+    handleToggle,
+    handleCheckConnection,
+    refetchStatus // Added refetch capability
+  } = useAISettings();
 
-  // Fetch current AI provider status
-  const fetchProviderStatus = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getAIProviderStatus();
-      if (response.success) {
-        setIsLocalAI(response.useLocalAI);
-        setConnectionStatus(response.status || "unknown");
-        console.log("fetchProviderStatus: LocalAI=", response.useLocalAI, "Status=", response.status);
+  // Remove all useState, useCallback, and useEffect logic that's now in the hook
+  // const { toast } = useToast(); // Removed
+  // const [isLocalAI, setIsLocalAI] = useState(false); // Removed
+  // const [isLoading, setIsLoading] = useState(true); // Removed
+  // const [isToggling, setIsToggling] = useState(false); // Removed
+  // const [statusMessage, setStatusMessage] = useState(null); // Removed (now a string)
+  // const [connectionStatus, setConnectionStatus] = useState("unknown"); // Removed
+  // const [connectionCheckResult, setConnectionCheckResult] = useState(null); // Removed (now an object)
 
-        if (response.useLocalAI && response.status === "disconnected") {
-          setStatusMessage({
-            type: "warning",
-            message: "Local AI (LM Studio) appears offline. Ensure it's running.",
-          });
-        } else {
-          setStatusMessage(null); // Clear message if connected or using cloud
-        }
-        return response.status || "unknown";
-      } else {
-        throw new Error(response.error || "Failed to fetch AI status");
-      }
-    } catch (error) {
-      console.error("Failed to fetch AI provider status:", error);
-      setStatusMessage({
-        type: "error",
-        message: "Unable to retrieve AI provider status. Please try again later.",
-      });
-      setConnectionStatus("unknown");
-      setIsLocalAI(false); // Default to false on error?
-      return "unknown";
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Toggle between local and cloud AI
-  const handleToggle = async () => {
-    setIsToggling(true);
-    setStatusMessage(null); // Clear previous messages
-    setConnectionCheckResult(null);
-    const newValue = !isLocalAI;
-    
-    try {
-      const response = await toggleAIProvider(newValue);
-      if (response.success) {
-        setIsLocalAI(newValue);
-        setConnectionStatus(response.status || 'unknown'); // Update status from toggle response
-        toast({ title: `Switched to ${newValue ? 'Local AI' : 'Cloud AI'}` });
-         // Re-check status message conditions
-         if (newValue && response.status === 'disconnected') {
-            setStatusMessage({
-                type: "warning",
-                message: "Switched to Local AI, but LM Studio appears offline.",
-            });
-         }
-      } else {
-        throw new Error(response.error || "Failed to toggle AI provider");
-      }
-    } catch (error) {
-      console.error("Failed to toggle AI provider:", error);
-      toast({ title: "Error Toggling AI", description: error.message, variant: "destructive" });
-      // Optionally revert state? Or refetch to be sure?
-      fetchProviderStatus(); // Refetch on error to get actual current state
-    } finally {
-      setIsToggling(false);
-    }
-  };
-
-  // Check LM Studio connection status manually
-  const checkLMStudioConnection = async () => {
-    setIsLoading(true); // Use main loading indicator
-    setConnectionCheckResult(null); // Clear previous result
-    setStatusMessage(null);
-    try {
-      // We re-fetch the status which implicitly checks the connection
-      const latestStatus = await fetchProviderStatus();
-      console.log("checkLMStudioConnection: latestStatus", latestStatus);
-      if (latestStatus === "connected") {
-        setConnectionCheckResult({
-          text: "LM Studio connection successful!",
-          type: "success",
-        });
-      } else {
-        setConnectionCheckResult({
-          text: "LM Studio connection failed. Ensure it's running and accessible on port 1234.",
-          type: "error",
-        });
-      }
-    } catch (error) {
-      // Error during fetchProviderStatus is already handled within that function
-      setConnectionCheckResult({
-        text: "Unable to verify LM Studio connection. Check console for errors.",
-        type: "error",
-      });
-    } finally {
-      setIsLoading(false);
-      // Clear the check result message after 5 seconds
-      setTimeout(() => setConnectionCheckResult(null), 5000);
-    }
-  };
-
-  // Load initial status on mount
-  useEffect(() => {
-    fetchProviderStatus();
-  }, []);
+  // const fetchProviderStatus = useCallback(...); // Removed
+  // const handleToggle = useCallback(...); // Removed (provided by hook)
+  // const checkLMStudioConnection = async () => { ... }; // Renamed to handleCheckConnection in hook
+  // useEffect(() => { fetchProviderStatus(); }, []); // Removed (handled by hook)
 
   // Animation variants
   const cardVariants = {
@@ -158,6 +73,7 @@ const AISettings = () => {
       initial="hidden"
       animate="visible"
       variants={cardVariants}
+      className="w-full max-w-2xl mx-auto" // Added max-width and centering
     >
       <Card className="w-full bg-card/70 backdrop-blur-sm border-border/50">
         <CardHeader>
@@ -173,6 +89,7 @@ const AISettings = () => {
         </CardHeader>
         
         <CardContent className="space-y-4">
+          {/* Main Toggle Section */}
           <div className="flex flex-col gap-4 p-4 border rounded-lg bg-background/50">
             <div className="flex items-center space-x-2 justify-between">
               <div>
@@ -194,7 +111,7 @@ const AISettings = () => {
                 <Switch
                   id="ai-provider-toggle"
                   checked={isLocalAI}
-                  onCheckedChange={handleToggle}
+                  onCheckedChange={handleToggle} // Use handler from hook
                   disabled={isLoading || isToggling}
                   className="data-[state=checked]:bg-primary"
                 />
@@ -213,77 +130,87 @@ const AISettings = () => {
               {isLocalAI && (
                 <Badge 
                   variant={connectionStatus === "connected" ? "success" : connectionStatus === 'disconnected' ? "destructive" : "secondary"}
-                  className={`capitalize ${connectionStatus === 'unknown' ? 'animate-pulse' : ''}`}
+                  className={`capitalize ${connectionStatus === 'checking' || connectionStatus === 'unknown' ? 'animate-pulse' : ''}`} // Updated pulse condition
                 >
                   {connectionStatus}
                 </Badge>
               )}
             </div>
+             {/* Status Message Display */}
+             {statusMessage && (
+               <p className={`text-sm mt-2 ${
+                 connectionStatus === 'connected' ? 'text-green-600 dark:text-green-400' : 
+                 connectionStatus === 'disconnected' ? 'text-red-600 dark:text-red-400' : 
+                 connectionStatus === 'checking' ? 'text-blue-600 dark:text-blue-400' : 
+                 'text-muted-foreground' // Default for 'unknown' or other messages
+               }`}>
+                 {statusMessage}
+               </p>
+             )}
           </div>
 
-          {/* General Status/Warning Message */} 
-          {statusMessage && (
-            <Alert variant={statusMessage.type === "error" ? "destructive" : "default"} className={`${statusMessage.type === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200' : ''}`}>
-              <AlertTriangle className={`h-4 w-4 ${statusMessage.type === 'warning' ? 'text-yellow-600 dark:text-yellow-400' : ''}`} />
-              <AlertTitle>
-                {statusMessage.type === "error" ? "Error" : "Notice"}
-              </AlertTitle>
-              <AlertDescription>{statusMessage.message}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Connection Check Result Message */} 
+          {/* Connection Check Result */} 
           {connectionCheckResult && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`p-3 rounded-md text-sm flex items-center gap-2 ${connectionCheckResult.type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}
+              className={`p-3 rounded-md text-sm flex flex-col gap-2 border ${connectionCheckResult.status ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'}`}
             >
-              {connectionCheckResult.type === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-              {connectionCheckResult.text}
+             <div className="flex items-center gap-2 font-medium">
+                {connectionCheckResult.status ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                <span>{connectionCheckResult.message || (connectionCheckResult.status ? "Connection Successful" : "Connection Failed")}</span>
+              </div>
+              {connectionCheckResult.details && (
+                <pre className="text-xs mt-2 p-2 bg-muted/50 rounded overflow-x-auto">
+                  {typeof connectionCheckResult.details === 'string' ? connectionCheckResult.details : JSON.stringify(connectionCheckResult.details, null, 2)}
+                </pre>
+               )}
             </motion.div>
           )}
 
-          {/* Local AI Requirements Info Box */} 
+          {/* Local AI Specific Section */} 
           {isLocalAI && (
-            <div className="mt-4 space-y-2 p-4 bg-muted/50 rounded-md border">
-              <h4 className="font-medium text-sm">Local AI Requirements:</h4>
-              <ul className="list-disc list-inside text-xs space-y-1 text-muted-foreground">
-                <li>LM Studio application installed and running.</li>
-                <li>Local Inference Server started within LM Studio.</li>
-                <li>Server running on default port 1234 (OpenAI API format).</li>
-                <li>An appropriate model loaded and ready in LM Studio.</li>
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-4 space-y-4 p-4 bg-muted/50 rounded-md border"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Info size={16} className="text-blue-500"/>
+                    Local AI (LM Studio) Requirements
+                </p>
+                <Button
+                  onClick={handleCheckConnection} // Use handler from hook
+                  disabled={isLoading || isToggling || connectionStatus === 'checking'}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                >
+                  {connectionStatus === 'checking' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                  Check Connection
+                </Button>
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground pl-2">
+                <li>Ensure LM Studio is installed and running.</li>
+                <li>Verify the API server is enabled within LM Studio (usually on port 1234).</li>
+                <li>Make sure your firewall allows connections to LM Studio from this application.</li>
               </ul>
-            </div>
+              <Alert variant="info" className="mt-3 text-xs">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Tip</AlertTitle>
+                <AlertDescription>
+                  If connection fails, check LM Studio logs and ensure the correct port is configured in the server environment variables if necessary.
+                </AlertDescription>
+              </Alert>
+            </motion.div>
           )}
         </CardContent>
         
-        <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t">
-          <div className="text-xs text-muted-foreground max-w-md">
-            {isLocalAI ? (
-              <>Local AI keeps your task data private on your machine but requires setup and may be slower.</>
-            ) : (
-              <>Cloud AI (Groq) is faster and requires no setup, but sends task titles to an external service for processing.</>
-            )}
-          </div>
-          
-          {isLocalAI && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={checkLMStudioConnection}
-              disabled={isLoading || isToggling}
-              className="flex-shrink-0"
-            >
-              {(isLoading || isToggling) ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-              )}
-              Check LM Studio
-            </Button>
-          )}
+        <CardFooter className="text-xs text-muted-foreground pt-4 border-t">
+          Toggling the AI provider may require an application restart to take full effect in all features. Current status: {isLoading ? "Loading..." : isLocalAI ? `Local (${connectionStatus})` : "Cloud"}
         </CardFooter>
       </Card>
     </motion.div>

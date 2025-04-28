@@ -5,6 +5,7 @@ const {
   getProviderStatus,
   suggestSubtasks,
   expandDescription,
+  checkLocalConnection,
 } = require("../controllers/aiController");
 
 const router = express.Router();
@@ -17,6 +18,9 @@ router.post("/toggle-provider", toggleProvider);
 
 // Route: GET /api/ai/provider-status
 router.get("/provider-status", getProviderStatus);
+
+// Route: GET /api/ai/check-local-connection
+router.get("/check-local-connection", checkLocalConnection);
 
 // Route: POST /api/ai/suggest-subtasks
 router.post("/suggest-subtasks", suggestSubtasks);

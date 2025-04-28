@@ -215,3 +215,53 @@ exports.expandDescription = asyncHandler(async (req, res, next) => {
     provider: result.provider,
   });
 });
+
+// @desc    Check connection to Local AI (LM Studio)
+// @route   GET /api/ai/check-local-connection
+// @access  Private
+exports.checkLocalConnection = asyncHandler(async (req, res, next) => {
+  let status = false;
+  let message = "LM Studio server appears to be offline or unreachable.";
+  let details = null;
+
+  // Only proceed if local AI is supposed to be the active provider (or if we want to allow checking regardless)
+  // Currently checking regardless of the 'useLocalAI' state, as the button triggers it.
+
+  try {
+    // Use a short timeout for a quick check
+    const response = await axios.get(`${lmStudioSettings.baseURL}/models`, {
+      timeout: 3000, // Slightly longer timeout than status check
+    });
+    status = true;
+    message = "Successfully connected to LM Studio.";
+    // Optionally add details, like available models if needed
+    // details = response.data; 
+    console.log("Local AI Connection Check: Successful");
+  } catch (error) {
+    console.warn("Local AI Connection Check Failed:", error.message);
+    status = false;
+    if (error.code === "ECONNREFUSED") {
+      message = `Could not connect to LM Studio at ${lmStudioSettings.baseURL}. Ensure it is running and the API server is enabled.`;
+    } else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+      message = `Request to LM Studio at ${lmStudioSettings.baseURL} timed out.`;
+    } else {
+      message = error.message || "An unknown error occurred during connection check.";
+    }
+    details = {
+      code: error.code,
+      address: error.address,
+      port: error.port,
+      baseURL: lmStudioSettings.baseURL,
+      rawError: error.toString(),
+    };
+  }
+
+  res.status(200).json({
+    success: true, // The API call itself succeeded, even if connection failed
+    status: status, // Boolean indicating connection status
+    message: message,
+    details: details, // Include details for debugging
+    provider: "LM Studio (local)",
+    checkedAt: new Date().toISOString(),
+  });
+});

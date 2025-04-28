@@ -127,7 +127,7 @@ const ProjectKanbanBoard = ({ projectId }) => {
         {/* Use KANBAN_COLUMN_IDS for consistent ordering */} 
         <SortableContext items={taskIds}> {/* Provide all task IDs */} 
           {KANBAN_COLUMN_IDS.map((columnId) => (
-            <KanbanColumn
+        <KanbanColumn
               key={columnId}
               id={columnId} // Use constant ID
               title={KANBAN_COLUMN_NAMES[columnId] || columnId} // Use name from map

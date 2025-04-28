@@ -46,9 +46,9 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     togglePrayerTypeFilter,
     fetchMonthlyData // Needed for usePrayerActions revert logic
   } = usePrayerCalendarData(currentMonthYear);
-
+  
   // 4. Manage Stats Data
-  const [lastUpdated, setLastUpdated] = useState(null); 
+  const [lastUpdated, setLastUpdated] = useState(null);
   const {
     stats,
     setStats, 
@@ -80,7 +80,7 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     isCurrentDateToday,
     isFutureDate,
   });
-  
+
   // Consolidate loading and error states 
   const loading = {
     daily: loadingDailyStatus,
@@ -94,7 +94,7 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     stats: errorStats,
     action: errorAction,
   };
-  
+
   // Context value aggregates state and functions from hooks
   const value = {
     // Date Management
@@ -127,7 +127,7 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
 
     // Misc
     PRAYER_NAMES, 
-    lastUpdated, 
+    lastUpdated,
   };
 
   return (

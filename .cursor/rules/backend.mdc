@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Backend Refactor and Modularization Rules
+
+1. No functionality or API response changes.
+2. Use feature-based folder structure: group by feature (auth, tasks, prayers).
+3. Each feature should have its own controllers, routes, models, services, constants, and helpers.
+4. Move shared middlewares and utilities to /middlewares and /utils folders.
+5. Move constants like error messages, roles, configs to constants.js inside each feature.
+6. Move common logic like token generation, password hashing, etc. to helpers.js inside each feature.
+7. Keep controller functions small and focused — move heavy logic to service files.
+8. Format all code using Prettier.
+9. Clean and group imports: external libraries first, middlewares next, services/models next, then local files.
+10. Use environment variables (.env) for all sensitive values.
+11. Setup centralized error handling with consistent HTTP status codes.
+12. Remove all unused variables and commented-out code.

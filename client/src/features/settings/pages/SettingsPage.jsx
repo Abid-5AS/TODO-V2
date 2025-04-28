@@ -2,15 +2,14 @@
 // Main page for displaying settings options, using tabs for organization.
 
 import { motion } from "framer-motion";
-import { useTitle } from "../../../hooks/useTitle"; // Corrected path
+import { useTitle } from "@/hooks/useTitle"; // Updated path
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs"; // Corrected path
-import AISettings from "../components/AISettings";
-import AppearanceSettings from "../components/AppearanceSettings";
+} from "@/components/ui/tabs"; // Updated path
+import { AISettings, AppearanceSettings } from "../components";
 import { SlidersHorizontal, Bot, Palette, UserCircle } from "lucide-react";
 
 const SettingsPage = () => {

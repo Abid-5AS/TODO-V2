@@ -50,12 +50,12 @@ exports.logOrUpdatePrayer = async (req, res) => {
       const finalStatus = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
       console.log(`[prayerLogController] Upserting log with status: ${finalStatus}`);
 
-      const updatedLog = await PrayerLog.findOneAndUpdate(
-        { user_id, prayer_date, prayer_name }, // Find criteria
+    const updatedLog = await PrayerLog.findOneAndUpdate(
+      { user_id, prayer_date, prayer_name }, // Find criteria
         { $set: { status: finalStatus, updated_at: Date.now() }, $setOnInsert: { user_id, prayer_date, prayer_name, created_at: Date.now() } }, // Update/Set fields
         { new: true, upsert: true, runValidators: true } // Options
-      );
-      res.status(200).json({ success: true, data: updatedLog });
+    );
+    res.status(200).json({ success: true, data: updatedLog });
 
     } else {
       // Status is null, empty, or invalid: Delete the log entry if it exists

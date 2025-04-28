@@ -59,7 +59,7 @@ export const usePrayerActions = ({
 
       // *** Optimistic Update for Daily Status ONLY ***
       setDailyStatus(prev => ({ ...prev, [prayerName]: status }));
-      
+
       // *** Removed Optimistic Updates for Calendar/Stats ***
 
       try {
@@ -89,7 +89,7 @@ export const usePrayerActions = ({
         console.log('[usePrayerActions] Refetching data after error...');
         const { year, month } = { year: currentDate.getFullYear(), month: currentDate.getMonth() + 1 };
         fetchDailyLogs(currentDate);
-        fetchMonthlyData(year, month); 
+        fetchMonthlyData(year, month);
         fetchStats(); 
         setLastUpdated(Date.now()); // Trigger any other listeners *after* fetches initiated
         
@@ -121,7 +121,7 @@ export const usePrayerActions = ({
       let newStatus = status;
       
       // Cycle logic: null -> completed -> missed -> null
-      if (newStatus === null) { 
+      if (newStatus === null) {
         if (currentStatus === null) newStatus = 'completed';
         else if (currentStatus?.toLowerCase() === 'completed') newStatus = 'missed';
         else newStatus = null; 
