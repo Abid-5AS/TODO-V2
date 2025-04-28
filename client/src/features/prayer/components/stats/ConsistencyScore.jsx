@@ -14,7 +14,7 @@ const ConsistencyScore = ({ consistencyMetrics }) => {
           Consistency Score
         </span>
         <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-          {consistencyMetrics.completionRate}%
+          {consistencyMetrics.perfectDayRate}%
         </span>
       </div>
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -22,17 +22,17 @@ const ConsistencyScore = ({ consistencyMetrics }) => {
           className={cn(
             "h-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 dark:from-emerald-500 dark:to-emerald-400",
           )}
-          style={{ width: `${consistencyMetrics.completionRate}%` }}
+          style={{ width: `${consistencyMetrics.perfectDayRate}%` }}
         ></div>
       </div>
       <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-        Based on your prayer logging activity
+        Percentage of tracked days with all 5 prayers completed
       </div>
       
       {consistencyMetrics.totalDaysLogged > 0 && (
         <div className="mt-3 flex flex-wrap justify-between items-center gap-1">
           <span className="text-xs text-gray-600 dark:text-gray-400">
-            Perfect days: {consistencyMetrics.daysWithCompletePrayers} of {consistencyMetrics.totalDaysLogged} ({consistencyMetrics.perfectDayRate}%)
+            Perfect days: {consistencyMetrics.daysWithCompletePrayers} of {consistencyMetrics.totalDaysLogged} tracked
           </span>
           <TooltipProvider>
             <Tooltip>
