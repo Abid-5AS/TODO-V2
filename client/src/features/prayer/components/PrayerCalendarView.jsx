@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Sunrise, Sun, Sunset, Moon, Star, Filter, Check } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
-import { usePrayerLog } from '../hooks/usePrayerLog.jsx';
+import { usePrayerLog } from '../contexts/PrayerLogContext';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 import { Badge } from '../../../components/ui/badge';

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart } from 'lucide-react';
+import { PrayerLogProvider } from '@/features/prayer/contexts/PrayerLogContext';
 import DailyPrayerTracker from '@/features/prayer/components/DailyPrayerTracker';
 import PrayerCalendarView from '@/features/prayer/components/PrayerCalendarView';
 import PrayerStatsDisplay from '@/features/prayer/components/PrayerStatsDisplay';
@@ -31,41 +32,43 @@ const itemVariants = {
 
 const PrayerDashboardPage = () => {
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-      {/* Page Header */}
-      <div className="text-center mb-4 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-          <Heart className="mr-2 h-6 w-6 sm:h-8 sm:w-8" />
-          Prayer Tracker
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-2">
-          Track your daily prayers, build streaks, and enhance your spiritual journey
-        </p>
-      </div>
-
-      {/* Dashboard Components */}
-      <motion.div
-        className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Left Column: Daily Tracker and Stats */}
-        <div className="flex flex-col gap-4 sm:gap-6">
-          <motion.div variants={itemVariants}>
-            <DailyPrayerTracker />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <PrayerStatsDisplay />
-          </motion.div>
+    <PrayerLogProvider>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {/* Page Header */}
+        <div className="text-center mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center justify-center text-emerald-700 dark:text-emerald-400">
+            <Heart className="mr-2 h-6 w-6 sm:h-8 sm:w-8" />
+            Prayer Tracker
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+            Track your daily prayers, build streaks, and enhance your spiritual journey
+          </p>
         </div>
 
-        {/* Right Column: Calendar View */}
-        <motion.div variants={itemVariants}>
-          <PrayerCalendarView />
+        {/* Dashboard Components */}
+        <motion.div
+          className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {/* Left Column: Daily Tracker and Stats */}
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <motion.div variants={itemVariants}>
+              <DailyPrayerTracker />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <PrayerStatsDisplay />
+            </motion.div>
+          </div>
+
+          {/* Right Column: Calendar View */}
+          <motion.div variants={itemVariants}>
+            <PrayerCalendarView />
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </div>
+      </div>
+    </PrayerLogProvider>
   );
 };
 

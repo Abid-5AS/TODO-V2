@@ -1,5 +1,5 @@
 import React from 'react';
-import usePrayerLog from '../hooks/usePrayerLog.jsx';
+import usePrayerLog from '../hooks/usePrayerLog';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Sunrise, Sun, Sunset, Moon, Star } from 'lucide-react';

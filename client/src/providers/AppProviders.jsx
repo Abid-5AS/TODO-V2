@@ -3,7 +3,7 @@
 
 import React from "react";
 import { AuthProvider } from "../features/auth/contexts/AuthContext";
-import { PrayerLogProvider } from "../features/prayer/hooks/usePrayerLog.jsx";
+import { PrayerLogProvider } from "../features/prayer/contexts/PrayerLogContext";
 import { DashboardProvider } from "../features/dashboard/contexts/DashboardContext";
 import SonnerToaster from "../components/ui/sonner-toaster";
 import { BrowserRouter as Router } from "react-router-dom";

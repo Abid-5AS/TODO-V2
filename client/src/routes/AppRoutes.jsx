@@ -15,7 +15,7 @@ import SettingsPage from "../features/settings/pages/SettingsPage";
 import StatsPage from "../features/stats/pages/StatsPage";
 import IslamicHomePage from "../features/islamic/pages/IslamicHomePage";
 import PrayerDashboardPage from "../features/prayer/pages/PrayerDashboardPage"; // Import the new PrayerDashboardPage
-import { PrayerLogProvider } from "../features/prayer/hooks/usePrayerLog.jsx"; // Import the provider with .jsx extension
+import { PrayerLogProvider } from "../features/prayer/contexts/PrayerLogContext"; // Import the provider from contexts
 import Navbar from "../features/dashboard/components/Navbar"; // Public Navbar
 import ErrorBoundary from "../components/ErrorBoundary"; // Import the ErrorBoundary component
 import ErrorPage from "../pages/ErrorPage";

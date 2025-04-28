@@ -1,13 +1,16 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, Check, X, Clock, Loader2 } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { cn } from '../../../lib/utils';
-import usePrayerLog from '../hooks/usePrayerLog.jsx';
-import { Skeleton } from '../../../components/ui/skeleton';
-import { usePrayerTimes } from '../../islamic/hooks/usePrayerTimes';
-import { useLocation } from '../../islamic/hooks/useLocation';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePrayerTimes } from '@/features/islamic/hooks/usePrayerTimes';
+import { useLocation } from '@/features/islamic/hooks/useLocation';
+import { usePrayerLog } from '@/features/prayer/contexts/PrayerLogContext';
+import { PRAYER_NAMES } from '@/features/prayer/constants';
+import { formatPrayerTime, hasPrayerTimePassed, getPrayerStatusColor } from '@/features/prayer/helpers';
+import { isToday } from '@/features/prayer/helpers/dateHelpers';
 
 const DailyPrayerTracker = () => {
   // Get the location and prayer times
@@ -17,18 +20,17 @@ const DailyPrayerTracker = () => {
   // Local loading state for individual prayer buttons
   const [loadingPrayer, setLoadingPrayer] = useState({});
 
-  // Get prayer log hook - Call without arguments to use context
+  // Get prayer log hook from context
   const {
     currentDate,
-    dailyStatus, // This will now come from the provider
+    dailyStatus,
     loading,
     error,
     changeDate,
-    PRAYER_NAMES,
-    togglePrayerStatus // This will now come from the provider
-  } = usePrayerLog(); // <-- Removed arguments
+    togglePrayerStatus
+  } = usePrayerLog();
 
-  const isToday = new Date().toDateString() === currentDate.toDateString();
+  const isCurrentDateToday = isToday(currentDate);
   const isFutureDate = currentDate > new Date().setHours(0, 0, 0, 0);
 
   const handlePrevDay = () => changeDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
@@ -41,8 +43,7 @@ const DailyPrayerTracker = () => {
     setLoadingPrayer(prev => ({ ...prev, [prayerName]: true }));
     
     try {
-      // Backend status is already in the correct format ('completed'/'missed')
-      // Call the togglePrayerStatus function from the hook
+      // Call the togglePrayerStatus function from the context
       await togglePrayerStatus(prayerName, status);
       
       console.log(`[DailyPrayerTracker] Successfully logged ${prayerName} as ${status}`);
@@ -54,47 +55,6 @@ const DailyPrayerTracker = () => {
     }
   };
 
-  // Helper to format prayer time for display
-  const formatPrayerTime = (prayerName) => {
-    if (!prayerTimes) return "--:--";
-    
-    // Try to get the prayer time in standard format (case sensitive)
-    const time = prayerTimes[prayerName] || prayerTimes[prayerName.toLowerCase()];
-    if (!time) return "--:--";
-    
-    // Format the time for display (12-hour format)
-    try {
-      const [hours, minutes] = time.split(':').map(Number);
-      if (isNaN(hours) || isNaN(minutes)) return time; // Fall back to original format if parsing fails
-      
-      const period = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
-      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-    } catch (error) {
-      console.error("Error formatting prayer time:", error);
-      return time; // Return original if formatting fails
-    }
-  };
-
-  // Helper to check if a prayer time has already passed today
-  const hasPrayerTimePassed = (prayerName) => {
-    if (!prayerTimes || !isToday) return true; // Allow marking for past days
-    
-    const prayerTimeStr = prayerTimes[prayerName] || prayerTimes[prayerName.toLowerCase()];
-    if (!prayerTimeStr || typeof prayerTimeStr !== 'string') return false;
-    
-    const [prayerHour, prayerMinute] = prayerTimeStr.split(':').map(Number);
-    if (isNaN(prayerHour) || isNaN(prayerMinute)) return false;
-    
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // Compare times
-    return (currentHour > prayerHour || 
-           (currentHour === prayerHour && currentMinute >= prayerMinute));
-  };
-
   // Get status badge UI elements based on prayer status
   const getStatusBadge = (status) => {
     // Convert any case status to lowercase for comparison
@@ -103,27 +63,27 @@ const DailyPrayerTracker = () => {
     // Compare with lowercase values
     if (statusLower === 'completed') {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrayerStatusColor('completed')}`}>
           <Check className="mr-1 h-3 w-3" />
           Completed
         </span>
       );
     } else if (statusLower === 'missed') {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrayerStatusColor('missed')}`}>
           <X className="mr-1 h-3 w-3" />
           Missed
         </span>
       );
     } else if (statusLower === 'excused') {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrayerStatusColor('excused')}`}>
           Excused
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrayerStatusColor(null)}`}>
         Not Logged
       </span>
     );
@@ -136,10 +96,6 @@ const DailyPrayerTracker = () => {
       </div>
     );
   }
-
-  // --- Add Debug Log ---
-  console.log(`[DailyPrayerTracker] Rendering with dailyStatus:`, JSON.stringify(dailyStatus));
-  // --- End Debug Log ---
 
   return (
     <div className="prayer-tracker glass-card p-4 sm:p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
@@ -163,10 +119,10 @@ const DailyPrayerTracker = () => {
             onClick={handleToday}
             className={cn(
               "h-8 text-xs px-2",
-              isToday && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              isCurrentDateToday && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
             )}
           >
-            {isToday ? "Today" : "Go to Today"}
+            {isCurrentDateToday ? "Today" : "Go to Today"}
           </Button>
           <Button
             variant="outline"
@@ -210,8 +166,8 @@ const DailyPrayerTracker = () => {
       ) : (
         <div className="space-y-4">
           {PRAYER_NAMES.map((prayer) => {
-            const prayerHasPassed = hasPrayerTimePassed(prayer);
-            const isDisabled = isFutureDate || (isToday && !prayerHasPassed);
+            const prayerHasPassed = hasPrayerTimePassed(prayer, prayerTimes);
+            const isDisabled = isFutureDate || (isCurrentDateToday && !prayerHasPassed);
             const isPrayerLoading = loadingPrayer[prayer] || loading.action;
             
             return (
@@ -238,7 +194,7 @@ const DailyPrayerTracker = () => {
                     </h3>
                     <p className="text-sm text-muted-foreground flex flex-wrap items-center">
                       <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-                        {formatPrayerTime(prayer)}
+                        {formatPrayerTime(prayer, prayerTimes)}
                       </span>
                     </p>
                   </div>
@@ -264,7 +220,7 @@ const DailyPrayerTracker = () => {
                       ) : (
                         <Check className="mr-1 h-3 w-3" />
                       )}
-                      {isDisabled ? (isToday ? "Not time yet" : "Future") : "Completed"}
+                      {isDisabled ? (isCurrentDateToday ? "Not time yet" : "Future") : "Completed"}
                     </Button>
                     <Button
                       variant="outline"
