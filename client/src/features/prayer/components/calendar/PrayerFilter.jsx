@@ -1,24 +1,15 @@
 import React from 'react';
 import { Filter, Sunrise, Sun, Sunset, Moon } from 'lucide-react';
-import { Badge } from '@/components/ui/badge'; // Adjusted path
-import { cn } from '@/lib/utils'; // Adjusted path
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { PRAYER_ICONS, PRAYER_COLORS } from '../../constants';
 
-// Moved from PrayerCalendarView
-const PRAYER_ICONS = {
-  Fajr: <Sunrise size={16} />,
-  Dhuhr: <Sun size={16} />,
-  Asr: <Sun size={16} className="rotate-45" />,
-  Maghrib: <Sunset size={16} />,
-  Isha: <Moon size={16} />
-};
-
-// Moved from PrayerCalendarView
-const PRAYER_COLORS = {
-  Fajr: "text-amber-600 dark:text-amber-400",
-  Dhuhr: "text-orange-600 dark:text-orange-400",
-  Asr: "text-yellow-600 dark:text-yellow-400",
-  Maghrib: "text-red-600 dark:text-red-400",
-  Isha: "text-indigo-600 dark:text-indigo-400"
+// Helper component map to render icons based on string names
+const IconComponents = {
+  Sunrise: <Sunrise size={16} />,
+  Sun: <Sun size={16} />,
+  Sunset: <Sunset size={16} />,
+  Moon: <Moon size={16} />
 };
 
 const PrayerFilter = ({ 
@@ -34,22 +25,32 @@ const PrayerFilter = ({
         <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({activeFilterCount}/5 active)</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        {Object.keys(prayerTypeFilters).map(prayerName => (
-          <Badge
-            key={prayerName}
-            variant={prayerTypeFilters[prayerName] ? "default" : "outline"}
-            className={cn(
-              "cursor-pointer transition-all",
-              prayerTypeFilters[prayerName] && "bg-emerald-600 hover:bg-emerald-700"
-            )}
-            onClick={() => togglePrayerTypeFilter(prayerName)}
-          >
-            <span className={cn("mr-1", PRAYER_COLORS[prayerName])}>
-              {PRAYER_ICONS[prayerName]}
-            </span>
-            {prayerName}
-          </Badge>
-        ))}
+        {Object.keys(prayerTypeFilters).map(prayerName => {
+          const iconName = PRAYER_ICONS[prayerName]; // Get the string name (e.g., 'Sunrise')
+          const IconComponent = IconComponents[iconName]; // Get the component from the map
+          
+          // Handle potential rotation for Asr icon specifically
+          const iconElement = prayerName === 'Asr' && iconName === 'Sun' 
+            ? React.cloneElement(IconComponent, { className: "rotate-45" })
+            : IconComponent;
+            
+          return (
+            <Badge
+              key={prayerName}
+              variant={prayerTypeFilters[prayerName] ? "default" : "outline"}
+              className={cn(
+                "cursor-pointer transition-all",
+                prayerTypeFilters[prayerName] && "bg-emerald-600 hover:bg-emerald-700"
+              )}
+              onClick={() => togglePrayerTypeFilter(prayerName)}
+            >
+              <span className={cn("mr-1", PRAYER_COLORS[prayerName])}>
+                {iconElement || <div style={{width: 16, height: 16}}></div>} {/* Render the element or placeholder */} 
+              </span>
+              {prayerName}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );

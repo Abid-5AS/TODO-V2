@@ -95,4 +95,35 @@ export const getPrayerStatusColor = (status) => {
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
   }
+};
+
+/**
+ * Define color gradients for prayer count heatmap
+ * @param {number} count - Number of completed prayers (0-5)
+ * @param {boolean} isDarkMode - Whether dark mode is active
+ * @returns {string} - Tailwind CSS background color class
+ */
+export const getHeatmapColor = (count, isDarkMode = false) => {
+  const normalizedCount = Math.min(count || 0, 5);
+  if (normalizedCount === 0) return isDarkMode ? 'bg-gray-800' : 'bg-gray-100';
+
+  // Light mode colors (green gradient)
+  const lightColors = {
+    1: 'bg-green-100',
+    2: 'bg-green-200',
+    3: 'bg-green-300',
+    4: 'bg-green-400',
+    5: 'bg-green-500',
+  };
+  
+  // Dark mode colors (green gradient, darker base)
+  const darkColors = {
+    1: 'bg-green-900/30',
+    2: 'bg-green-800/40',
+    3: 'bg-green-700/50',
+    4: 'bg-green-600/60',
+    5: 'bg-green-500/70',
+  };
+  
+  return isDarkMode ? darkColors[normalizedCount] : lightColors[normalizedCount];
 }; 

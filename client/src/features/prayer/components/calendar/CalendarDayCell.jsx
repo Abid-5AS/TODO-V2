@@ -1,33 +1,17 @@
 import React from 'react';
 import { format, isSameMonth, isToday } from 'date-fns';
-import { Sunrise, Sun, Sunset, Moon, Check } from 'lucide-react'; // Added icons needed for tooltip
-import { cn } from '@/lib/utils'; // Adjusted path
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'; // Adjusted path
+import { Check, Sunrise, Sun, Sunset, Moon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PRAYER_ICONS, PRAYER_COLORS } from '../../constants';
+import { getHeatmapColor } from '../../helpers/prayerHelpers';
 
-// Constants defined here for self-containment or passed as props
-const PRAYER_ICONS = {
-  Fajr: <Sunrise size={16} />,
-  Dhuhr: <Sun size={16} />,
-  Asr: <Sun size={16} className="rotate-45" />,
-  Maghrib: <Sunset size={16} />,
-  Isha: <Moon size={16} />
-};
-
-const PRAYER_COLORS = {
-  Fajr: "text-amber-600 dark:text-amber-400",
-  Dhuhr: "text-orange-600 dark:text-orange-400",
-  Asr: "text-yellow-600 dark:text-yellow-400",
-  Maghrib: "text-red-600 dark:text-red-400",
-  Isha: "text-indigo-600 dark:text-indigo-400"
-};
-
-// Define color gradients for prayer count (copied from parent)
-const getHeatmapColor = (count, isDarkMode = false) => {
-  if (!count) return isDarkMode ? 'bg-gray-800' : 'bg-gray-100';
-  const lightColors = { 1: 'bg-green-100', 2: 'bg-green-200', 3: 'bg-green-300', 4: 'bg-green-400', 5: 'bg-green-500' };
-  const darkColors = { 1: 'bg-green-900/30', 2: 'bg-green-800/40', 3: 'bg-green-700/50', 4: 'bg-green-600/60', 5: 'bg-green-500/70' };
-  const normalizedCount = Math.min(count, 5);
-  return isDarkMode ? darkColors[normalizedCount] : lightColors[normalizedCount];
+// Helper component map (can be shared if moved to a helper file)
+const IconComponents = {
+  Sunrise: <Sunrise size={16} />,
+  Sun: <Sun size={16} />,
+  Sunset: <Sunset size={16} />,
+  Moon: <Moon size={16} />
 };
 
 const CalendarDayCell = ({ 
@@ -82,7 +66,14 @@ const CalendarDayCell = ({
               <div className="pt-1 border-t border-gray-200 dark:border-gray-700">
                 {Object.keys(PRAYER_ICONS).map(prayer => {
                   const isCompleted = detailedDataForDay && detailedDataForDay[prayer];
+                  const iconName = PRAYER_ICONS[prayer];
+                  const IconComponent = IconComponents[iconName];
                   
+                  // Handle Asr rotation
+                  const iconElement = prayer === 'Asr' && iconName === 'Sun'
+                    ? React.cloneElement(IconComponent, { className: "rotate-45" })
+                    : IconComponent;
+
                   return (
                     <div 
                       key={prayer} 
@@ -91,7 +82,7 @@ const CalendarDayCell = ({
                         isCompleted ? PRAYER_COLORS[prayer] : "text-gray-400 dark:text-gray-600"
                       )}
                     >
-                      <span className="mr-1">{PRAYER_ICONS[prayer]}</span>
+                      <span className="mr-1">{iconElement || <div style={{width: 16, height: 16}}></div>}</span>
                       <span>{prayer}</span>
                       {isCompleted && (
                         <span className="ml-auto">

@@ -10,7 +10,7 @@ import { useLocation } from '@/features/islamic/hooks/useLocation';
 import { usePrayerLog } from '@/features/prayer/contexts/PrayerLogContext';
 import { PRAYER_NAMES } from '@/features/prayer/constants';
 import { formatPrayerTime, hasPrayerTimePassed, getPrayerStatusColor } from '@/features/prayer/helpers';
-import { isToday } from '@/features/prayer/helpers/dateHelpers';
+import { isToday, isFutureDate } from '@/common/utils/dateUtils';
 
 const DailyPrayerTracker = () => {
   // Get the location and prayer times
@@ -30,8 +30,11 @@ const DailyPrayerTracker = () => {
     togglePrayerStatus
   } = usePrayerLog();
 
+  // Use isToday from common utils
   const isCurrentDateToday = isToday(currentDate);
-  const isFutureDate = currentDate > new Date().setHours(0, 0, 0, 0);
+  // Use isFutureDate from common utils (or context if preferred)
+  // const isFutureDate = currentDate > new Date().setHours(0, 0, 0, 0); // Old calculation
+  const isFuture = isFutureDate(currentDate); // Using the helper
 
   const handlePrevDay = () => changeDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
   const handleNextDay = () => changeDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
@@ -130,7 +133,7 @@ const DailyPrayerTracker = () => {
             className="h-8 w-8"
             onClick={handleNextDay}
             aria-label="Next day"
-            disabled={isFutureDate} // Disable going to future dates
+            disabled={isFuture} // Disable going to future dates
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -146,7 +149,7 @@ const DailyPrayerTracker = () => {
           {format(currentDate, 'MMMM d, yyyy')}
         </div>
         
-        {isFutureDate && (
+        {isFuture && (
           <div className="mt-2 text-sm text-amber-600 dark:text-amber-400">
             Cannot track prayers for future dates
           </div>
@@ -167,7 +170,7 @@ const DailyPrayerTracker = () => {
         <div className="space-y-4">
           {PRAYER_NAMES.map((prayer) => {
             const prayerHasPassed = hasPrayerTimePassed(prayer, prayerTimes);
-            const isDisabled = isFutureDate || (isCurrentDateToday && !prayerHasPassed);
+            const isDisabled = isFuture || (isCurrentDateToday && !prayerHasPassed);
             const isPrayerLoading = loadingPrayer[prayer] || loading.action;
             
             return (

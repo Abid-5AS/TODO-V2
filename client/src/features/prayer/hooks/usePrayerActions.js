@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { isToday, startOfDay } from 'date-fns';
 import { logOrUpdatePrayerAPI } from '../services/prayerLogService';
 import { useToast } from '../../../hooks/use-toast';
+import { hasPrayerTimePassed } from '../helpers/prayerHelpers';
 
 /**
  * Custom hook providing functions to log and modify prayer statuses.
@@ -26,12 +27,9 @@ export const usePrayerActions = ({
   currentDate,
   dailyStatus,
   setDailyStatus,
-  setCalendarData,
-  setDetailedCalendarData,
-  setStats,
   setLastUpdated,
   prayerTimes,
-  fetchDailyLogs, // Needed for reverting optimistic updates
+  fetchDailyLogs,
   fetchMonthlyData,
   fetchStats,
   isCurrentDateToday,
@@ -46,107 +44,67 @@ export const usePrayerActions = ({
 
   // --- Action Functions ---
   const logPrayer = useCallback(
-    async (prayerName, status = 'Completed') => {
+    async (prayerName, status) => {
       if (!currentDate) return false;
-      console.log(`[usePrayerActions] Logging ${prayerName} as ${status} for ${currentDate.toISOString()}`);
+      console.log(`[usePrayerActions] Logging ${prayerName} as ${status ?? 'null'} for ${currentDate.toISOString()}`);
 
       if (isFutureDate) {
         toast({ title: `Cannot mark prayers for future dates`, variant: 'destructive' });
         return false;
       }
-      if (isCurrentDateToday && status === 'Completed' && !hasPrayerTimePassed(prayerName, prayerTimes)) {
+      if (isCurrentDateToday && status?.toLowerCase() === 'completed' && !hasPrayerTimePassed(prayerName, prayerTimes)) {
         toast({ title: `Cannot mark ${prayerName} as completed`, description: "Prayer time hasn't arrived", variant: 'destructive' });
         return false;
       }
 
       setLoadingAction(true);
       setErrorAction(null);
-      const previousStatus = { ...(dailyStatus || {}) }; // Ensure dailyStatus is an object
-      const previousSpecificStatus = previousStatus[prayerName] || null;
+      const previousStatus = { ...(dailyStatus || {}) };
 
-      // *** Start Optimistic Updates ***
+      // *** Optimistic Update for Daily Status ONLY ***
       setDailyStatus(prev => ({ ...prev, [prayerName]: status }));
-
-      if (isCurrentDateToday) {
-        const todayStr = startOfDay(currentDate).toISOString().split('T')[0];
-        
-        // Calendar Data
-        setCalendarData(prev => {
-          const currentCount = prev[todayStr] || 0;
-          let newCount = currentCount;
-          if (status === 'Completed' && previousSpecificStatus !== 'Completed') {
-            newCount = currentCount + 1;
-          } else if (status !== 'Completed' && previousSpecificStatus === 'Completed') {
-            newCount = Math.max(0, currentCount - 1);
-          }
-          return newCount !== currentCount ? { ...prev, [todayStr]: newCount } : prev;
-        });
-
-        // Detailed Calendar Data
-        setDetailedCalendarData(prev => {
-          const updatedData = { ...prev };
-          if (!updatedData[todayStr]) updatedData[todayStr] = {};
-          if (status === 'Completed' || status === 'Missed' || status === 'Excused') { // Store actual status
-             updatedData[todayStr][prayerName] = status;
-          } else {
-             delete updatedData[todayStr][prayerName]; // Remove if status is null
-          }
-          return updatedData;
-        });
-
-        // Stats Data
-        setStats(prev => {
-            let totalPrayersChange = 0;
-            if (status === 'Completed' && previousSpecificStatus !== 'Completed') {
-                totalPrayersChange = 1;
-            } else if (status !== 'Completed' && previousSpecificStatus === 'Completed') {
-                totalPrayersChange = -1;
-            }
-            if(totalPrayersChange === 0) return prev; // No change needed
-            
-            const updatedPrayerStats = { ...prev.prayerCompletionStats };
-            updatedPrayerStats[prayerName] = Math.max(0, (prev.prayerCompletionStats[prayerName] || 0) + totalPrayersChange);
-
-            return {
-                ...prev,
-                totalPrayersLogged: Math.max(0, prev.totalPrayersLogged + totalPrayersChange),
-                prayerCompletionStats: updatedPrayerStats
-            };
-        });
-      }
-      // *** End Optimistic Updates ***
-
-      // Trigger refresh for stats via usePrayerStats hook
-      const timestamp = Date.now();
-      setLastUpdated(timestamp);
+      
+      // *** Removed Optimistic Updates for Calendar/Stats ***
 
       try {
         const response = await logOrUpdatePrayerAPI(currentDate, prayerName, status);
         if (!response.success) throw new Error(response.message || 'API error logging prayer');
-        toast({ title: `${prayerName} marked as ${status}` });
-        fetchDailyLogs(currentDate); // Re-fetch daily logs to confirm server state
+        
+        toast({ title: `${prayerName} marked as ${status ?? 'Not Logged'}` });
+        
+        // *** Refetch data AFTER successful API call ***
+        console.log('[usePrayerActions] Refetching data after success...');
+        const { year, month } = { year: currentDate.getFullYear(), month: currentDate.getMonth() + 1 };
+        fetchDailyLogs(currentDate); // Ensure daily status is synced
+        fetchMonthlyData(year, month); // Refresh calendar for the relevant month
+        fetchStats(); // Refresh stats
+        setLastUpdated(Date.now()); // Trigger any other listeners *after* fetches initiated
+
         return true;
       } catch (err) {
         console.error('logPrayer Error:', err);
         setErrorAction(err.message);
         toast({ title: `Error updating ${prayerName}`, description: err.message, variant: 'destructive' });
         
-        // *** Start Revert Optimistic Updates ***
+        // *** Revert Optimistic Daily Update ***
         setDailyStatus(previousStatus);
-        // Re-fetch calendar/stats instead of trying to calculate reverse delta
+        
+        // *** Refetch data AFTER error/revert ***
+        console.log('[usePrayerActions] Refetching data after error...');
         const { year, month } = { year: currentDate.getFullYear(), month: currentDate.getMonth() + 1 };
-        fetchMonthlyData(year, month);
+        fetchDailyLogs(currentDate);
+        fetchMonthlyData(year, month); 
         fetchStats(); 
-        // *** End Revert Optimistic Updates ***
+        setLastUpdated(Date.now()); // Trigger any other listeners *after* fetches initiated
         
         return false;
       } finally {
         setLoadingAction(false);
       }
     },
-    // Dependencies needed for the function logic and optimistic updates
+    // Update dependencies 
     [currentDate, dailyStatus, prayerTimes, isCurrentDateToday, isFutureDate, toast, 
-     setDailyStatus, setCalendarData, setDetailedCalendarData, setStats, setLastUpdated, 
+     setDailyStatus, setLastUpdated, 
      fetchDailyLogs, fetchMonthlyData, fetchStats] 
   );
 
@@ -165,15 +123,21 @@ export const usePrayerActions = ({
 
       const currentStatus = dailyStatus?.[prayerName] || null;
       let newStatus = status;
-      if (newStatus === null) {
+      
+      // Cycle logic: null -> completed -> missed -> null
+      if (newStatus === null) { 
         if (currentStatus === null) newStatus = 'completed';
-        else if (currentStatus === 'completed') newStatus = 'missed';
-        else newStatus = null; // Cycle back to null from missed/excused
+        else if (currentStatus?.toLowerCase() === 'completed') newStatus = 'missed';
+        else newStatus = null; 
       }
 
-      if (newStatus?.toLowerCase() === currentStatus?.toLowerCase()) return; // Allow null -> 'Completed' vs 'completed'
+      if (newStatus?.toLowerCase() === currentStatus?.toLowerCase()) {
+          if (newStatus !== null || currentStatus !== null) { 
+             // Allow redundant calls for now, backend handles upsert.
+          }
+      }
 
-      // Call the main logPrayer function to handle API and optimistic updates
+      // Call the main logPrayer function
       return await logPrayer(prayerName, newStatus);
     },
     [currentDate, isFutureDate, dailyStatus, logPrayer]

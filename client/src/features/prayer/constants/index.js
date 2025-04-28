@@ -37,15 +37,19 @@ export const PRAYER_STATUS = {
   NOT_LOGGED: null
 };
 
-// Prayer icons and colors (for consistency across components)
+// --- Icons and Colors Section --- 
+// Removed React import and specific icons from lucide-react
+
+// Prayer icons as strings (to be mapped to components where used)
 export const PRAYER_ICONS = {
   Fajr: 'Sunrise',
   Dhuhr: 'Sun', 
-  Asr: 'Sun', // Usually shown with rotation
+  Asr: 'Sun', // Component using this might apply rotation based on name
   Maghrib: 'Sunset',
   Isha: 'Moon'
 };
 
+// Prayer colors 
 export const PRAYER_COLORS = {
   Fajr: "text-amber-600 dark:text-amber-400",
   Dhuhr: "text-orange-600 dark:text-orange-400",
@@ -53,3 +57,14 @@ export const PRAYER_COLORS = {
   Maghrib: "text-red-600 dark:text-red-400",
   Isha: "text-indigo-600 dark:text-indigo-400"
 }; 
+
+// Removed old string-based PRAYER_ICONS definition
+/*
+export const PRAYER_ICONS = {
+  Fajr: 'Sunrise',
+  Dhuhr: 'Sun', 
+  Asr: 'Sun', // Usually shown with rotation
+  Maghrib: 'Sunset',
+  Isha: 'Moon'
+};
+*/ 
