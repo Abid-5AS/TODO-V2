@@ -360,70 +360,221 @@ export const calculateProhibitedTimes = (
 };
 
 /**
- * Determines a IANA timezone string or fallback GMT offset for a given location.
- * Tries to use location.timezone if available, then checks known locations,
- * otherwise falls back to browser's offset.
- * @param {Object} location - The location object (should have name, country, or timezone).
- * @returns {string} IANA timezone string (e.g., "Asia/Singapore") or GMT offset (e.g., "Etc/GMT+8").
+ * Get timezone offset in minutes from a location
+ * @param {Object} location - Location object
+ * @returns {number} Timezone offset in minutes (positive for east, negative for west)
+ */
+export const getTimezoneOffsetFromLocation = (location) => {
+  if (!location) return -new Date().getTimezoneOffset(); // Default to browser's timezone offset
+  
+  // If location has a timezone string, use it to calculate offset
+  if (location.timezone) {
+    try {
+      // Get current date in UTC
+      const now = new Date();
+      
+      // Format date to get timezone offset from location's timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: location.timezone,
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false
+      });
+      
+      // Parse parts to create date object in location's timezone
+      const parts = formatter.formatToParts(now);
+      const getPartValue = (type) => {
+        const part = parts.find(p => p.type === type);
+        return part ? parseInt(part.value, 10) : 0;
+      };
+      
+      // Create date objects for both UTC and location timezone
+      const year = getPartValue('year');
+      const month = getPartValue('month') - 1; // Month is 0-indexed in Date
+      const day = getPartValue('day');
+      const hour = getPartValue('hour');
+      const minute = getPartValue('minute');
+      
+      const locationTime = new Date(Date.UTC(year, month, day, hour, minute));
+      const utcTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 
+                                        now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes()));
+      
+      // Calculate offset in minutes
+      return Math.round((locationTime - utcTime) / 60000);
+    } catch (err) {
+      console.error("Error calculating timezone offset from timezone string:", err);
+    }
+  }
+  
+  // Handle special cases
+  if (location.name === 'Singapore' || location.country === 'Singapore') return 480; // UTC+8
+  if (location.name === 'Dhaka' || location.country === 'Bangladesh') return 360; // UTC+6
+  
+  // If location has offset in decimal hours, convert to minutes
+  if (typeof location.gmtOffset === 'number') {
+    return location.gmtOffset * 60;
+  }
+  
+  // Last resort: use browser's timezone
+  return -new Date().getTimezoneOffset();
+};
+
+/**
+ * Get timezone string from location
+ * @param {Object} location - Location object
+ * @returns {string} Timezone string
  */
 export const getTimezoneFromLocation = (location) => {
-  if (!location) return "Etc/GMT+0"; // Default to UTC if no location
-
-  // If location has a stored timezone, use it (assuming it's IANA)
+  if (!location) return Intl.DateTimeFormat().resolvedOptions().timeZone; // Default to browser timezone
   if (location.timezone) return location.timezone;
+  // Add more specific fallbacks if needed
+  if (location.name === 'Singapore' || location.country === 'Singapore') return "Asia/Singapore";
+  if (location.name === 'Dhaka' || location.country === 'Bangladesh') return "Asia/Dhaka";
+  // Fallback based on browser offset
+  const browserOffset = -new Date().getTimezoneOffset() / 60;
+  const sign = browserOffset >= 0 ? "+" : "-";
+  const hours = Math.abs(Math.floor(browserOffset));
+  return `Etc/GMT${sign}${hours}`;
+};
 
-  // For certain well-known locations, hardcode the timezone
-  if (location.name === 'Singapore' || location.country === 'Singapore') {
-    return "Asia/Singapore";
-  }
-  else if (location.name === 'Dhaka' || location.country === 'Bangladesh') {
-    return "Asia/Dhaka";
-  }
-  // Add more known locations as needed
+/**
+ * Calculate sun position as percentage of the day
+ * @param {Date} currentTime - Current time
+ * @param {Object} prayerTimes - Prayer times object
+ * @param {Object} location - Location object
+ * @returns {number} Sun position as percentage (0-100)
+ */
+export const calculateSunPosition = (currentTime, prayerTimes, location) => {
+  // **Robust Check:** Ensure prayerTimes is an object and has essential times (case-insensitive)
+  const hasRequiredTimes = Boolean(
+    prayerTimes &&
+    typeof prayerTimes === 'object' &&
+    (prayerTimes.Sunrise || prayerTimes.sunrise) &&
+    (prayerTimes.Dhuhr || prayerTimes.dhuhr) &&
+    (prayerTimes.Maghrib || prayerTimes.Sunset || prayerTimes.maghrib || prayerTimes.sunset)
+  );
 
-  // Fallback: Use browser's timezone offset to create Etc/GMT string
+  if (!hasRequiredTimes) {
+    console.warn("calculateSunPosition: Invalid or incomplete prayerTimes", prayerTimes);
+    return 50; // Default to middle
+  }
+  
+  if (!(currentTime instanceof Date)) {
+    console.warn("calculateSunPosition: currentTime is not a Date object");
+    currentTime = new Date(); 
+  }
+
+  // Helper to convert "HH:MM" to minutes since midnight
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return 0;
+    const [h, m] = timeStr.split(":").map(Number);
+    return (isNaN(h) || isNaN(m)) ? 0 : h * 60 + m;
+  };
+
+  // Compute current time at the location in minutes since midnight
+  let currentTimeInMinutes;
   try {
-    const browserOffset = -new Date().getTimezoneOffset(); // Offset in minutes
-    const sign = browserOffset >= 0 ? "+" : "-";
-    // Note: Etc/GMT offsets are reversed (e.g., GMT+8 is Etc/GMT-8)
-    const hours = Math.abs(Math.floor(browserOffset / 60)); 
-    return `Etc/GMT${browserOffset >= 0 ? '-' : '+'}${hours}`; // Use reversed sign for Etc/GMT
-  } catch (e) {
-    console.warn("Could not determine browser timezone offset, defaulting to UTC", e);
-    return "Etc/GMT+0"; // Absolute fallback
+    const tz = getTimezoneFromLocation(location) || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const fmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz });
+    const parts = fmt.formatToParts(currentTime);
+    const hourPart = parts.find(p => p.type === 'hour');
+    const minutePart = parts.find(p => p.type === 'minute');
+    const hours = hourPart ? parseInt(hourPart.value, 10) : currentTime.getHours();
+    const minutes = minutePart ? parseInt(minutePart.value, 10) : currentTime.getMinutes();
+    currentTimeInMinutes = hours * 60 + minutes;
+  } catch (err) {
+    console.warn('calculateSunPosition: timezone conversion failed, falling back to browser time', err);
+    currentTimeInMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+  }
+
+  // Get minutes for key prayer times (case-insensitive access)
+  const sunriseMinutes = timeToMinutes(prayerTimes.Sunrise || prayerTimes.sunrise);
+  const dhuhrMinutes = timeToMinutes(prayerTimes.Dhuhr || prayerTimes.dhuhr);
+
+  const maghribMinutes = timeToMinutes(
+    prayerTimes.Maghrib || prayerTimes.Sunset || prayerTimes.maghrib || prayerTimes.sunset
+  );
+  const fajrMinutes = timeToMinutes(prayerTimes.Fajr || prayerTimes.fajr); // Needed for pre-sunrise
+
+  // Basic validation
+  if (sunriseMinutes <= 0 || dhuhrMinutes <= 0 || maghribMinutes <= 0) {
+    console.warn("calculateSunPosition: Invalid prayer time minutes", { sunriseMinutes, dhuhrMinutes, maghribMinutes });
+    return 50;
+  }
+
+  const daylightMinutes = maghribMinutes - sunriseMinutes;
+  if (daylightMinutes <= 0) {
+    console.warn("calculateSunPosition: Invalid daylight duration", { daylightMinutes });
+    return 50;
+  }
+
+  let position = 50; // Default
+
+  // --- Calculation Logic --- (Simplified for clarity)
+  if (currentTimeInMinutes < sunriseMinutes) {
+    // Before sunrise
+    const nightBeforeDuration = sunriseMinutes - (fajrMinutes || sunriseMinutes - 90); // Approx Fajr if missing
+    if (nightBeforeDuration > 0) {
+      const progress = currentTimeInMinutes - (fajrMinutes || sunriseMinutes - 90);
+      position = Math.max(0, Math.min(25, (progress / nightBeforeDuration) * 25));
+    }
+  } else if (currentTimeInMinutes > maghribMinutes) {
+    // After Maghrib
+    position = 75 + Math.min(25, ((currentTimeInMinutes - maghribMinutes) / 180) * 25); // Assume night lasts ~3 hours for viz
+  } else {
+    // Daytime
+    if (currentTimeInMinutes <= dhuhrMinutes) {
+      // Morning (Sunrise to Dhuhr: 25% -> 50%)
+      const morningDuration = dhuhrMinutes - sunriseMinutes;
+      if (morningDuration > 0) {
+        const progress = currentTimeInMinutes - sunriseMinutes;
+        position = 25 + (progress / morningDuration) * 25;
+      }
+    } else {
+      // Afternoon (Dhuhr to Maghrib: 50% -> 75%)
+      const afternoonDuration = maghribMinutes - dhuhrMinutes;
+      if (afternoonDuration > 0) {
+        const progress = currentTimeInMinutes - dhuhrMinutes;
+        position = 50 + (progress / afternoonDuration) * 25;
+      }
+    }
+  }
+
+  position = Math.max(0, Math.min(100, position)); // Clamp between 0 and 100
+  
+  return position;
+};
+
+/**
+ * Format a date for display in the location's timezone
+ * @param {Date} dateToFormat - Date to format
+ * @param {Object} location - Location object
+ * @returns {string} Formatted date string
+ */
+export const formatDateForLocation = (dateToFormat, location) => {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  try {
+    const targetTimezone = getTimezoneFromLocation(location);
+    return dateToFormat.toLocaleDateString('en-US', { ...options, timeZone: targetTimezone });
+  } catch (error) {
+    console.error("Error formatting date for location:", error);
+    return dateToFormat.toLocaleDateString(undefined, options); // Fallback to browser locale/timezone
   }
 };
 
 /**
- * Calculates the current time's offset from UTC in minutes for a given location's timezone.
- * @param {Object} location - The location object.
- * @returns {number} The timezone offset in minutes (positive for East, negative for West).
+ * Format a time for display in the location's timezone
+ * @param {Date} dateToFormat - Date to format
+ * @param {Object} location - Location object
+ * @returns {string} Formatted time string
  */
-export const getTimezoneOffsetFromLocation = (location) => {
-  const tz = getTimezoneFromLocation(location); // Get IANA or Etc/GMT string
+export const formatTimeForLocation = (dateToFormat, location) => {
+  const options = { hour: "2-digit", minute: "2-digit", hour12: true };
   try {
-    // Create a date object formatted for the target timezone
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz,
-      timeZoneName: 'longOffset', // Get the offset string like GMT+X or GMT-X
-    });
-    const parts = formatter.formatToParts(new Date());
-    const offsetString = parts.find(part => part.type === 'timeZoneName')?.value; // e.g., "GMT+8"
-
-    if (offsetString && offsetString.startsWith('GMT')) {
-      const offsetParts = offsetString.replace('GMT', '').split(':');
-      const hours = parseInt(offsetParts[0], 10);
-      const minutes = offsetParts[1] ? parseInt(offsetParts[1], 10) : 0;
-      if (!isNaN(hours)) {
-        return (hours * 60) + (hours >= 0 ? minutes : -minutes);
-      }
-    }
-    // Fallback if parsing fails: use the browser's current offset
-    console.warn(`Could not parse offset string "${offsetString}" for timezone "${tz}", using browser offset.`);
-    return -new Date().getTimezoneOffset();
-  } catch (err) {
-    console.error(`Error getting timezone offset for ${tz}:`, err);
-    // Absolute fallback: browser's offset
-    return -new Date().getTimezoneOffset();
+    const targetTimezone = getTimezoneFromLocation(location);
+    return dateToFormat.toLocaleTimeString('en-US', { ...options, timeZone: targetTimezone });
+  } catch (error) { 
+    console.error("Error formatting time for location:", error);
+    return dateToFormat.toLocaleTimeString([], options); // Fallback to browser locale/timezone
   }
 };
