@@ -2,8 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import { CalendarDaysIcon, ClockIcon, StarIcon, RefreshCw } from 'lucide-react';
-import { useIslamicDate } from '../../hooks/useIslamicDate';
-import Spinner from '../../../../components/ui/spinner';
+import { useIslamicDate } from '@/features/islamic/hooks/useIslamicDate';
+import Spinner from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
 function IslamicCalendarSection({ itemVariants, isLoading: externalLoading }) {

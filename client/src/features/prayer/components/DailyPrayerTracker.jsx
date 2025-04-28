@@ -6,8 +6,8 @@ import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
 import usePrayerLog from '../hooks/usePrayerLog.jsx';
 import { Skeleton } from '../../../components/ui/skeleton';
-import { usePrayerTimes } from '../../dashboard/hooks/usePrayerTimes';
-import { useLocation } from '../../dashboard/hooks/useLocation';
+import { usePrayerTimes } from '../../islamic/hooks/usePrayerTimes';
+import { useLocation } from '../../islamic/hooks/useLocation';
 
 const DailyPrayerTracker = () => {
   // Get the location and prayer times

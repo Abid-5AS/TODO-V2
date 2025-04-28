@@ -1,14 +1,14 @@
 // Custom hook for fetching and managing prayer times
 import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
-import { fetchTimezone } from "../utils/islamic/locationUtils";
+import { fetchTimezone } from "../utils/locationUtils";
 import {
   timeStringToDate as baseTimeStringToDate,
   addMinutes,
   subtractMinutes,
   calculateFallbackPrayerTimes,
   calculateProhibitedTimes,
-} from "../utils/islamic/timeUtils";
+} from "../utils/timeUtils";
 import { formatTimeToHHMMSS } from "../../../utils/timeUtils";
 import {
   getLocalStorageItem,

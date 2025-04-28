@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart } from 'lucide-react';
-import DailyPrayerTracker from '../components/DailyPrayerTracker';
-import PrayerCalendarView from '../components/PrayerCalendarView';
-import PrayerStatsDisplay from '../components/PrayerStatsDisplay';
+import DailyPrayerTracker from '@/features/prayer/components/DailyPrayerTracker';
+import PrayerCalendarView from '@/features/prayer/components/PrayerCalendarView';
+import PrayerStatsDisplay from '@/features/prayer/components/PrayerStatsDisplay';
 
 // Animation variants for staggered entrance
 const containerVariants = {

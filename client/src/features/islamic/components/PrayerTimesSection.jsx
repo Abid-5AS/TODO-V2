@@ -2,7 +2,7 @@ import React from "react";
 import { Clock, Loader2, SunIcon, SunriseIcon, SunsetIcon, MoonIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import PropTypes from "prop-types";
-import { formatTimeHumanReadable, formatTo12Hour as format12Hour } from "../../../../utils/timeUtils";
+import { formatTimeHumanReadable, formatTo12Hour as format12Hour } from "@/utils/timeUtils";
 
 // Helper to get the next prayer time
 const getNextPrayerTime = (prayerName, prayerTimes) => {

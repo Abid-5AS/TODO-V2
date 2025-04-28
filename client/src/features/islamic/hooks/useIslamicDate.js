@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 // import "moment-hijri"; // Remove moment-hijri import
-import useUserSettings from "./useUserSettings";
+import { useUserSettings } from "./useUserSettings";
 import { gregorianToHijri } from "@tabby_ai/hijri-converter";
 
 // Array of Hijri month names (adjust based on desired language/transliteration)

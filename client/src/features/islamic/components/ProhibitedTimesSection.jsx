@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { AlertTriangle, Sunrise, Sun, Sunset } from "lucide-react";
 import { motion } from "framer-motion";
-import { formatTo12Hour } from "../../../../utils/timeUtils";
+import { formatTo12Hour } from "@/utils/timeUtils";
 
 const ProhibitedTimesSection = ({ prohibitedTimes, itemVariants }) => {
   // Function to render the appropriate icon based on iconType

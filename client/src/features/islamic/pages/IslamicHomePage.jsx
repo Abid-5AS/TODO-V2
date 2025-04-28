@@ -1,4 +1,4 @@
-// src/features/dashboard/pages/IslamicHomePage.jsx
+// src/features/islamic/pages/IslamicHomePage.jsx
 // Islamic home page featuring Quran verse, prayer times, and prayer tracking
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -7,27 +7,29 @@ import {
   MapPin, RefreshCw, Settings, Bug, Clock, AlertTriangle,
   Moon, Sun, ChevronDown, ChevronUp, Calendar, Loader2
 } from "lucide-react";
-import { useTitle } from "../../../hooks/useTitle";
+import { useTitle } from "@/hooks/useTitle";
 import { toast } from "sonner";
 
 // Import custom hooks
-import { useLocation } from "../hooks/useLocation";
-import { useSettings } from "../hooks/useSettings";
-import { usePrayerTimes } from "../hooks/usePrayerTimes";
-import { useIslamicDate } from "../hooks/useIslamicDate";
+import { useLocation } from "@/features/islamic/hooks/useLocation";
+import { useSettings } from "@/features/islamic/hooks/useSettings";
+import { usePrayerTimes } from "@/features/islamic/hooks/usePrayerTimes";
+import { useIslamicDate } from "@/features/islamic/hooks/useIslamicDate";
 
 // Import time utilities
-import { formatTo12Hour } from "../utils/islamic/timeUtils";
+import { formatTo12Hour } from "@/features/islamic/utils/timeUtils";
 
 // Import modular components
-import LocationSelectionModal from "../components/islamic/LocationSelectionModal";
-import SettingsModal from "../components/islamic/SettingsModal";
-import DailyOverviewSection from "../components/islamic/DailyOverviewSection";
-import PrayerTimesSection from "../components/islamic/PrayerTimesSection";
-import ProhibitedTimesSection from "../components/islamic/ProhibitedTimesSection";
-import IslamicCalendarSection from "../components/islamic/IslamicCalendarSection";
-import DailyQuranVerse from "../components/islamic/DailyQuranVerse";
-import DebugSection from "../components/islamic/DebugSection";
+import {
+  LocationSelectionModal,
+  SettingsModal,
+  DailyOverviewSection,
+  PrayerTimesSection,
+  ProhibitedTimesSection,
+  IslamicCalendarSection,
+  DailyQuranVerse,
+  DebugSection
+} from '@/features/islamic/components';
 
 // Accordion Component
 const Accordion = ({ title, icon, children, defaultOpen = false, className = "" }) => {
@@ -412,4 +414,4 @@ const IslamicHomePage = () => {
   );
 };
 
-export default IslamicHomePage;
+export default IslamicHomePage; 

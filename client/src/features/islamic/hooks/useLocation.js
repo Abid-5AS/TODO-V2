@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   getCurrentLocationWithDetails,
   searchLocations,
-} from "../utils/islamic/locationUtils";
+} from "../utils/locationUtils";
 
 export const useLocation = (maxSavedLocations = 5) => {
   const [location, setLocation] = useState(null);

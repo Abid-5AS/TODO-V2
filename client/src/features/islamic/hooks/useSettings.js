@@ -1,19 +1,18 @@
 // Custom hook for managing Islamic dashboard settings
 import { useState, useEffect, useCallback } from "react";
 
-// Default settings object
-const DEFAULT_SETTINGS = {
-  calculationMethod: "mwl", // mwl (Muslim World League - Google default), standard (ISNA) or hanafi (Karachi)
-  madhab: 1, // 1 for Hanafi, 2 for Shafi/Maliki/Hanbali
+// Default settings
+const defaultSettings = {
+  calculationMethod: "MWL",
+  madhab: "SHAFI",
   timeAdjustments: {
-    Fajr: 0,
-    Sunrise: 0,
-    Dhuhr: 0,
-    Asr: 0,
-    Maghrib: 0,
-    Isha: 0,
+    fajr: 0,
+    dhuhr: 0,
+    asr: 0,
+    maghrib: 0,
+    isha: 0,
   },
-  use12HourFormat: true,
+  timeFormat: "12h",
 };
 
 export const useSettings = () => {
@@ -26,9 +25,9 @@ export const useSettings = () => {
         // If no saved settings exist, use defaults and save them
         localStorage.setItem(
           "islamicDashboardSettings",
-          JSON.stringify(DEFAULT_SETTINGS)
+          JSON.stringify(defaultSettings)
         );
-        return DEFAULT_SETTINGS;
+        return defaultSettings;
       }
 
       // Parse saved settings
@@ -38,25 +37,22 @@ export const useSettings = () => {
       return {
         calculationMethod:
           parsedSettings.calculationMethod ||
-          DEFAULT_SETTINGS.calculationMethod,
-        madhab: parsedSettings.madhab || DEFAULT_SETTINGS.madhab,
+          defaultSettings.calculationMethod,
+        madhab: parsedSettings.madhab || defaultSettings.madhab,
         timeAdjustments: {
-          ...DEFAULT_SETTINGS.timeAdjustments,
+          ...defaultSettings.timeAdjustments,
           ...(parsedSettings.timeAdjustments || {}),
         },
-        use12HourFormat:
-          parsedSettings.use12HourFormat !== undefined
-            ? parsedSettings.use12HourFormat
-            : DEFAULT_SETTINGS.use12HourFormat,
+        timeFormat: parsedSettings.timeFormat || defaultSettings.timeFormat,
       };
     } catch (error) {
       console.error("Error loading settings:", error);
       // If there was an error, use defaults and save them
       localStorage.setItem(
         "islamicDashboardSettings",
-        JSON.stringify(DEFAULT_SETTINGS)
+        JSON.stringify(defaultSettings)
       );
-      return DEFAULT_SETTINGS;
+      return defaultSettings;
     }
   });
 
@@ -103,16 +99,16 @@ export const useSettings = () => {
   const updateTimeFormat = useCallback((use12Hour) => {
     setSettings((prevSettings) => ({
       ...prevSettings,
-      use12HourFormat: use12Hour,
+      timeFormat: use12Hour,
     }));
   }, []);
 
   // Reset settings to defaults
   const resetSettings = useCallback(() => {
-    setSettings(DEFAULT_SETTINGS);
+    setSettings(defaultSettings);
     localStorage.setItem(
       "islamicDashboardSettings",
-      JSON.stringify(DEFAULT_SETTINGS)
+      JSON.stringify(defaultSettings)
     );
   }, []);
 
