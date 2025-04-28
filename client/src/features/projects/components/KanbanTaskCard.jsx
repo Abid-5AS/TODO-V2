@@ -41,7 +41,7 @@ const KanbanTaskCard = ({ task, overlay }) => {
     "bg-blue-100/30 dark:bg-blue-900/20 backdrop-blur-sm border-0 hover:shadow-md hover:scale-[1.03] hover:bg-blue-100/40 dark:hover:bg-blue-900/30 hover:z-10 relative";
   // Specific styles for overlay (dragged) card
   const overlayCardClasses =
-    "bg-blue-100/40 dark:bg-blue-900/30 backdrop-blur-sm border-0 shadow-md scale-[1.05]";
+    "bg-blue-100/40 dark:bg-blue-900/30 backdrop-blur-sm border-0 shadow-md";
 
   return (
     <motion.div

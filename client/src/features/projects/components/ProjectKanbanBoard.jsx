@@ -282,7 +282,7 @@ const ProjectKanbanBoard = ({
         />
 
         {/* Drag overlay for the currently dragged task */}
-        <DragOverlay adjustScale={true}>
+        <DragOverlay adjustScale={false}>
           {activeId && activeTask ? (
             <KanbanTaskCard task={activeTask} overlay={true} />
           ) : null}
