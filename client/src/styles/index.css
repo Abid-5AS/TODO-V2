@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "./card-theme.css"; /* Import our custom card theme */
 @import "./glass-theme.css"; /* Import our frosted glass theme */
+@import "./animations.css"; /* Import our custom animations */
 
 @custom-variant dark (&:is(.dark *));
 

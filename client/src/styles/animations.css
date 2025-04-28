@@ -1,0 +1,35 @@
+/* Custom Animation Classes */
+
+/* Animation delay utility classes */
+.animation-delay-2000 {
+  animation-delay: 2000ms;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4000ms;
+}
+
+/* Background gradients with animated flow */
+.bg-gradient-radial {
+  background-color: transparent;
+  background-size: 400% 400%;
+}
+
+/* Enhance backdrop filters for browsers that support them */
+@supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
+  .backdrop-blur-glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+  .backdrop-blur-glass {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .dark .backdrop-blur-glass {
+    background-color: rgba(17, 24, 39, 0.8);
+  }
+} 

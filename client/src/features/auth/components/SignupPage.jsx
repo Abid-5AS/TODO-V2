@@ -56,15 +56,18 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-theme(space.14))] flex items-center justify-center bg-theme relative overflow-hidden pt-14">
-      {" "}
-      {/* Added bg-theme and relative classes */}
-      {/* Background gradient elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[5%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute top-[50%] -left-[5%] w-[30%] h-[30%] rounded-full bg-accent/5 blur-3xl" />
-        <div className="absolute -bottom-[5%] right-[20%] w-[50%] h-[30%] rounded-full bg-primary/5 blur-3xl" />
+    <div className="min-h-[calc(100vh-theme(space.14))] flex items-center justify-center relative overflow-hidden pt-14 bg-gradient-radial">
+      {/* Animated flowing gradient background */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute w-full h-full bg-gradient-to-r from-indigo-600/30 via-blue-500/30 to-sky-400/30 animate-gradient-x"></div>
+        <div className="absolute w-full h-full bg-gradient-to-b from-blue-600/20 via-indigo-500/20 to-blue-400/20 animate-gradient-y"></div>
+        <div className="absolute w-full h-full opacity-30">
+          <div className="absolute top-1/4 right-1/4 w-1/3 h-1/3 rounded-full bg-blue-600/40 blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/3 left-1/4 w-1/3 h-1/3 rounded-full bg-blue-400/40 blur-3xl animate-blob"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-1/3 h-1/3 rounded-full bg-cyan-500/40 blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
       </div>
+
       <motion.div
         initial="hidden"
         animate="visible"
@@ -73,11 +76,15 @@ const SignupPage = () => {
       >
         <motion.div
           variants={itemVariants}
-          className="p-8 bg-card dark:bg-gray-800 rounded-xl shadow-lg backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80 border border-border dark:border-gray-700"
+          className="p-8 rounded-xl backdrop-blur-md bg-white/10 dark:bg-gray-900/20 shadow-xl border border-white/20 dark:border-gray-700/30"
+          style={{
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
         >
           <motion.h2
             variants={itemVariants}
-            className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
+            className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent dark:from-primary dark:to-primary/80"
           >
             Create Account
           </motion.h2>
@@ -86,7 +93,7 @@ const SignupPage = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-3 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800"
+              className="mb-6 p-3 text-red-500 text-sm bg-red-50/80 dark:bg-red-900/30 rounded-lg border border-red-100/80 dark:border-red-800/50"
             >
               {state.error}
             </motion.div>
@@ -97,44 +104,56 @@ const SignupPage = () => {
             action={formAction}
             className="space-y-5"
           >
-            <motion.div variants={itemVariants}>
-              <label className="block mb-2 font-medium text-sm">Name</label>
+            <motion.div 
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <label className="block mb-2 font-medium text-sm text-gray-800 dark:text-gray-200">Name</label>
               <div className="relative">
                 <input
                   type="text"
                   name="name"
                   required
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white/30 dark:bg-gray-800/30 border border-white/30 dark:border-gray-700/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 dark:text-gray-100 transition-all duration-200 placeholder-gray-500/80 dark:placeholder-gray-400/80"
                   placeholder="Your name"
                 />
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants}>
-              <label className="block mb-2 font-medium text-sm">Email</label>
+            <motion.div 
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <label className="block mb-2 font-medium text-sm text-gray-800 dark:text-gray-200">Email</label>
               <div className="relative">
                 <input
                   type="email"
                   name="email"
                   required
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white/30 dark:bg-gray-800/30 border border-white/30 dark:border-gray-700/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 dark:text-gray-100 transition-all duration-200 placeholder-gray-500/80 dark:placeholder-gray-400/80"
                   placeholder="your@email.com"
                 />
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants}>
-              <label className="block mb-2 font-medium text-sm">Password</label>
+            <motion.div 
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <label className="block mb-2 font-medium text-sm text-gray-800 dark:text-gray-200">Password</label>
               <div className="relative">
                 <input
                   type="password"
                   name="password"
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white/30 dark:bg-gray-800/30 border border-white/30 dark:border-gray-700/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 dark:text-gray-100 transition-all duration-200 placeholder-gray-500/80 dark:placeholder-gray-400/80"
                   placeholder="••••••••"
                 />
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                   Must be at least 6 characters
                 </div>
               </div>
@@ -142,11 +161,11 @@ const SignupPage = () => {
 
             <motion.button
               variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
+              whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isPending}
-              className="w-full py-3 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 font-medium shadow-md shadow-primary/20 mt-2"
+              className="w-full py-3 px-4 bg-primary/90 text-white rounded-lg hover:bg-primary transition-all duration-300 font-medium shadow-lg shadow-primary/20 dark:shadow-none backdrop-blur-sm mt-2"
             >
               {isPending ? (
                 <span className="flex items-center justify-center">
@@ -180,7 +199,8 @@ const SignupPage = () => {
 
           <motion.div
             variants={itemVariants}
-            className="mt-6 text-center text-sm"
+            whileHover={{ scale: 1.05 }}
+            className="mt-6 text-center text-sm text-gray-700 dark:text-gray-300"
           >
             Already have an account?{" "}
             <Link
@@ -196,9 +216,9 @@ const SignupPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
+            className="mt-8 pt-6 border-t border-white/30 dark:border-gray-700/30"
           >
-            <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-center text-xs text-gray-600 dark:text-gray-400">
               By creating an account, you agree to our{" "}
               <a href="#" className="text-primary hover:underline">
                 Terms of Service

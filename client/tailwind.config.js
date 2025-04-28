@@ -66,7 +66,9 @@ export default {
         "fade-in": "fadeIn 0.6s ease",
         "fade-in-fast": "fadeIn 0.3s ease-out",
         "scale-in": "scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-        "gradient-x": "gradientX 3s ease-in-out infinite",
+        "gradient-x": "gradientX 15s ease-in-out infinite",
+        "gradient-y": "gradientY 15s ease-in-out infinite",
+        "gradient-xy": "gradientXY 15s ease-in-out infinite",
         float: "float 3s ease-in-out infinite",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "spin-slow": "spin 3s linear infinite",
@@ -75,6 +77,7 @@ export default {
         "slide-in-left": "slideInLeft 0.5s ease-out",
         "slide-in-up": "slideInUp 0.5s ease-out",
         glow: "glow 2s ease-in-out infinite alternate",
+        blob: "blob 7s infinite",
       },
       keyframes: {
         fadeIn: {
@@ -88,6 +91,16 @@ export default {
         gradientX: {
           "0%, 100%": { "background-position": "0% 50%" },
           "50%": { "background-position": "100% 50%" },
+        },
+        gradientY: {
+          "0%, 100%": { "background-position": "50% 0%" },
+          "50%": { "background-position": "50% 100%" },
+        },
+        gradientXY: {
+          "0%, 100%": { "background-position": "0% 0%" },
+          "25%": { "background-position": "100% 0%" },
+          "50%": { "background-position": "100% 100%" },
+          "75%": { "background-position": "0% 100%" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
@@ -109,13 +122,32 @@ export default {
           "0%": { boxShadow: "0 0 5px rgba(99, 102, 241, 0.4)" },
           "100%": { boxShadow: "0 0 20px rgba(99, 102, 241, 0.7)" },
         },
+        blob: {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)"
+          },
+          "33%": {
+            transform: "translate(30px, -50px) scale(1.1)"
+          },
+          "66%": {
+            transform: "translate(-20px, 20px) scale(0.9)"
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)"
+          },
+        },
       },
       backgroundSize: {
         200: "200% 200%",
+        "400%": "400% 400%",
       },
       transitionProperty: {
         height: "height",
         spacing: "margin, padding",
+      },
+      transitionDelay: {
+        '2000': '2000ms',
+        '4000': '4000ms',
       },
     },
   },
