@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext } from 'react';
-// Removed unused imports: useCallback, useEffect, useMemo, moment, useToast, logOrUpdatePrayerAPI, getDailyLogsAPI, getMonthlyCalendarDataAPI, getPrayerStatsAPI, initialDailyStatus, initialStats, AUTO_REFRESH_INTERVAL, isFutureDate
 
 // Import the specialized hooks
 import { usePrayerDateManager } from '../hooks/usePrayerDateManager';
@@ -7,13 +6,13 @@ import { useDailyPrayerStatus } from '../hooks/useDailyPrayerStatus';
 import { usePrayerCalendarData } from '../hooks/usePrayerCalendarData';
 import { usePrayerStats } from '../hooks/usePrayerStats';
 import { usePrayerActions } from '../hooks/usePrayerActions';
-import { PRAYER_NAMES } from '../constants'; // Still needed for context value potentially
+import { PRAYER_NAMES } from '../constants';
 
 // Create a context to share prayer log state between components
 export const PrayerLogContext = createContext(null);
 
 /**
- * Provider component for prayer logging functionality, now using specialized hooks.
+ * Provider component for prayer logging functionality, using specialized hooks.
  */
 export function PrayerLogProvider({ children, initialDate = new Date(), prayerTimes = null }) {
   // 1. Manage Date
@@ -32,38 +31,37 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     setDailyStatus,
     loadingDailyStatus,
     errorDailyStatus,
-    fetchDailyLogs // Keep fetch function if manual refresh is needed outside actions
+    fetchDailyLogs // Needed for usePrayerActions revert logic
   } = useDailyPrayerStatus(currentDate);
   
   // 3. Manage Calendar Data
   const {
-    calendarData, // This is the filtered data
-    // rawCalendarData, // Expose if needed
+    calendarData, 
     detailedCalendarData,
-    setCalendarData, // Setter needed for optimistic updates
-    setDetailedCalendarData, // Setter needed for optimistic updates
+    setCalendarData, 
+    setDetailedCalendarData, 
     loadingCalendar,
     errorCalendar,
     prayerTypeFilters,
     togglePrayerTypeFilter,
-    fetchMonthlyData // Keep fetch function if manual refresh is needed outside actions
+    fetchMonthlyData // Needed for usePrayerActions revert logic
   } = usePrayerCalendarData(currentMonthYear);
 
   // 4. Manage Stats Data
-  const [lastUpdated, setLastUpdated] = useState(null); // Trigger for stats refresh
+  const [lastUpdated, setLastUpdated] = useState(null); 
   const {
     stats,
-    setStats, // Setter needed for optimistic updates
+    setStats, 
     loadingStats,
     errorStats,
-    fetchStats // Keep fetch function if manual refresh is needed outside actions
-  } = usePrayerStats(lastUpdated); // Pass trigger
+    fetchStats // Needed for usePrayerActions revert logic
+  } = usePrayerStats(lastUpdated); 
 
   // 5. Manage Actions
   const {
-    logPrayer, // Main action function
-    togglePrayerCompleted, // Convenience wrapper
-    togglePrayerStatus, // Convenience wrapper
+    logPrayer,
+    togglePrayerCompleted,
+    togglePrayerStatus,
     loadingAction,
     errorAction
   } = usePrayerActions({
@@ -75,15 +73,15 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     setDetailedCalendarData,
     setStats,
     setLastUpdated,
-    prayerTimes, // Pass prayerTimes prop from provider
-    fetchDailyLogs, // Pass fetchers for revert logic
+    prayerTimes, 
+    fetchDailyLogs, 
     fetchMonthlyData,
     fetchStats,
     isCurrentDateToday,
     isFutureDate,
   });
   
-  // Consolidate loading and error states (optional, can expose individually)
+  // Consolidate loading and error states 
   const loading = {
     daily: loadingDailyStatus,
     calendar: loadingCalendar,
@@ -96,11 +94,6 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     stats: errorStats,
     action: errorAction,
   };
-
-  // --- Removed Redundant Logic ---
-  // Removed useState for: currentDate, dailyStatus, calendarData, detailedCalendarData, stats, loading, error, prayerTypeFilters, lastUpdated
-  // Removed useMemo for: currentMonthYear, filteredCalendarData (handled in hooks)
-  // Removed useCallback/useEffect for: fetchDailyLogs, fetchMonthlyData, fetchStats, changeDate, changeMonth, togglePrayerTypeFilter, togglePrayerStatus, refreshAllData, auto-refresh interval
   
   // Context value aggregates state and functions from hooks
   const value = {
@@ -113,18 +106,15 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     
     // Daily Status
     dailyStatus,
-    // fetchDailyLogs, // Expose if refresh needed outside actions
     
     // Calendar Data
-    calendarData, // Filtered data
+    calendarData, 
     detailedCalendarData,
     prayerTypeFilters,
     togglePrayerTypeFilter,
-    // fetchMonthlyData, // Expose if refresh needed outside actions
 
     // Stats Data
     stats,
-    // fetchStats, // Expose if refresh needed outside actions
     
     // Actions
     logPrayer,
@@ -136,8 +126,8 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     error,
 
     // Misc
-    PRAYER_NAMES, // Keep if needed by consumers
-    lastUpdated, // Expose if needed
+    PRAYER_NAMES, 
+    lastUpdated, 
   };
 
   return (

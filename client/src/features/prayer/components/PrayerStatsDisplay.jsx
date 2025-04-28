@@ -13,7 +13,7 @@ import ConsistencyScore from './stats/ConsistencyScore';
 import StreakInfo from './stats/StreakInfo';
 
 const PrayerStatsDisplay = () => {
-  const { stats, loading, error, calendarData, lastUpdated /*, refreshAllData */ } = usePrayerLog();
+  const { stats, loading, error, calendarData /*, lastUpdated, refreshAllData */ } = usePrayerLog();
 
   // Calculate consistency metrics
   const consistencyMetrics = useMemo(() => {
@@ -150,7 +150,7 @@ const PrayerStatsDisplay = () => {
         </motion.div>
       )}
 
-      {/* Use Extracted Components */} 
+      {/* Use Extracted Components */ }
       {!loading.stats && <ConsistencyScore consistencyMetrics={consistencyMetrics} />}
       {!loading.stats && <StreakInfo currentStreak={stats.currentStreak} />}
     </div>

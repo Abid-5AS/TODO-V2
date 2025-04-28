@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { isToday, startOfDay } from 'date-fns';
 import { logOrUpdatePrayerAPI } from '../services/prayerLogService';
 import { useToast } from '../../../hooks/use-toast';
 import { hasPrayerTimePassed } from '../helpers/prayerHelpers';
@@ -38,9 +37,6 @@ export const usePrayerActions = ({
   const { toast } = useToast();
   const [loadingAction, setLoadingAction] = useState(false);
   const [errorAction, setErrorAction] = useState(null);
-
-  // Move helper function to a separate file
-  // const hasPrayerTimePassed = (...) => { ... };
 
   // --- Action Functions ---
   const logPrayer = useCallback(
