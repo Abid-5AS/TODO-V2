@@ -4,6 +4,7 @@
 import React from "react";
 import { AuthProvider } from "../features/auth/contexts/AuthContext";
 import { PrayerLogProvider } from "../features/prayer/hooks/usePrayerLog.jsx";
+import { DashboardProvider } from "../features/dashboard/contexts/DashboardContext";
 import SonnerToaster from "../components/ui/sonner-toaster";
 import { BrowserRouter as Router } from "react-router-dom";
 
@@ -12,8 +13,10 @@ const AppProviders = ({ children }) => {
     <AuthProvider>
       <PrayerLogProvider>
         <Router>
-          {children}
-          <SonnerToaster />
+          <DashboardProvider>
+            {children}
+            <SonnerToaster />
+          </DashboardProvider>
         </Router>
       </PrayerLogProvider>
     </AuthProvider>
