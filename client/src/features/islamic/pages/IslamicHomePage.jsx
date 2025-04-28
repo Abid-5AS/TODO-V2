@@ -27,9 +27,11 @@ import {
   PrayerTimesSection,
   ProhibitedTimesSection,
   IslamicCalendarSection,
-  DailyQuranVerse,
   DebugSection
 } from '@/features/islamic/components';
+
+// Import Quran components from the new quran sub-feature
+import { DailyQuranVerse } from '@/features/islamic/quran/components';
 
 // Accordion Component
 const Accordion = ({ title, icon, children, defaultOpen = false, className = "" }) => {

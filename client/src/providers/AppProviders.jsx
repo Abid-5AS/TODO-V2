@@ -14,8 +14,8 @@ const AppProviders = ({ children }) => {
       <PrayerLogProvider>
         <Router>
           <DashboardProvider>
-            {children}
-            <SonnerToaster />
+          {children}
+          <SonnerToaster />
           </DashboardProvider>
         </Router>
       </PrayerLogProvider>

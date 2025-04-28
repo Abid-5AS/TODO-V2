@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { BookOpen, CheckCircle, Circle, BarChart2, Settings } from "lucide-react";
-import useQuranTracker from "../hooks/useQuranTracker";
+import { useQuranTracker } from "../hooks"; // Updated import path
 
 const QuranTrackerSection = () => {
   const { progress, updateProgress, markSurahComplete, setDailyTarget, resetProgress } = useQuranTracker();
@@ -72,7 +72,7 @@ const QuranTrackerSection = () => {
           <span>Update Current Progress</span>
           <Circle size={16} />
         </button>
-        
+
         <button
           onClick={() => markSurahComplete(progress.lastReadSurah)}
           className="w-full p-3 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors flex items-center justify-between"

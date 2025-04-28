@@ -25,7 +25,7 @@ const useQuranTracker = () => {
     if (progress.lastReadDate) {
       const lastRead = new Date(progress.lastReadDate);
       const daysDiff = Math.floor((new Date() - lastRead) / (1000 * 60 * 60 * 24));
-      
+
       if (daysDiff > 1) {
         // Reset streak if more than a day has passed
         setProgress(prev => ({
@@ -38,7 +38,7 @@ const useQuranTracker = () => {
 
   const updateProgress = (surah, ayah) => {
     const today = new Date().toDateString();
-    
+
     setProgress(prev => {
       const newProgress = {
         ...prev,

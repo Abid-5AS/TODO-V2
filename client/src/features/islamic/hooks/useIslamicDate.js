@@ -345,3 +345,4 @@ export const useIslamicDate = (location) => {
 
 // Keep default export for backward compatibility
 export default useIslamicDate;
+ 

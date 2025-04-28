@@ -9,7 +9,7 @@ import { Button } from "../../../components/ui/button";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent } from "../../../components/ui/sheet";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { 
+import {
   FolderPlus, 
   Search, 
   Filter, 
@@ -82,19 +82,19 @@ const Sidebar = ({
           <FolderPlus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
-        <Button
-          variant="ghost"
+          <Button
+            variant="ghost"
           className="w-full justify-start"
           onClick={() => handleActionClick("addProject")}
-        >
+          >
           <FolderPlus className="mr-2 h-4 w-4" />
           Add Project
-        </Button>
+          </Button>
       </div>
 
       {/* === Special Feature Links === */}
       <div className="px-4 py-2 space-y-2">
-        <Button
+          <Button
           key="islamic"
           variant={selectedProject === "islamic" ? "secondary" : "ghost"}
           className={cn(
@@ -104,31 +104,31 @@ const Sidebar = ({
               "text-foreground/80 hover:text-purple-600 dark:hover:text-purple-400"
           )}
           onClick={() => handleProjectClick("islamic")}
-        >
+            >
           <Moon className="mr-3 h-5 w-5 text-purple-500" />
           Islamic Home
           {selectedProject === "islamic" && (
             <ChevronRight className="ml-auto h-5 w-5" />
           )}
-        </Button>
+          </Button>
         <Button
           key="prayers"
           variant={selectedProject === "prayers" ? "secondary" : "ghost"}
-          className={cn(
+                className={cn(
             "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
             selectedProject === "prayers" ?
               "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 dark:text-green-300 border-l-4 border-green-500 pl-4" :
               "text-foreground/80 hover:text-green-600 dark:hover:text-green-400"
-          )}
+                )}
           onClick={() => handleProjectClick("prayers")}
-        >
+              >
           <CheckSquare className="mr-3 h-5 w-5 text-green-500" />
           Prayer Tracking
           {selectedProject === "prayers" && (
             <ChevronRight className="ml-auto h-5 w-5" />
           )}
         </Button>
-      </div>
+                </div>
 
       {/* Special Routes (Original Quick Access) */}
       <div className="px-4 py-2">
@@ -142,7 +142,7 @@ const Sidebar = ({
               variant={selectedProject === route.id ? "secondary" : "ghost"}
               className="w-full justify-start"
               onClick={() => handleProjectClick(route.id)}
-            >
+              >
               <route.icon className="mr-2 h-4 w-4" />
               {route.label}
               {selectedProject === route.id && (
@@ -150,10 +150,10 @@ const Sidebar = ({
               )}
             </Button>
           ))}
-        </div>
-      </div>
+                </div>
+          </div>
 
-      {/* Projects Section */}
+          {/* Projects Section */}
       <div className="flex-1 px-4 py-2">
         <h3 className="text-sm font-medium text-muted-foreground mb-2">
           My Projects
@@ -189,15 +189,15 @@ const Sidebar = ({
                       size="icon"
                       className="opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => onDeleteProject(project)}
-                    >
+                >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   )}
-                </div>
+              </div>
               ))}
-            </div>
-          )}
-        </ScrollArea>
+              </div>
+            )}
+      </ScrollArea>
       </div>
     </div>
   );

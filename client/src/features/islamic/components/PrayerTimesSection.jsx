@@ -191,3 +191,4 @@ PrayerTimesSection.propTypes = {
 
 // Export as memoized component to prevent re-renders unless props actually change
 export default React.memo(PrayerTimesSection);
+ 
