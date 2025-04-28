@@ -3,21 +3,6 @@ import { isToday, startOfDay } from 'date-fns';
 import { logOrUpdatePrayerAPI } from '../services/prayerLogService';
 import { useToast } from '../../../hooks/use-toast';
 
-// Helper (can be moved to constants or kept local if only used here)
-const hasPrayerTimePassed = (prayerName, prayerTimes) => {
-  if (!prayerTimes) return false;
-  const currentTime = new Date();
-  const currentHour = currentTime.getHours();
-  const currentMinute = currentTime.getMinutes();
-  const currentMinutesSinceMidnight = currentHour * 60 + currentMinute;
-  const prayerTimeStr = prayerTimes[prayerName] || prayerTimes[prayerName.toLowerCase()];
-  if (!prayerTimeStr || typeof prayerTimeStr !== 'string' || !prayerTimeStr.includes(':')) return false;
-  const [prayerHour, prayerMinute] = prayerTimeStr.split(':').map(Number);
-  if (isNaN(prayerHour) || isNaN(prayerMinute)) return false;
-  const prayerMinutesSinceMidnight = prayerHour * 60 + prayerMinute;
-  return currentMinutesSinceMidnight >= prayerMinutesSinceMidnight;
-};
-
 /**
  * Custom hook providing functions to log and modify prayer statuses.
  *
@@ -55,6 +40,9 @@ export const usePrayerActions = ({
   const { toast } = useToast();
   const [loadingAction, setLoadingAction] = useState(false);
   const [errorAction, setErrorAction] = useState(null);
+
+  // Move helper function to a separate file
+  // const hasPrayerTimePassed = (...) => { ... };
 
   // --- Action Functions ---
   const logPrayer = useCallback(

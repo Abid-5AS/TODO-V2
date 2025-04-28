@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { getMonthlyCalendarDataAPI } from '../services/prayerLogService';
-import { PRAYER_NAMES } from './prayerLogConstants'; // Assuming constants are moved
+import { PRAYER_NAMES } from '../constants'; // Corrected path
 
 /**
  * Custom hook to manage monthly prayer calendar data.

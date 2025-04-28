@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getPrayerStatsAPI } from '../services/prayerLogService';
-import { initialStats } from './prayerLogConstants'; // Assuming constants are moved
+import { initialStats } from '../constants'; // Corrected path
 
 /**
  * Custom hook to manage prayer statistics.

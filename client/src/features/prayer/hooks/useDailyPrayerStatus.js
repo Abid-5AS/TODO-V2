@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getDailyLogsAPI } from '../services/prayerLogService';
-import { PRAYER_NAMES, initialDailyStatus } from './prayerLogConstants'; // Assuming constants are moved
+import { PRAYER_NAMES, initialDailyStatus } from '../constants'; // Corrected path
 
 /**
  * Custom hook to manage the daily prayer log status for a given date.
