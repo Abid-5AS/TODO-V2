@@ -38,8 +38,18 @@ exports.logOrUpdatePrayer = async (req, res) => {
 
     const prayer_date = getStartOfDayUTC(dateString);
     const prayer_name = normalizePrayerName(rawPrayerName);
-    const validStatus = ['Completed', 'Missed', 'Excused'];
-    const finalStatus = status && validStatus.includes(status) ? status : 'Completed';
+    
+    // Make status validation case-insensitive
+    const validStatuses = ['completed', 'missed', 'excused'];
+    // Normalize the status string to lowercase for comparison
+    const normalizedStatus = status ? status.toLowerCase() : '';
+    
+    // Use the capitalized status for DB storage if valid, otherwise default to "Completed"
+    const finalStatus = normalizedStatus && validStatuses.includes(normalizedStatus) 
+        ? normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1) 
+        : 'Completed';
+    
+    console.log(`[prayerLogController] Processing status: input=${status}, normalized=${normalizedStatus}, final=${finalStatus}`);
 
     const logData = {
       user_id,

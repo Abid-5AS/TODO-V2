@@ -7,6 +7,7 @@ import { usePrayerLog } from '../hooks/usePrayerLog.jsx';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 import { Badge } from '../../../components/ui/badge';
+import { Calendar } from '../../../components/ui/calendar';
 
 // Define color gradients for prayer count
 const getHeatmapColor = (count, isDarkMode = false) => {

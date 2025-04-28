@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, Check, X, Clock, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
-import { usePrayerLog } from '../hooks/usePrayerLog.jsx';
+import usePrayerLog from '../hooks/usePrayerLog.jsx';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { usePrayerTimes } from '../../dashboard/hooks/usePrayerTimes';
 import { useLocation } from '../../dashboard/hooks/useLocation';
@@ -97,26 +97,25 @@ const DailyPrayerTracker = () => {
 
   // Get status badge UI elements based on prayer status
   const getStatusBadge = (status) => {
-    // Convert lowercase backend status to UI capitalized format
-    const displayStatus = status === 'completed' ? 'Completed' : 
-                        status === 'missed' ? 'Missed' : 
-                        status === 'excused' ? 'Excused' : null;
-                        
-    if (displayStatus === 'Completed') {
+    // Convert any case status to lowercase for comparison
+    const statusLower = status?.toLowerCase();
+    
+    // Compare with lowercase values
+    if (statusLower === 'completed') {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
           <Check className="mr-1 h-3 w-3" />
           Completed
         </span>
       );
-    } else if (displayStatus === 'Missed') {
+    } else if (statusLower === 'missed') {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
           <X className="mr-1 h-3 w-3" />
           Missed
         </span>
       );
-    } else if (displayStatus === 'Excused') {
+    } else if (statusLower === 'excused') {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
           Excused
@@ -137,6 +136,10 @@ const DailyPrayerTracker = () => {
       </div>
     );
   }
+
+  // --- Add Debug Log ---
+  console.log(`[DailyPrayerTracker] Rendering with dailyStatus:`, JSON.stringify(dailyStatus));
+  // --- End Debug Log ---
 
   return (
     <div className="prayer-tracker glass-card p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
@@ -218,9 +221,9 @@ const DailyPrayerTracker = () => {
                 className={cn(
                   "flex flex-wrap md:flex-nowrap items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200",
                   isDisabled && "opacity-70",
-                  dailyStatus[prayer] === 'completed'
+                  dailyStatus[prayer]?.toLowerCase() === 'completed'
                     ? "bg-green-50 border border-green-100 dark:bg-green-900/20 dark:border-green-900/30"
-                    : dailyStatus[prayer] === 'missed'
+                    : dailyStatus[prayer]?.toLowerCase() === 'missed'
                     ? "bg-red-50 border border-red-100 dark:bg-red-900/20 dark:border-red-900/30"
                     : "bg-white/50 border border-gray-100 dark:bg-gray-800/20 dark:border-gray-700/20 hover:bg-gray-50 dark:hover:bg-gray-800/30"
                 )}
@@ -252,7 +255,7 @@ const DailyPrayerTracker = () => {
                       variant="default"
                       size="sm"
                       className={cn(
-                        dailyStatus[prayer] === 'completed' 
+                        dailyStatus[prayer]?.toLowerCase() === 'completed' 
                           ? "bg-green-600 hover:bg-green-700 text-white" 
                           : "bg-emerald-600 hover:bg-emerald-700 text-white"
                       )}
@@ -270,7 +273,7 @@ const DailyPrayerTracker = () => {
                       variant="outline"
                       size="sm"
                       className={cn(
-                        dailyStatus[prayer] === 'missed' 
+                        dailyStatus[prayer]?.toLowerCase() === 'missed' 
                           ? "bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/30" 
                           : "border-red-200 text-red-700 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/10"
                       )}

@@ -473,10 +473,10 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
       const existingCount = prev[dateKey] || 0;
       let newCount = existingCount;
       
-      // Adjust count based on status changes
-      if (currentStatus === 'completed' && newStatus !== 'completed') {
+      // Adjust count based on status changes - FIXED case-sensitivity issue with toLowerCase()
+      if (currentStatus?.toLowerCase() === 'completed' && newStatus?.toLowerCase() !== 'completed') {
         newCount = Math.max(0, existingCount - 1);
-      } else if (currentStatus !== 'completed' && newStatus === 'completed') {
+      } else if (currentStatus?.toLowerCase() !== 'completed' && newStatus?.toLowerCase() === 'completed') {
         newCount = existingCount + 1;
       }
       
@@ -494,24 +494,37 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     // Optimistic UI update for detailed calendar data
     setDetailedCalendarData(prev => {
       const dayData = prev[dateKey] || {};
-      console.log(`[togglePrayerStatus] Updating detailed calendar data for ${dateKey}, prayer: ${prayerName}, status: ${newStatus === 'completed'}`);
+      // FIXED: Store the actual status string instead of a boolean
+      console.log(`[togglePrayerStatus] Updating detailed calendar data for ${dateKey}, prayer: ${prayerName}, status: ${newStatus}`);
+      
+      // Only store the prayer in detailed data if it has a status (not null)
+      const updatedDayData = {...dayData};
+      if (newStatus) {
+        updatedDayData[prayerName] = newStatus; // Store the actual status string
+      } else {
+        // If status is null, remove the prayer from detailed data
+        delete updatedDayData[prayerName];
+      }
+      
       return {
         ...prev,
-        [dateKey]: {
-          ...dayData,
-          [prayerName]: newStatus === 'completed'
-        }
+        [dateKey]: updatedDayData
       };
     });
 
     // Optimistic UI update for stats
     setStats(prev => {
       let totalPrayersChange = 0;
-      if (currentStatus === 'completed' && newStatus !== 'completed') {
+      console.log(`[togglePrayerStatus Stats Update] Prayer: ${prayerName}, Previous Status: ${currentStatus}, New Status: ${newStatus}`);
+      
+      // FIXED: Case-insensitive comparison with toLowerCase()
+      if (currentStatus?.toLowerCase() === 'completed' && newStatus?.toLowerCase() !== 'completed') {
         totalPrayersChange = -1;
-      } else if (currentStatus !== 'completed' && newStatus === 'completed') {
+      } else if (currentStatus?.toLowerCase() !== 'completed' && newStatus?.toLowerCase() === 'completed') {
         totalPrayersChange = 1;
       }
+      
+      console.log(`[togglePrayerStatus Stats Update] Calculated totalPrayersChange: ${totalPrayersChange}`);
       
       // Only "completed" status counts toward the total
       const updatedStats = {
@@ -533,11 +546,14 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
       const response = await logOrUpdatePrayerAPI(currentDate, prayerName, newStatus);
       
       // Force refresh data to ensure everything is in sync after API response
+      // Commented out: Optimistic updates should handle immediate UI. Rely on other mechanisms for eventual consistency.
+      /*
       await Promise.all([
         fetchDailyLogs(currentDate),
         fetchMonthlyData(currentMonthYear.year, currentMonthYear.month),
         fetchStats()
       ]);
+      */
       
       return response;
     } catch (error) {
@@ -602,6 +618,9 @@ export const usePrayerLog = (initialDate, prayerTimes) => {
   
   return context;
 };
+
+// Also add a default export for the hook
+export default usePrayerLog;
 
 // The original hook logic (now renamed) to maintain backward compatibility
 const usePrayerLogStandalone = (initialDate = new Date(), prayerTimes = null) => {

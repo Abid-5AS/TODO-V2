@@ -15,7 +15,7 @@ import SettingsPage from "../features/settings/pages/SettingsPage";
 import StatsPage from "../features/stats/pages/StatsPage";
 import IslamicHomePage from "../features/dashboard/pages/IslamicHomePage";
 import PrayerDashboardPage from "../features/prayer/pages/PrayerDashboardPage"; // Import the new PrayerDashboardPage
-import { PrayerLogProvider } from "../features/prayer/hooks/usePrayerLog"; // Import the provider
+import { PrayerLogProvider } from "../features/prayer/hooks/usePrayerLog.jsx"; // Import the provider with .jsx extension
 import Navbar from "../features/dashboard/components/Navbar"; // Public Navbar
 import ErrorBoundary from "../components/ErrorBoundary"; // Import the ErrorBoundary component
 import ErrorPage from "../pages/ErrorPage";
@@ -80,9 +80,7 @@ function AppRoutes() {
             path="prayers"
             element={
               <ErrorBoundary showDetails={false}>
-                <PrayerLogProvider>
-                  <PrayerDashboardPage />
-                </PrayerLogProvider>
+                <PrayerDashboardPage />
               </ErrorBoundary>
             }
           />

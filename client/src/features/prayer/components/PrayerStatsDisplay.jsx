@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Award, Percent, CheckCircle, BarChart2, Calendar, HelpCircle } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { usePrayerLog } from '../hooks/usePrayerLog.jsx';
+import usePrayerLog from '../hooks/usePrayerLog.jsx';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 
