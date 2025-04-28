@@ -78,7 +78,11 @@ export const useDashboardState = () => {
   // Handle project selection
   const handleSelectProject = useCallback((projectId) => {
     const specialRoutes = ['today', 'upcoming', 'completed', 'all', 'inbox', 'overdue'];
-    if (specialRoutes.includes(projectId)) {
+    if (projectId === 'islamic') {
+      navigate(`/dashboard/islamic`);
+    } else if (projectId === 'prayers') {
+      navigate(`/dashboard/prayers`);
+    } else if (specialRoutes.includes(projectId)) {
       navigate(`/dashboard/${projectId}`);
     } else {
       navigate(`/dashboard/project/${encodeURIComponent(projectId)}`);
@@ -86,7 +90,7 @@ export const useDashboardState = () => {
     if (isMobile) {
       setSidebarOpen(false); // Close sidebar on mobile after selection
     }
-  }, [navigate, isMobile]);
+  }, [navigate, isMobile, setSidebarOpen]);
   
   // Handle task form
   const handleOpenTaskForm = useCallback((project = null) => {

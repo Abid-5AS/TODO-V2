@@ -4,28 +4,35 @@
 import { SPECIAL_ROUTES } from '../constants';
 
 /**
- * Extracts the project name from the current URL path
+ * Extracts the project name or special route identifier from the current URL path
  * @param {string} path - The current URL path
- * @returns {string} - The project name or special route
+ * @returns {string|null} - The project name, special route ID, or null if not a dashboard route
  */
 export const getProjectFromPath = (path) => {
   const parts = path.split('/');
 
-  if (parts.length >= 4 && parts[1] === 'dashboard' && parts[2] === 'project') {
+  // Ensure it's a dashboard path
+  if (parts.length < 3 || parts[1] !== 'dashboard') {
+    return null; // Not a dashboard route
+  }
+
+  // Check for specific project: /dashboard/project/projectName
+  if (parts.length >= 4 && parts[2] === 'project') {
     const potentialProject = decodeURIComponent(parts[3]);
-    if (potentialProject) {
-      return potentialProject;
-    }
+    return potentialProject || null; // Return project name or null if empty
   }
 
-  if (parts.length >= 3 && parts[1] === 'dashboard') {
-    const currentRoute = parts[2];
-    if (SPECIAL_ROUTES.includes(currentRoute)) {
-      return currentRoute;
-    }
+  // Check for special routes like /dashboard/today, /dashboard/upcoming, /dashboard/islamic, /dashboard/prayers
+  const currentRoute = parts[2];
+  const knownSpecialRoutes = ['today', 'upcoming', 'completed', 'all', 'inbox', 'overdue', 'islamic', 'prayers'];
+
+  if (knownSpecialRoutes.includes(currentRoute)) {
+    return currentRoute;
   }
 
-  return "today"; // Default view
+  // If it's /dashboard but not recognized, maybe default or return null?
+  // Returning null might be safer than defaulting to 'today' here.
+  return null; 
 };
 
 /**

@@ -18,7 +18,9 @@ import {
   Home,
   Calendar,
   CheckCircle,
-  ListTodo
+  ListTodo,
+  Moon,
+  CheckSquare
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
@@ -71,7 +73,7 @@ const Sidebar = ({
       </div>
 
       {/* Quick Actions */}
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2 border-b border-border/20 pb-4 mb-2">
         <Button
           variant="ghost"
           className="w-full justify-start"
@@ -90,7 +92,45 @@ const Sidebar = ({
         </Button>
       </div>
 
-      {/* Special Routes */}
+      {/* === Special Feature Links === */}
+      <div className="px-4 py-2 space-y-2">
+        <Button
+          key="islamic"
+          variant={selectedProject === "islamic" ? "secondary" : "ghost"}
+          className={cn(
+            "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
+            selectedProject === "islamic" ?
+              "bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 border-l-4 border-purple-500 pl-4" :
+              "text-foreground/80 hover:text-purple-600 dark:hover:text-purple-400"
+          )}
+          onClick={() => handleProjectClick("islamic")}
+        >
+          <Moon className="mr-3 h-5 w-5 text-purple-500" />
+          Islamic Home
+          {selectedProject === "islamic" && (
+            <ChevronRight className="ml-auto h-5 w-5" />
+          )}
+        </Button>
+        <Button
+          key="prayers"
+          variant={selectedProject === "prayers" ? "secondary" : "ghost"}
+          className={cn(
+            "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
+            selectedProject === "prayers" ?
+              "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 dark:text-green-300 border-l-4 border-green-500 pl-4" :
+              "text-foreground/80 hover:text-green-600 dark:hover:text-green-400"
+          )}
+          onClick={() => handleProjectClick("prayers")}
+        >
+          <CheckSquare className="mr-3 h-5 w-5 text-green-500" />
+          Prayer Tracking
+          {selectedProject === "prayers" && (
+            <ChevronRight className="ml-auto h-5 w-5" />
+          )}
+        </Button>
+      </div>
+
+      {/* Special Routes (Original Quick Access) */}
       <div className="px-4 py-2">
         <h3 className="text-sm font-medium text-muted-foreground mb-2">
           Quick Access
