@@ -42,31 +42,33 @@ exports.logOrUpdatePrayer = async (req, res) => {
     // Make status validation case-insensitive
     const validStatuses = ['completed', 'missed', 'excused'];
     // Normalize the status string to lowercase for comparison
-    const normalizedStatus = status ? status.toLowerCase() : '';
-    
-    // Use the capitalized status for DB storage if valid, otherwise default to "Completed"
-    const finalStatus = normalizedStatus && validStatuses.includes(normalizedStatus) 
-        ? normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1) 
-        : 'Completed';
-    
-    console.log(`[prayerLogController] Processing status: input=${status}, normalized=${normalizedStatus}, final=${finalStatus}`);
+    const normalizedStatus = status ? status.toLowerCase() : null; // Treat null/empty as null
 
-    const logData = {
-      user_id,
-      prayer_date,
-      prayer_name,
-      status: finalStatus,
-      updated_at: Date.now(), // Manually set update time
-    };
+    // Check if status is valid. If not, we'll delete the log.
+    if (normalizedStatus && validStatuses.includes(normalizedStatus)) {
+      // Valid status provided: Upsert the log with the capitalized status
+      const finalStatus = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
+      console.log(`[prayerLogController] Upserting log with status: ${finalStatus}`);
 
-    // Use findOneAndUpdate with upsert: create if not exists, update if exists
-    const updatedLog = await PrayerLog.findOneAndUpdate(
-      { user_id, prayer_date, prayer_name }, // Find criteria
-      { $set: { status: finalStatus, updated_at: Date.now() }, $setOnInsert: { user_id, prayer_date, prayer_name, created_at: Date.now() } }, // Update specific fields, set others on insert
-      { new: true, upsert: true, runValidators: true } // Options: return updated doc, create if not found, run schema validation
-    );
+      const updatedLog = await PrayerLog.findOneAndUpdate(
+        { user_id, prayer_date, prayer_name }, // Find criteria
+        { $set: { status: finalStatus, updated_at: Date.now() }, $setOnInsert: { user_id, prayer_date, prayer_name, created_at: Date.now() } }, // Update/Set fields
+        { new: true, upsert: true, runValidators: true } // Options
+      );
+      res.status(200).json({ success: true, data: updatedLog });
 
-    res.status(200).json({ success: true, data: updatedLog });
+    } else {
+      // Status is null, empty, or invalid: Delete the log entry if it exists
+      console.log(`[prayerLogController] Deleting log due to null or invalid status: ${status}`);
+      const deleteResult = await PrayerLog.findOneAndDelete({ user_id, prayer_date, prayer_name });
+
+      if (deleteResult) {
+        res.status(200).json({ success: true, message: 'Prayer log entry deleted.', data: null });
+      } else {
+        // No log found to delete, which is fine (idempotent)
+        res.status(200).json({ success: true, message: 'No prayer log entry found to delete.', data: null });
+      }
+    }
 
   } catch (error) {
     console.error('Error logging prayer:', error);
