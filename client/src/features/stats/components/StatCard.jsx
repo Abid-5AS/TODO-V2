@@ -7,29 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "../../../components/ui/card";
-
-// Animation variants for cards
-export const cardVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.98 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 25,
-      delay: i * 0.05, // Stagger
-    },
-  }),
-  hover: {
-    scale: 1.02,
-    y: -2,
-    boxShadow:
-      "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.04)",
-    transition: { type: "spring", stiffness: 350, damping: 15 },
-  },
-};
+import { cardVariants } from '../constants/statsConstants';
 
 // Changed from motion(Card) to motion.create(Card) to fix deprecation warning
 const MotionCard = motion.create(Card);
