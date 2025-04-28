@@ -358,3 +358,72 @@ export const calculateProhibitedTimes = (
     },
   ];
 };
+
+/**
+ * Determines a IANA timezone string or fallback GMT offset for a given location.
+ * Tries to use location.timezone if available, then checks known locations,
+ * otherwise falls back to browser's offset.
+ * @param {Object} location - The location object (should have name, country, or timezone).
+ * @returns {string} IANA timezone string (e.g., "Asia/Singapore") or GMT offset (e.g., "Etc/GMT+8").
+ */
+export const getTimezoneFromLocation = (location) => {
+  if (!location) return "Etc/GMT+0"; // Default to UTC if no location
+
+  // If location has a stored timezone, use it (assuming it's IANA)
+  if (location.timezone) return location.timezone;
+
+  // For certain well-known locations, hardcode the timezone
+  if (location.name === 'Singapore' || location.country === 'Singapore') {
+    return "Asia/Singapore";
+  }
+  else if (location.name === 'Dhaka' || location.country === 'Bangladesh') {
+    return "Asia/Dhaka";
+  }
+  // Add more known locations as needed
+
+  // Fallback: Use browser's timezone offset to create Etc/GMT string
+  try {
+    const browserOffset = -new Date().getTimezoneOffset(); // Offset in minutes
+    const sign = browserOffset >= 0 ? "+" : "-";
+    // Note: Etc/GMT offsets are reversed (e.g., GMT+8 is Etc/GMT-8)
+    const hours = Math.abs(Math.floor(browserOffset / 60)); 
+    return `Etc/GMT${browserOffset >= 0 ? '-' : '+'}${hours}`; // Use reversed sign for Etc/GMT
+  } catch (e) {
+    console.warn("Could not determine browser timezone offset, defaulting to UTC", e);
+    return "Etc/GMT+0"; // Absolute fallback
+  }
+};
+
+/**
+ * Calculates the current time's offset from UTC in minutes for a given location's timezone.
+ * @param {Object} location - The location object.
+ * @returns {number} The timezone offset in minutes (positive for East, negative for West).
+ */
+export const getTimezoneOffsetFromLocation = (location) => {
+  const tz = getTimezoneFromLocation(location); // Get IANA or Etc/GMT string
+  try {
+    // Create a date object formatted for the target timezone
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'longOffset', // Get the offset string like GMT+X or GMT-X
+    });
+    const parts = formatter.formatToParts(new Date());
+    const offsetString = parts.find(part => part.type === 'timeZoneName')?.value; // e.g., "GMT+8"
+
+    if (offsetString && offsetString.startsWith('GMT')) {
+      const offsetParts = offsetString.replace('GMT', '').split(':');
+      const hours = parseInt(offsetParts[0], 10);
+      const minutes = offsetParts[1] ? parseInt(offsetParts[1], 10) : 0;
+      if (!isNaN(hours)) {
+        return (hours * 60) + (hours >= 0 ? minutes : -minutes);
+      }
+    }
+    // Fallback if parsing fails: use the browser's current offset
+    console.warn(`Could not parse offset string "${offsetString}" for timezone "${tz}", using browser offset.`);
+    return -new Date().getTimezoneOffset();
+  } catch (err) {
+    console.error(`Error getting timezone offset for ${tz}:`, err);
+    // Absolute fallback: browser's offset
+    return -new Date().getTimezoneOffset();
+  }
+};

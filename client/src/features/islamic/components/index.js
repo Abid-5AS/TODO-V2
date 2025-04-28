@@ -12,4 +12,6 @@ export { default as SettingsModal } from './SettingsModal';
 export { default as LocationSelectionModal } from './LocationSelectionModal';
 // export { default as QuranTrackerSection } from './QuranTrackerSection'; // Moved to quran/
 export { default as LocationSuggestions } from './LocationSuggestions'; // Added new component
-export { default as RecentLocations } from './RecentLocations'; // Added new component 
+export { default as RecentLocations } from './RecentLocations'; // Added new component
+export { default as Accordion } from './Accordion'; // Added export
+export { default as TabInterface } from './TabInterface'; // Added export 

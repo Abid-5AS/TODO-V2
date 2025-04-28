@@ -10,68 +10,23 @@ import {
   AlertCircle,
   ChevronRight,
 } from 'lucide-react';
-import axios from 'axios'; // Keep axios for reverse geocoding
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, Transition } from '@headlessui/react';
-import { useLocationSearch } from '../hooks/useLocationSearch';
+import { useLocationSearch, useCurrentLocation } from '../hooks';
+import { normalizeLocationData } from '../utils/locationUtils';
 import LocationSuggestions from './LocationSuggestions';
 import RecentLocations from './RecentLocations';
-
-// Helper function to normalize location data (can be moved to a utils file if needed)
-const normalizeLocationData = (data, type = 'search') => {
-  if (!data) return null;
-
-  const lat = parseFloat(data.lat);
-  const lon = parseFloat(data.lon || data.lng);
-
-  if (isNaN(lat) || isNaN(lon)) {
-    console.error('Invalid coordinates received:', data);
-    return null; // Or throw an error
-  }
-
-  let name = 'Selected Location';
-  if (type === 'reverse') {
-    name =
-      data.address?.city ||
-      data.address?.town ||
-      data.address?.village ||
-      data.address?.county ||
-      'Current Location';
-  } else if (type === 'search' || type === 'recent') {
-    name =
-      data.name || // Use pre-normalized name if available
-      data.address?.city ||
-      data.address?.town ||
-      data.address?.village ||
-      data.address?.county ||
-      (data.display_name ? data.display_name.split(',')[0] : name);
-  }
-
-  const displayName = data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-
-  return {
-    lat,
-    lon,
-    display_name: displayName,
-    address: data.address || {},
-    name: name,
-    country: data.country || data.address?.country || '',
-  };
-};
 
 const LocationSelectionModal = ({
   isOpen,
   onClose,
   onSelectLocation,
-  savedLocations = [], // Passed from parent
+  savedLocations = [],
 }) => {
   const searchInputRef = useRef(null);
   const modalRef = useRef(null);
-  const [isGettingCurrentLocation, setIsGettingCurrentLocation] = useState(false);
-  const [geoError, setGeoError] = useState('');
   const [showSuggestionsUI, setShowSuggestionsUI] = useState(false);
 
-  // Use the extracted hook for search logic
   const {
     searchQuery,
     searchResults,
@@ -81,110 +36,11 @@ const LocationSelectionModal = ({
     clearSearch,
   } = useLocationSearch();
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      clearSearch();
-      setGeoError('');
-      setIsGettingCurrentLocation(false);
-      setShowSuggestionsUI(false);
-      // Focus search input after modal animation
-      setTimeout(() => searchInputRef.current?.focus(), 100);
-    } else {
-      // Ensure suggestions are hidden when closing
-      setShowSuggestionsUI(false);
-    }
-  }, [isOpen, clearSearch]);
-
-  // Show suggestions UI only when focused and results/loading/error exist
-  useEffect(() => {
-    if (searchQuery.length > 2 && (isSearching || searchResults.length > 0 || searchError)) {
-      setShowSuggestionsUI(true);
-    } else {
-      setShowSuggestionsUI(false);
-    }
-  }, [searchQuery, isSearching, searchResults, searchError]);
-
-  // Handle clicks outside the search input/suggestions to hide suggestions
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        // Click outside the modal panel itself (redundant with Dialog onClose, but safe)
-        // onClose(); // Dialog handles this
-      } else if (
-        searchInputRef.current &&
-        !searchInputRef.current.contains(event.target) &&
-        !event.target.closest('.location-suggestions-container') // Check parent
-      ) {
-        setShowSuggestionsUI(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleGetCurrentLocation = useCallback(() => {
-    setIsGettingCurrentLocation(true);
-    setGeoError('');
-
-    if (!navigator.geolocation) {
-      setGeoError('Geolocation is not supported.');
-      setIsGettingCurrentLocation(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // Reverse geocode to get address details
-          const response = await axios.get(
-            'https://nominatim.openstreetmap.org/reverse',
-            {
-              params: { lat: latitude, lon: longitude, format: 'json', addressdetails: 1 },
-              headers: { 'User-Agent': 'Islamic Dashboard App' }, // Replace as needed
-            }
-          );
-
-          const locationData = normalizeLocationData(
-            { ...response.data, lat: latitude, lon: longitude },
-            'reverse'
-          );
-
-          if (locationData) {
-            handleSelectAndClose(locationData);
-          } else {
-            throw new Error('Failed to normalize current location data.');
-          }
-        } catch (err) {
-          console.error('Error getting or processing current location:', err);
-          setGeoError('Could not fetch location details. Using coordinates.');
-          // Fallback to using coordinates directly
-          const fallbackLocation = normalizeLocationData({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
-          if (fallbackLocation) {
-            handleSelectAndClose(fallbackLocation);
-          } else {
-            setGeoError('Failed to get location. Please try searching.');
-          }
-        } finally {
-          setIsGettingCurrentLocation(false);
-        }
-      },
-      (error) => {
-        console.error('Geolocation Error:', error);
-        let message = 'Failed to get location.';
-        if (error.code === error.PERMISSION_DENIED) message = 'Location permission denied.';
-        else if (error.code === error.POSITION_UNAVAILABLE) message = 'Location unavailable.';
-        else if (error.code === error.TIMEOUT) message = 'Location request timed out.';
-        setGeoError(message);
-        setIsGettingCurrentLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  }, [onSelectLocation, onClose]);
+  const {
+    isGettingCurrentLocation,
+    geoError,
+    getCurrentLocation,
+  } = useCurrentLocation(handleSelectAndClose);
 
   const handleSelectAndClose = useCallback(
     (location) => {
@@ -195,27 +51,57 @@ const LocationSelectionModal = ({
         setShowSuggestionsUI(false);
         onClose();
       } else {
-        // Handle case where normalization fails (e.g., show toast)
         console.error('Failed to select location due to normalization error');
-        // Potentially show an error message to the user
       }
     },
     [onSelectLocation, onClose, clearSearch]
   );
 
+  useEffect(() => {
+    if (isOpen) {
+      clearSearch();
+      setShowSuggestionsUI(false);
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      setShowSuggestionsUI(false);
+    }
+  }, [isOpen, clearSearch]);
+
+  useEffect(() => {
+    if (searchQuery.length > 2 && (isSearching || searchResults.length > 0 || searchError)) {
+      setShowSuggestionsUI(true);
+    } else {
+      setShowSuggestionsUI(false);
+    }
+  }, [searchQuery, isSearching, searchResults, searchError]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        // Handled by Dialog
+      } else if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target) &&
+        !event.target.closest('.location-suggestions-container') 
+      ) {
+        setShowSuggestionsUI(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleGetCurrentLocationClick = () => {
+    getCurrentLocation();
+  };
+
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key === 'Escape') {
         setShowSuggestionsUI(false);
-        // Optionally clear search or close modal based on preference
-        // clearSearch();
-        // onClose();
-      } else if (e.key === 'Enter' && !isSearching && searchQuery.length > 2) {
-        // Allow explicit search on Enter if needed, though hook handles debounced search
-        // searchLocations(searchQuery); // Already handled by hook usually
-      }
+      } 
     },
-    [searchQuery, isSearching]
+    []
   );
 
   return (
@@ -227,9 +113,8 @@ const LocationSelectionModal = ({
           setShowSuggestionsUI(false);
           onClose();
         }}
-        initialFocus={searchInputRef} // Set initial focus on the input
+        initialFocus={searchInputRef}
       >
-        {/* Overlay */}
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
@@ -238,7 +123,6 @@ const LocationSelectionModal = ({
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
         </Transition.Child>
 
-        {/* Modal Content */}
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
@@ -247,94 +131,97 @@ const LocationSelectionModal = ({
               leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                ref={modalRef} // Ref for click outside detection
-                className="w-full max-w-md transform overflow-visible rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all"
+                ref={modalRef}
+                className="w-full max-w-md transform overflow-hidden rounded-2xl glass-card p-6 text-left align-middle shadow-xl transition-all"
+                onKeyDown={handleKeyDown}
               >
-                {/* Header */}
-                <div className="flex justify-between items-center mb-4">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-white flex items-center">
-                    <Map className="w-5 h-5 mr-2" />
-                    Select Location
-                  </Dialog.Title>
-                  <button
-                    onClick={onClose}
-                    className="rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    aria-label="Close modal"
-                  >
-                    <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  </button>
-                </div>
-
-                {/* Current Location Button */}
-                <button
-                  onClick={handleGetCurrentLocation}
-                  disabled={isGettingCurrentLocation}
-                  className="w-full flex items-center justify-between p-3 mb-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                <Dialog.Title
+                  as="h3"
+                  className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 flex items-center"
                 >
-                  <div className="flex items-center">
-                    <LocateFixed className="h-5 w-5 text-blue-500 mr-2" />
-                    <span className="text-gray-800 dark:text-white">Use current location</span>
-                  </div>
-                  {isGettingCurrentLocation ? (
-                    <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 text-blue-500" />
-                  )}
+                  <MapPin className="mr-2 h-5 w-5 text-primary" />
+                  Select Location
+                </Dialog.Title>
+                
+                <button 
+                  onClick={onClose} 
+                  className="absolute top-4 right-4 p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={20} />
                 </button>
 
-                {/* Geolocation Error Display */}
-                {geoError && (
-                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-md text-sm flex items-start">
-                    <AlertCircle size={16} className="mr-2 mt-0.5 flex-shrink-0" />
-                    <span>{geoError}</span>
-                  </div>
-                )}
-
-                {/* Search Input & Suggestions Area */}
-                <div className="relative mb-4">
+                <div className="mt-4 relative">
                   <div className="relative">
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                     <input
                       ref={searchInputRef}
                       type="text"
-                      placeholder="Search for a city or address..."
+                      placeholder="Search for city or area..."
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      onKeyDown={handleKeyDown}
                       onFocus={() => searchQuery.length > 2 && setShowSuggestionsUI(true)}
-                      className="w-full p-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none"
-                      aria-label="Search for location"
+                      className="pl-10 pr-10 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-primary focus:border-primary bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 transition-colors"
                     />
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                     {searchQuery && (
                       <button
-                        type="button"
                         onClick={clearSearch}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                         aria-label="Clear search"
                       >
-                        <X className="h-5 w-5" />
+                        <X size={18} />
                       </button>
                     )}
                   </div>
-                  {/* Suggestions Component - container div for click outside detection */}
-                  <div className="relative location-suggestions-container">
-                    <AnimatePresence>
-                      {showSuggestionsUI && (
-                        <LocationSuggestions
-                          suggestions={searchResults}
+                  
+                  <AnimatePresence>
+                    {showSuggestionsUI && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto location-suggestions-container"
+                      >
+                        <LocationSuggestions 
+                          results={searchResults}
                           isLoading={isSearching}
                           error={searchError}
                           onSelect={handleSelectAndClose}
-                          isVisible={showSuggestionsUI} // Explicit visibility control
                         />
-                      )}
-                    </AnimatePresence>
-                  </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {/* Recent Locations Component */}
-                <RecentLocations locations={savedLocations} onSelect={handleSelectAndClose} />
+                <div className="mt-4">
+                  <button
+                    onClick={handleGetCurrentLocationClick}
+                    disabled={isGettingCurrentLocation}
+                    className="w-full inline-flex justify-center items-center rounded-md border border-transparent bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGettingCurrentLocation ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <LocateFixed className="mr-2 h-4 w-4" />
+                    )}
+                    Use Current Location
+                  </button>
+                  {geoError && (
+                    <p className="mt-2 text-xs text-red-600 dark:text-red-400 flex items-center">
+                      <AlertCircle size={14} className="mr-1 flex-shrink-0" />
+                      {geoError}
+                    </p>
+                  )}
+                </div>
 
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Recent Locations</h4>
+                  <RecentLocations locations={savedLocations} onSelect={handleSelectAndClose} />
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>

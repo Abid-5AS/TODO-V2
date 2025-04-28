@@ -1,126 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { BookText, RefreshCw, Loader2, Copy, Check, Share2 } from "lucide-react";
-import axios from 'axios';
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button"; // Using absolute path
-import { Skeleton } from "@/components/ui/skeleton"; // Using absolute path
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"; // Using absolute path
-import { Separator } from "@/components/ui/separator"; // Using absolute path
-import { getLocalStorageItem, setLocalStorageItem } from "@/utils/localStorageUtils"; // Assuming you have localStorage helpers
-
-// Helper function to get today's date in YYYY-MM-DD format
-const getTodayDateString = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-// Implement fetchDailyQuranVerse directly in the component since we removed it from services
-const fetchDailyQuranVerse = async () => {
-  try {
-    const response = await axios.get(`/api/quran/daily-verse`);
-    return {
-      success: true,
-      data: response.data
-    };
-  } catch (error) {
-    console.error("Error fetching daily Quran verse:", error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-};
-
-const DAILY_VERSE_CACHE_KEY = "dailyQuranVerseData";
-
-// Helper to extract Surah and Ayah number from "S:A" format
-const parseVerseReference = (reference) => {
-  if (!reference || typeof reference !== 'string') {
-    return { surahNum: "1", ayahNum: "1" }; // Default to Al-Fatiha:1 if invalid
-  }
-  const parts = reference.split(':');
-  if (parts.length !== 2 || isNaN(parseInt(parts[0])) || isNaN(parseInt(parts[1]))) {
-    console.warn(`Unexpected verse reference format: ${reference}`);
-    // Attempt fallback for potential "Surah Name Ayah" format (less likely now)
-    const spaceParts = reference.split(" ");
-    if (spaceParts.length >= 2 && !isNaN(parseInt(spaceParts[spaceParts.length - 1]))) {
-      return { 
-        surahNum: "1", // Default to Al-Fatiha if parsing fails
-        ayahNum: spaceParts[spaceParts.length - 1] 
-      };
-    }
-    return { surahNum: "1", ayahNum: "1" }; // Default to Al-Fatiha:1 if all parsing fails
-  }
-  return { 
-    surahNum: parts[0].trim(), 
-    ayahNum: parts[1].trim() 
-  };
-};
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useDailyQuranVerse } from "../hooks"; // Import the new hook
+import { parseVerseReference } from "../utils"; // Corrected import path
 
 const DailyQuranVerse = () => {
-  const [verseData, setVerseData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { verseData, isLoading, error, isRefreshing, handleRefresh } = useDailyQuranVerse();
   const [isCopied, setIsCopied] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const loadVerse = useCallback(async (isRefresh = false) => {
-    console.log("DailyQuranVerse: loadVerse called", { isRefresh });
-    const todayStr = getTodayDateString();
-    const cachedData = getLocalStorageItem(DAILY_VERSE_CACHE_KEY);
-
-    // Use cached data if available for today and not forcing refresh
-    if (!isRefresh && cachedData && cachedData.date === todayStr && cachedData.data) {
-      console.log("DailyQuranVerse: Using cached verse data for today.");
-      setVerseData(cachedData.data);
-      setIsLoading(false);
-      setError(null);
-      return; // Exit early, don't fetch from API
-    }
-
-    // Proceed to fetch from API if no valid cache or if refreshing
-    console.log("DailyQuranVerse: Fetching new verse data from API.");
-    if (isRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    setError(null);
-
-    try {
-      const result = await fetchDailyQuranVerse();
-      console.log("DailyQuranVerse: API result:", result);
-      if (result.success && result.data && result.data.data) {
-        const newVerseData = result.data.data;
-        setVerseData(newVerseData);
-        // Cache the newly fetched data with today's date
-        setLocalStorageItem(DAILY_VERSE_CACHE_KEY, { date: todayStr, data: newVerseData });
-        console.log("DailyQuranVerse: verseData state SET and cached with:", newVerseData);
-      } else {
-        console.error("DailyQuranVerse: API fetch unsuccessful or data missing", result);
-        throw new Error(result.error || "Failed to fetch verse");
-      }
-    } catch (err) {
-      console.error("DailyQuranVerse: Error in loadVerse catch block:", err);
-      setError(err.message || "Could not load verse");
-      toast.error("Failed to load daily verse.");
-      // Optional: Clear cache on error?
-      // localStorage.removeItem(DAILY_VERSE_CACHE_KEY);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-      console.log("DailyQuranVerse: loadVerse finished");
-    }
-  }, []);
-
-  useEffect(() => {
-    console.log("DailyQuranVerse: useEffect triggered on mount");
-    loadVerse(); // loadVerse will now handle cache logic
-  }, [loadVerse]); // Keep loadVerse dependency for correctness with useCallback
 
   const handleCopy = () => {
     if (!verseData) return;
@@ -159,20 +50,13 @@ const DailyQuranVerse = () => {
       });
   };
 
-  const handleRefresh = () => {
-    loadVerse(true); // Pass true to indicate a refresh action (will bypass cache)
-  };
-
   // Motion variants for animations
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  console.log(`DailyQuranVerse: Rendering - isLoading=${isLoading}, error=${error}, verseData exists=${!!verseData}`);
-
   if (isLoading) {
-    console.log("DailyQuranVerse: Rendering Skeleton");
     return (
       <Card className="glass-card border-purple-300/20">
         <CardHeader>
@@ -194,7 +78,6 @@ const DailyQuranVerse = () => {
   }
 
   if (error) {
-    console.log("DailyQuranVerse: Rendering Error Message");
     return (
       <Card className="glass-card border-red-400/30 bg-red-50/50 dark:bg-red-900/10">
         <CardHeader>
@@ -222,16 +105,10 @@ const DailyQuranVerse = () => {
   }
 
   if (!verseData) {
-    console.error("DailyQuranVerse: Rendering - verseData is unexpectedly null/undefined after load!");
     return null; // Should not happen if loading/error states are handled
   }
-
-  console.log("DailyQuranVerse - verseData before parse:", verseData);
   
-  // Use the updated parsing logic
   const { surahNum, ayahNum } = parseVerseReference(verseData.reference);
-  
-  console.log(`DailyQuranVerse - Parsed Reference: Surah=${surahNum}, Ayah=${ayahNum}`);
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible">
@@ -246,7 +123,7 @@ const DailyQuranVerse = () => {
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-purple-500 hover:bg-purple-100/50 dark:hover:bg-purple-900/30"
-              onClick={handleRefresh}
+              onClick={handleRefresh} // Use handleRefresh from hook
               disabled={isRefreshing}
               title="Refresh Verse"
             >

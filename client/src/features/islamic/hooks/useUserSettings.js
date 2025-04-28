@@ -71,6 +71,4 @@ export const useUserSettings = () => {
     updateTimeFormat,
     updateLocation
   };
-};
-
-export default useUserSettings; 
+}; 

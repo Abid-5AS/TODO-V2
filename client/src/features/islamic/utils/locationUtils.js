@@ -191,3 +191,50 @@ export const getCurrentLocationWithDetails = async () => {
     throw error;
   }
 };
+
+/**
+ * Normalizes location data from different sources (search, reverse geocode, recent).
+ * @param {Object} data - The raw location data.
+ * @param {string} [type='search'] - The source type ('search', 'reverse', 'recent').
+ * @returns {Object|null} Normalized location object or null if invalid.
+ */
+export const normalizeLocationData = (data, type = 'search') => {
+  if (!data) return null;
+
+  const lat = parseFloat(data.lat);
+  const lon = parseFloat(data.lon || data.lng); // Accept lng as well
+
+  if (isNaN(lat) || isNaN(lon)) {
+    console.error('Invalid coordinates received:', data);
+    return null;
+  }
+
+  let name = 'Selected Location';
+  if (type === 'reverse') {
+    name =
+      data.address?.city ||
+      data.address?.town ||
+      data.address?.village ||
+      data.address?.county ||
+      'Current Location';
+  } else if (type === 'search' || type === 'recent') {
+    name =
+      data.name || // Use pre-normalized name if available
+      data.address?.city ||
+      data.address?.town ||
+      data.address?.village ||
+      data.address?.county ||
+      (data.display_name ? data.display_name.split(',')[0] : name);
+  }
+
+  const displayName = data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+
+  return {
+    lat,
+    lon, // Use lon consistently
+    display_name: displayName,
+    address: data.address || {},
+    name: name,
+    country: data.country || data.address?.country || '',
+  };
+};
