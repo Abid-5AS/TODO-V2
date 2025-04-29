@@ -96,14 +96,14 @@ const Sidebar = ({
           <FolderPlus className="mr-2 h-4 w-4 text-primary/80 group-hover:text-primary transition-colors duration-150" />
           Add Task
         </Button>
-        <Button
-          variant="ghost"
+          <Button
+            variant="ghost"
           className="w-full justify-start font-medium text-base hover:bg-primary/10 hover:text-primary transition-colors duration-150 h-10 group"
           onClick={() => handleActionClick("addProject")}
-        >
+          >
           <FolderPlus className="mr-2 h-4 w-4 text-primary/80 group-hover:text-primary transition-colors duration-150" />
           Add Project
-        </Button>
+          </Button>
       </div>
 
       {/* === Special Feature Links === */}
@@ -118,22 +118,22 @@ const Sidebar = ({
             whileHover={{ x: 5 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
           >
-            <Button
+          <Button
               variant={"ghost"}
-              className={cn(
+          className={cn(
                 "w-full justify-start font-semibold text-base transition-colors duration-150 h-11",
                 selectedProject === link.id
                   ? "bg-primary/10 text-primary border-l-4 border-primary pl-4 font-semibold"
                   : "text-foreground/80 hover:bg-primary/5 hover:text-primary"
-              )}
+          )}
               onClick={() => handleProjectClick(link.id)}
             >
               <link.icon className={cn("mr-3 h-5 w-5", link.iconColor)} />
               {link.label}
               {selectedProject === link.id && (
-                <ChevronRight className="ml-auto h-5 w-5" />
-              )}
-            </Button>
+            <ChevronRight className="ml-auto h-5 w-5" />
+          )}
+          </Button>
           </motion.div>
         ))}
       </div>
@@ -165,14 +165,14 @@ const Sidebar = ({
                         ? "bg-primary/10 text-primary border-l-4 border-primary pl-4 font-medium"
                         : "text-foreground/80 hover:bg-primary/5 hover:text-primary"
                     )}
-                    onClick={() => handleProjectClick(route.id)}
+                  onClick={() => handleProjectClick(route.id)}
                   >
                     <route.icon className={cn("mr-2 h-4 w-4", route.colorClass)} />
-                    {route.label}
-                    {selectedProject === route.id && (
-                      <ChevronRight className="ml-auto h-4 w-4" />
-                    )}
-                  </Button>
+                  {route.label}
+                  {selectedProject === route.id && (
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  )}
+                </Button>
                 </motion.div>
               ))}
             </div>
@@ -223,7 +223,7 @@ const Sidebar = ({
                           size="icon"
                           className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9 flex-shrink-0"
                           onClick={(e) => { e.stopPropagation(); onDeleteProject(project);}}
-                        >
+                    >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       )}
