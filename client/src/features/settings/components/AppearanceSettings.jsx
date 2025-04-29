@@ -68,24 +68,6 @@ const AppearanceSettings = () => {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-background/50">
-            <div className="space-y-0.5">
-              <Label htmlFor="dark-mode" className="text-base font-medium">
-                Dark Mode
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Toggle between light and dark themes.
-              </p>
-            </div>
-            <Switch
-               id="dark-mode"
-               checked={settings.darkMode}
-               onCheckedChange={handleDarkModeChange}
-               disabled={isLoading || isSaving}
-               aria-label="Toggle dark mode"
-             />
-          </div>
-
           <div className="space-y-4 p-4 border rounded-lg bg-background/50">
             <div>
               <Label className="text-base font-medium">Accent Color</Label>
