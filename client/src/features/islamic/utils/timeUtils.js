@@ -493,41 +493,21 @@ export const calculateSunPosition = (currentTime, prayerTimes, location) => {
     return 50;
   }
 
-  const daylightMinutes = maghribMinutes - sunriseMinutes;
-  if (daylightMinutes <= 0) {
-    console.warn("calculateSunPosition: Invalid daylight duration", { daylightMinutes });
-    return 50;
-  }
+  let position = 50; // Default - will be overwritten
 
-  let position = 50; // Default
-
-  // --- Calculation Logic --- (Simplified for clarity)
-  if (currentTimeInMinutes < sunriseMinutes) {
-    // Before sunrise
-    const nightBeforeDuration = sunriseMinutes - (fajrMinutes || sunriseMinutes - 90); // Approx Fajr if missing
-    if (nightBeforeDuration > 0) {
-      const progress = currentTimeInMinutes - (fajrMinutes || sunriseMinutes - 90);
-      position = Math.max(0, Math.min(25, (progress / nightBeforeDuration) * 25));
-    }
-  } else if (currentTimeInMinutes > maghribMinutes) {
-    // After Maghrib
-    position = 75 + Math.min(25, ((currentTimeInMinutes - maghribMinutes) / 180) * 25); // Assume night lasts ~3 hours for viz
+  // --- New Calculation Logic (0% at Sunrise, 100% at Sunset) ---
+  if (currentTimeInMinutes <= sunriseMinutes) {
+    // Before or exactly at sunrise
+    position = 0;
+  } else if (currentTimeInMinutes >= maghribMinutes) {
+    // After or exactly at sunset
+    position = 100;
   } else {
-    // Daytime
-    if (currentTimeInMinutes <= dhuhrMinutes) {
-      // Morning (Sunrise to Dhuhr: 25% -> 50%)
-      const morningDuration = dhuhrMinutes - sunriseMinutes;
-      if (morningDuration > 0) {
-        const progress = currentTimeInMinutes - sunriseMinutes;
-        position = 25 + (progress / morningDuration) * 25;
-      }
-    } else {
-      // Afternoon (Dhuhr to Maghrib: 50% -> 75%)
-      const afternoonDuration = maghribMinutes - dhuhrMinutes;
-      if (afternoonDuration > 0) {
-        const progress = currentTimeInMinutes - dhuhrMinutes;
-        position = 50 + (progress / afternoonDuration) * 25;
-      }
+    // Daytime: Linearly scale between sunrise (0%) and sunset (100%)
+    const daylightDuration = maghribMinutes - sunriseMinutes;
+    const progressMinutes = currentTimeInMinutes - sunriseMinutes;
+    if (daylightDuration > 0) {
+      position = (progressMinutes / daylightDuration) * 100;
     }
   }
 

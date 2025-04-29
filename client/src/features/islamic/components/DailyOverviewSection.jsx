@@ -76,6 +76,12 @@ const DailyOverviewSection = ({
   const displayDate = formatDateForLocation(localTime, location);
   const displayTime = formatTimeForLocation(localTime, location);
 
+  // Determine background based on sun position (0 = sunrise, 100 = sunset)
+  const isNight = calculatedSunPosition <= 0 || calculatedSunPosition >= 100;
+  const backgroundClass = isNight
+    ? "bg-gradient-to-b from-slate-800/30 via-indigo-900/20 to-slate-900/30 dark:from-slate-900/40 dark:via-indigo-950/30 dark:to-black/50"
+    : "bg-gradient-to-b from-blue-100/30 via-amber-100/10 to-orange-100/10 dark:from-blue-900/20 dark:via-amber-900/10 dark:to-orange-900/10";
+
   return (
     <motion.section variants={itemVariants} className="md:col-span-2">
        <div className="glass-card p-5 rounded-lg shadow-md border border-emerald-300/20 bg-gradient-to-r from-emerald-50/10 to-blue-50/10 dark:from-emerald-950/20 dark:to-blue-950/20">
@@ -93,8 +99,9 @@ const DailyOverviewSection = ({
          </div>
  
          {/* Sun Arc Visualization */}
-         <div className="relative h-44 mb-6 bg-gradient-to-b from-blue-50/20 to-transparent dark:from-blue-950/10 rounded-t-full overflow-hidden">
-           <div className="absolute inset-0 bg-gradient-to-b from-blue-100/30 via-amber-100/10 to-orange-100/10 dark:from-blue-900/20 dark:via-amber-900/10 dark:to-orange-900/10 rounded-t-full"></div>
+         <div className="relative h-44 mb-6 rounded-t-full overflow-hidden">
+           {/* Dynamic Background */}
+           <div className={`absolute inset-0 ${backgroundClass} rounded-t-full`}></div> 
            <div className="absolute bottom-0 w-full h-[1px] bg-gray-300/20 dark:bg-gray-700/20"></div>
  
            {/* Conditional Sun Path/Icon */} 
