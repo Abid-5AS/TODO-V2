@@ -31,6 +31,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import { motion } from "framer-motion";
 
 const Sidebar = ({
   selectedProject,
@@ -50,11 +51,11 @@ const Sidebar = ({
   const { projectObjects } = useDashboard();
 
   const specialRoutes = [
-    { id: "today", label: "Today", icon: Home },
-    { id: "upcoming", label: "Upcoming", icon: Calendar },
-    { id: "completed", label: "Completed", icon: CheckCircle },
-    { id: "overdue", label: "Overdue", icon: AlertTriangle },
-    { id: "all", label: "All Tasks", icon: ListTodo },
+    { id: "today", label: "Today", icon: Home, colorClass: "text-blue-500" },
+    { id: "upcoming", label: "Upcoming", icon: Calendar, colorClass: "text-orange-500" },
+    { id: "completed", label: "Completed", icon: CheckCircle, colorClass: "text-green-500" },
+    { id: "overdue", label: "Overdue", icon: AlertTriangle, colorClass: "text-red-500" },
+    { id: "all", label: "All Tasks", icon: ListTodo, colorClass: "text-gray-500" },
   ];
 
   const handleProjectClick = (projectId) => {
@@ -89,75 +90,52 @@ const Sidebar = ({
       <div className="p-4 space-y-2 border-b border-border/20 pb-4 mb-2">
         <Button
           variant="ghost"
-          className="w-full justify-start"
+          className="w-full justify-start font-medium text-base hover:bg-primary/10 hover:text-primary transition-colors duration-150 h-10 group"
           onClick={() => handleActionClick("addTask")}
         >
-          <FolderPlus className="mr-2 h-4 w-4" />
+          <FolderPlus className="mr-2 h-4 w-4 text-primary/80 group-hover:text-primary transition-colors duration-150" />
           Add Task
         </Button>
-          <Button
-            variant="ghost"
-          className="w-full justify-start"
+        <Button
+          variant="ghost"
+          className="w-full justify-start font-medium text-base hover:bg-primary/10 hover:text-primary transition-colors duration-150 h-10 group"
           onClick={() => handleActionClick("addProject")}
-          >
-          <FolderPlus className="mr-2 h-4 w-4" />
+        >
+          <FolderPlus className="mr-2 h-4 w-4 text-primary/80 group-hover:text-primary transition-colors duration-150" />
           Add Project
-          </Button>
+        </Button>
       </div>
 
       {/* === Special Feature Links === */}
       <div className="px-4 py-2 space-y-2">
-          <Button
-          key="islamic"
-          variant={selectedProject === "islamic" ? "secondary" : "ghost"}
-          className={cn(
-            "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
-            selectedProject === "islamic" ?
-              "bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 border-l-4 border-purple-500 pl-4" :
-              "text-foreground/80 hover:text-purple-600 dark:hover:text-purple-400"
-          )}
-          onClick={() => handleProjectClick("islamic")}
+        {[
+          { id: "islamic", label: "Islamic Home", icon: Moon, iconColor: "text-purple-500" },
+          { id: "prayers", label: "Prayer Tracking", icon: CheckSquare, iconColor: "text-green-500" },
+          { id: "stats", label: "Stats", icon: BarChart2, iconColor: "text-blue-500" },
+        ].map((link) => (
+          <motion.div
+            key={link.id}
+            whileHover={{ x: 5 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          >
+            <Button
+              variant={"ghost"}
+              className={cn(
+                "w-full justify-start font-semibold text-base transition-colors duration-150 h-11",
+                selectedProject === link.id
+                  ? "bg-primary/10 text-primary border-l-4 border-primary pl-4 font-semibold"
+                  : "text-foreground/80 hover:bg-primary/5 hover:text-primary"
+              )}
+              onClick={() => handleProjectClick(link.id)}
             >
-          <Moon className="mr-3 h-5 w-5 text-purple-500" />
-          Islamic Home
-          {selectedProject === "islamic" && (
-            <ChevronRight className="ml-auto h-5 w-5" />
-          )}
-          </Button>
-        <Button
-          key="prayers"
-          variant={selectedProject === "prayers" ? "secondary" : "ghost"}
-                className={cn(
-            "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
-            selectedProject === "prayers" ?
-              "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 dark:text-green-300 border-l-4 border-green-500 pl-4" :
-              "text-foreground/80 hover:text-green-600 dark:hover:text-green-400"
-                )}
-          onClick={() => handleProjectClick("prayers")}
-              >
-          <CheckSquare className="mr-3 h-5 w-5 text-green-500" />
-          Prayer Tracking
-          {selectedProject === "prayers" && (
-            <ChevronRight className="ml-auto h-5 w-5" />
-          )}
-        </Button>
-        <Button
-          key="stats"
-          variant={selectedProject === "stats" ? "secondary" : "ghost"}
-          className={cn(
-            "w-full justify-start font-medium text-base transition-all duration-200 hover:pl-5",
-            selectedProject === "stats" ?
-              "bg-gradient-to-r from-blue-500/20 to-sky-500/20 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500 pl-4" :
-              "text-foreground/80 hover:text-blue-600 dark:hover:text-blue-400"
-          )}
-          onClick={() => handleProjectClick("stats")}
-        >
-          <BarChart2 className="mr-3 h-5 w-5 text-blue-500" />
-          Stats
-          {selectedProject === "stats" && (
-            <ChevronRight className="ml-auto h-5 w-5" />
-          )}
-        </Button>
+              <link.icon className={cn("mr-3 h-5 w-5", link.iconColor)} />
+              {link.label}
+              {selectedProject === link.id && (
+                <ChevronRight className="ml-auto h-5 w-5" />
+              )}
+            </Button>
+          </motion.div>
+        ))}
       </div>
 
       {/* Accordion for Collapsible Sections */}
@@ -174,18 +152,28 @@ const Sidebar = ({
           <AccordionContent className="pb-1">
             <div className="space-y-1 pl-2">
               {specialRoutes.map((route) => (
-                <Button
+                <motion.div
                   key={route.id}
-                  variant={selectedProject === route.id ? "secondary" : "ghost"}
-                  className="w-full justify-start h-9"
-                  onClick={() => handleProjectClick(route.id)}
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                >
+                  <Button
+                    variant={"ghost"}
+                    className={cn(
+                      "w-full justify-start h-9 transition-colors duration-150",
+                      selectedProject === route.id
+                        ? "bg-primary/10 text-primary border-l-4 border-primary pl-4 font-medium"
+                        : "text-foreground/80 hover:bg-primary/5 hover:text-primary"
+                    )}
+                    onClick={() => handleProjectClick(route.id)}
                   >
-                  <route.icon className="mr-2 h-4 w-4" />
-                  {route.label}
-                  {selectedProject === route.id && (
-                    <ChevronRight className="ml-auto h-4 w-4" />
-                  )}
-                </Button>
+                    <route.icon className={cn("mr-2 h-4 w-4", route.colorClass)} />
+                    {route.label}
+                    {selectedProject === route.id && (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
+                  </Button>
+                </motion.div>
               ))}
             </div>
           </AccordionContent>
@@ -207,13 +195,20 @@ const Sidebar = ({
               ) : (
                 <div className="space-y-1 pr-2">
                   {myProjects.map((project) => (
-                    <div
+                    <motion.div
                       key={project}
                       className="group flex items-center justify-between"
+                      whileHover={{ x: 5 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     >
                       <Button
-                        variant={selectedProject === project ? "secondary" : "ghost"}
-                        className="w-full justify-start h-9 flex-1 mr-1"
+                        variant={"ghost"}
+                        className={cn(
+                          "w-full justify-start h-9 flex-1 mr-1 transition-colors duration-150",
+                          selectedProject === project
+                            ? "bg-primary/10 text-primary border-l-4 border-primary pl-4 font-medium"
+                            : "text-foreground/80 hover:bg-primary/5 hover:text-primary"
+                        )}
                         onClick={() => handleProjectClick(project)}
                       >
                         <FolderPlus className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -228,11 +223,11 @@ const Sidebar = ({
                           size="icon"
                           className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9 flex-shrink-0"
                           onClick={(e) => { e.stopPropagation(); onDeleteProject(project);}}
-                    >
+                        >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       )}
-                  </div>
+                    </motion.div>
                   ))}
                   </div>
                 )}

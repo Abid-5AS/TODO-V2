@@ -22,9 +22,19 @@ export const getProjectFromPath = (path) => {
     return potentialProject || null; // Return project name or null if empty
   }
 
-  // Check for special routes like /dashboard/today, /dashboard/upcoming, /dashboard/islamic, /dashboard/prayers
+  // Check for special routes like /dashboard/today, /dashboard/upcoming, /dashboard/islamic, /dashboard/prayers, /dashboard/stats
   const currentRoute = parts[2];
-  const knownSpecialRoutes = ['today', 'upcoming', 'completed', 'all', 'inbox', 'overdue', 'islamic', 'prayers'];
+  const knownSpecialRoutes = [
+    'today', 
+    'upcoming', 
+    'completed', 
+    'all', 
+    'inbox', 
+    'overdue', 
+    'islamic', 
+    'prayers', 
+    'stats'
+  ];
 
   if (knownSpecialRoutes.includes(currentRoute)) {
     return currentRoute;
