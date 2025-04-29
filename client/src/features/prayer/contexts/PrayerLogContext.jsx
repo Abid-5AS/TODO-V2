@@ -37,6 +37,7 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
   // 3. Manage Calendar Data
   const {
     calendarData, 
+    rawCalendarData,
     detailedCalendarData,
     setCalendarData, 
     setDetailedCalendarData, 
@@ -109,6 +110,7 @@ export function PrayerLogProvider({ children, initialDate = new Date(), prayerTi
     
     // Calendar Data
     calendarData, 
+    rawCalendarData,
     detailedCalendarData,
     prayerTypeFilters,
     togglePrayerTypeFilter,

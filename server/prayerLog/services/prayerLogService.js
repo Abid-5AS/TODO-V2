@@ -126,7 +126,7 @@ exports.getCalendarDataForMonth = async (userId, startOfMonth, endOfMonth) => {
 
   const detailedData = detailedResults.reduce((acc, day) => {
     acc[day.date] = day.prayers.reduce((prayerMap, p) => {
-        prayerMap[p.prayer] = true; // Indicate presence
+        prayerMap[p.prayer] = "Completed"; // <-- Return the status string
         return prayerMap;
     }, {});
     return acc;

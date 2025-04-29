@@ -66,16 +66,15 @@ export const usePrayerCalendarData = (currentMonthYear) => {
       Object.keys(prayerStatuses).forEach(prayer => {
          // Ensure prayer exists in PRAYER_NAMES and filter is active
          if (PRAYER_NAMES.includes(prayer) && prayerTypeFilters[prayer]) {
-           // Check if the status for this prayer is 'completed' (case-insensitive)
-           if (prayerStatuses[prayer]?.toLowerCase() === 'completed') {
+           // Check if the status for this prayer is a string and 'completed' (case-insensitive)
+           if (typeof prayerStatuses[prayer] === 'string' && prayerStatuses[prayer].toLowerCase() === 'completed') {
               completedCount++;
            }
          }
       });
       
-      if (completedCount > 0) {
-        result[date] = completedCount; // Store the count of completed prayers for filtered types
-      }
+      // Always add the date to the result, even if the filtered count is 0.
+      result[date] = completedCount;
     });
     
     return result;

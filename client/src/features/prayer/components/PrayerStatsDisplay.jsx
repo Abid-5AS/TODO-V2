@@ -13,11 +13,12 @@ import ConsistencyScore from './stats/ConsistencyScore';
 import StreakInfo from './stats/StreakInfo';
 
 const PrayerStatsDisplay = () => {
-  const { stats, loading, error, calendarData /*, lastUpdated, refreshAllData */ } = usePrayerLog();
+  const { stats, loading, error, rawCalendarData /* Use raw data */ } = usePrayerLog();
 
   // Calculate consistency metrics
   const consistencyMetrics = useMemo(() => {
-    if (!calendarData || Object.keys(calendarData).length === 0) {
+    // Use rawCalendarData here
+    if (!rawCalendarData || Object.keys(rawCalendarData).length === 0) {
       return {
         completionRate: 0,
         daysWithCompletePrayers: 0,
@@ -25,9 +26,9 @@ const PrayerStatsDisplay = () => {
       };
     }
 
-    // Count days with all 5 prayers logged
-    const daysWithCompletePrayers = Object.values(calendarData).filter(count => count >= 5).length;
-    const totalDaysLogged = Object.keys(calendarData).length;
+    // Count days with all 5 prayers logged using raw data
+    const daysWithCompletePrayers = Object.values(rawCalendarData).filter(count => count >= 5).length;
+    const totalDaysLogged = Object.keys(rawCalendarData).length;
     
     // Calculate completion percentage (% of logged days with all 5 prayers)
     const perfectDayRate = totalDaysLogged > 0 
@@ -48,7 +49,7 @@ const PrayerStatsDisplay = () => {
       daysWithCompletePrayers,
       totalDaysLogged
     };
-  }, [calendarData, stats.totalPrayersLogged]);
+  }, [rawCalendarData, stats.totalPrayersLogged]);
 
   if (error?.stats) {
     return (
