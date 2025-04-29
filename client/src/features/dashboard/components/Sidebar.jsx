@@ -10,6 +10,12 @@ import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent } from "../../../components/ui/sheet";
 import { Skeleton } from "../../../components/ui/skeleton";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../../../components/ui/accordion";
+import {
   FolderPlus, 
   Search, 
   Filter, 
@@ -21,7 +27,8 @@ import {
   ListTodo,
   Moon,
   CheckSquare,
-  BarChart2
+  BarChart2,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
@@ -46,17 +53,16 @@ const Sidebar = ({
     { id: "today", label: "Today", icon: Home },
     { id: "upcoming", label: "Upcoming", icon: Calendar },
     { id: "completed", label: "Completed", icon: CheckCircle },
+    { id: "overdue", label: "Overdue", icon: AlertTriangle },
     { id: "all", label: "All Tasks", icon: ListTodo },
   ];
 
   const handleProjectClick = (projectId) => {
-    // Special case for stats - only navigate, don't set as selected project
     if (projectId === "stats") {
       navigate("/dashboard/stats");
     } else {
       onSelectProject(projectId);
     }
-    
     if (isMobile) {
       onClose();
     }
@@ -154,75 +160,87 @@ const Sidebar = ({
         </Button>
       </div>
 
-      {/* Special Routes (Original Quick Access) */}
-      <div className="px-4 py-2">
-        <h3 className="text-sm font-medium text-muted-foreground mb-2">
-          Quick Access
-        </h3>
-        <div className="space-y-1">
-          {specialRoutes.map((route) => (
-            <Button
-              key={route.id}
-              variant={selectedProject === route.id ? "secondary" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => handleProjectClick(route.id)}
-              >
-              <route.icon className="mr-2 h-4 w-4" />
-              {route.label}
-              {selectedProject === route.id && (
-                <ChevronRight className="ml-auto h-4 w-4" />
-              )}
-            </Button>
-          ))}
-                </div>
-          </div>
-
-          {/* Projects Section */}
-      <div className="flex-1 px-4 py-2">
-        <h3 className="text-sm font-medium text-muted-foreground mb-2">
-          My Projects
-        </h3>
-        <ScrollArea className="h-[calc(100vh-400px)]">
-          {loadingProjects ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-10 w-full" />
+      {/* Accordion for Collapsible Sections */}
+      <Accordion 
+        type="multiple" 
+        defaultValue={["quick-access", "my-projects"]}
+        className="flex-1 overflow-y-auto px-4 py-2 space-y-2"
+      >
+        {/* Quick Access Section */}
+        <AccordionItem value="quick-access" className="border-b-0">
+          <AccordionTrigger className="text-sm font-medium text-muted-foreground hover:no-underline py-2">
+            Quick Access
+          </AccordionTrigger>
+          <AccordionContent className="pb-1">
+            <div className="space-y-1 pl-2">
+              {specialRoutes.map((route) => (
+                <Button
+                  key={route.id}
+                  variant={selectedProject === route.id ? "secondary" : "ghost"}
+                  className="w-full justify-start h-9"
+                  onClick={() => handleProjectClick(route.id)}
+                  >
+                  <route.icon className="mr-2 h-4 w-4" />
+                  {route.label}
+                  {selectedProject === route.id && (
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  )}
+                </Button>
               ))}
             </div>
-          ) : (
-            <div className="space-y-1">
-              {myProjects.map((project) => (
-                <div
-                  key={project}
-                  className="group flex items-center justify-between"
-                >
-                  <Button
-                    variant={selectedProject === project ? "secondary" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => handleProjectClick(project)}
-                  >
-                    <FolderPlus className="mr-2 h-4 w-4" />
-                    {project}
-                    {selectedProject === project && (
-                      <ChevronRight className="ml-auto h-4 w-4" />
-                    )}
-                  </Button>
-                  {project !== "Inbox" && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => onDeleteProject(project)}
-                >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-              </div>
-              ))}
-              </div>
-            )}
-      </ScrollArea>
-      </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Projects Section */}
+        <AccordionItem value="my-projects" className="border-b-0">
+          <AccordionTrigger className="text-sm font-medium text-muted-foreground hover:no-underline py-2">
+            My Projects
+          </AccordionTrigger>
+          <AccordionContent className="pb-1">
+            <ScrollArea className="h-[calc(100vh-550px)] pl-2">
+              {loadingProjects ? (
+                <div className="space-y-2 pr-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-9 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1 pr-2">
+                  {myProjects.map((project) => (
+                    <div
+                      key={project}
+                      className="group flex items-center justify-between"
+                    >
+                      <Button
+                        variant={selectedProject === project ? "secondary" : "ghost"}
+                        className="w-full justify-start h-9 flex-1 mr-1"
+                        onClick={() => handleProjectClick(project)}
+                      >
+                        <FolderPlus className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{project}</span>
+                        {selectedProject === project && (
+                          <ChevronRight className="ml-auto h-4 w-4 flex-shrink-0" />
+                        )}
+                      </Button>
+                      {project !== "Inbox" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9 flex-shrink-0"
+                          onClick={(e) => { e.stopPropagation(); onDeleteProject(project);}}
+                    >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                  </div>
+                  ))}
+                  </div>
+                )}
+            </ScrollArea>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
     </div>
   );
 
