@@ -15,10 +15,10 @@ const groqClient = new Groq({
 const lmStudioSettings = {
   baseURL: process.env.LM_STUDIO_URL || "http://localhost:1234/v1",
   apiKey: "not-needed-for-local", // LM Studio doesn't require an API key for local inference
-  defaultModel: "local-model" // This is just a placeholder, actual model is configured in LM Studio
+  defaultModel: "local-model", // This is just a placeholder, actual model is configured in LM Studio
 };
 
 module.exports = {
   groqClient,
-  lmStudioSettings
+  lmStudioSettings,
 };

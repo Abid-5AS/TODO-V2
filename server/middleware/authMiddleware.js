@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../auth/models/User");
 require("dotenv").config();
 
 const authenticateToken = async (req, res, next) => {
@@ -33,7 +33,7 @@ const authenticateToken = async (req, res, next) => {
         req.user.photo = decoded.photo;
       }
 
-      console.log('[AuthMiddleware] req.user after photo attach:', req.user);
+      console.log("[AuthMiddleware] req.user after photo attach:", req.user);
 
       next(); // Proceed to the next middleware or route handler
     } catch (error) {

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, Transition } from '@headlessui/react';
 import { useLocationSearch, useCurrentLocation } from '../hooks';
 import { normalizeLocationData } from '../utils/locationUtils';
+import { toast } from 'sonner';
 
 // Import extracted components
 import LocationSuggestions from './LocationSuggestions';
@@ -21,6 +22,7 @@ const LocationSelectionModal = ({
   const modalRef = useRef(null);
   const [showSuggestionsUI, setShowSuggestionsUI] = useState(false);
 
+  // Destructure search hook FIRST
   const {
     searchQuery,
     searchResults,
@@ -30,26 +32,59 @@ const LocationSelectionModal = ({
     clearSearch,
   } = useLocationSearch();
 
+  // Log state for debugging
+  console.log('LocationSelectionModal state:', {
+    showSuggestionsUI,
+    searchQuery,
+    searchResultsCount: searchResults?.length || 0,
+    isSearching,
+    searchError
+  });
+
+  // Define the callback function, now clearSearch is available
+  const handleSelectAndClose = useCallback(
+    (location) => {
+      console.log('handleSelectAndClose called with:', location);
+
+      if (!location) {
+        console.error('handleSelectAndClose received null data');
+        toast.error("Invalid location selected");
+        return;
+      }
+
+      // Pass the raw location data directly to the parent's handler.
+      // The useLocation hook's selectLocation function will handle normalization.
+      try {
+        // Check if onSelectLocation exists and is a function
+        if (typeof onSelectLocation !== 'function') {
+          console.error('onSelectLocation is not a function:', onSelectLocation);
+          toast.error('Internal error: Location handler not available.');
+          return;
+        }
+
+        console.log('Calling onSelectLocation with raw data:', location);
+        onSelectLocation(location);
+        console.log('onSelectLocation call completed');
+
+        // Close the modal and clean up UI after successful selection
+        clearSearch();
+        setShowSuggestionsUI(false);
+        onClose();
+
+      } catch (error) {
+        console.error('Error in onSelectLocation:', error);
+        toast.error('Error selecting location. Please try again.');
+      }
+    },
+    [onSelectLocation, onClose, clearSearch] // Dependencies
+  );
+
+  // Now use the defined function in the current location hook
   const {
     isGettingCurrentLocation,
     geoError,
     getCurrentLocation,
   } = useCurrentLocation(handleSelectAndClose);
-
-  const handleSelectAndClose = useCallback(
-    (location) => {
-      const normalized = normalizeLocationData(location);
-      if (normalized) {
-        onSelectLocation(normalized);
-        clearSearch();
-        setShowSuggestionsUI(false);
-        onClose();
-      } else {
-        console.error('Failed to select location due to normalization error');
-      }
-    },
-    [onSelectLocation, onClose, clearSearch]
-  );
 
   useEffect(() => {
     if (isOpen) {
@@ -61,11 +96,12 @@ const LocationSelectionModal = ({
     }
   }, [isOpen, clearSearch]);
 
+  // Modified effect to show suggestions more reliably
   useEffect(() => {
-    if (searchQuery.length > 2 && (isSearching || searchResults.length > 0 || searchError)) {
+    // If we're searching or have results or an error, show suggestions
+    if (searchQuery.length > 2) {
       setShowSuggestionsUI(true);
-    } else {
-      setShowSuggestionsUI(false);
+      console.log('Showing suggestions UI due to valid query + state');
     }
   }, [searchQuery, isSearching, searchResults, searchError]);
 
@@ -97,6 +133,7 @@ const LocationSelectionModal = ({
   const handleSearchFocus = () => {
     if (searchQuery.length > 2) {
       setShowSuggestionsUI(true);
+      console.log('Setting showSuggestionsUI to true due to search focus');
     }
   };
 
@@ -157,24 +194,14 @@ const LocationSelectionModal = ({
                     onFocus={handleSearchFocus}
                   />
                   
-                  <AnimatePresence>
-                    {showSuggestionsUI && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto location-suggestions-container"
-                      >
-                        <LocationSuggestions 
-                          results={searchResults}
-                          isLoading={isSearching}
-                          error={searchError}
-                          onSelect={handleSelectAndClose}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* Always render the LocationSuggestions component and let it decide visibility */}
+                  <LocationSuggestions 
+                    suggestions={searchResults}
+                    isLoading={isSearching}
+                    error={searchError}
+                    onSelect={handleSelectAndClose}
+                    isVisible={showSuggestionsUI && searchQuery.length > 2}
+                  />
                 </div>
 
                 <div className="mt-4">

@@ -124,6 +124,7 @@ const DashboardPage = () => {
 
   // Prepare props for child components
   const commonProps = {
+    selectedProject: projectKey,
     projectId: projectKey,
     allProjects: allProjects,
     projectObjects: projectObjects,

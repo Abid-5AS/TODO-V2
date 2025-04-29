@@ -114,7 +114,14 @@ export const fetchAndProcessPrayerTimes = async (location, settings, dateString)
     const madhab = settings?.madhab || 1; // Default to 1 (Shafi)
 
     const url = `https://api.aladhan.com/v1/timings/${dateString}?latitude=${lat}&longitude=${lon}&method=${methodId}&school=${madhab}`;
+    // *** DEBUG LOGGING ***
+    console.log('[islamicService] Fetching Aladhan URL:', url);
+    // *** END DEBUG LOGGING ***
     const response = await axios.get(url);
+    // *** DEBUG LOGGING ***
+    console.log('[islamicService] Aladhan Raw Response Status:', response.status);
+    console.log('[islamicService] Aladhan Raw Response Data:', JSON.stringify(response.data));
+    // *** END DEBUG LOGGING ***
 
     if (response.data && response.data.data && response.data.data.timings) {
       let timings = response.data.data.timings;
@@ -137,9 +144,19 @@ export const fetchAndProcessPrayerTimes = async (location, settings, dateString)
       }
       return { success: true, data: timings, error: null };
     } else {
+      // *** DEBUG LOGGING ***
+      console.error('[islamicService] Invalid data format received from Aladhan.');
+      // *** END DEBUG LOGGING ***
       throw new Error("Invalid data format from Aladhan API");
     }
   } catch (apiError) {
+    // *** DEBUG LOGGING ***
+    console.error('[islamicService] Error during Aladhan API call:', apiError.message);
+    if (apiError.response) {
+      console.error('[islamicService] Aladhan Error Response Status:', apiError.response.status);
+      console.error('[islamicService] Aladhan Error Response Data:', JSON.stringify(apiError.response.data));
+    }
+    // *** END DEBUG LOGGING ***
     console.error("Error fetching/processing prayer times from Aladhan API:", apiError);
     return {
       success: false,

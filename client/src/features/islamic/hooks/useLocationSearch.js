@@ -1,28 +1,39 @@
 import { useState, useRef, useCallback } from 'react';
-import axios from 'axios';
 import { toast } from 'sonner';
+import axiosInstance from '../../../api/axiosInstance';
 
 const DEBOUNCE_DELAY = 500;
 
 // Helper to normalize search results from Nominatim
 const normalizeSearchResults = (data) => {
-  if (!data || !Array.isArray(data)) return [];
-  return data.map((item) => ({
-    lat: parseFloat(item.lat),
-    lon: parseFloat(item.lon),
-    display_name: item.display_name,
-    address: item.address || {},
-    name:
-      item.address?.city ||
-      item.address?.town ||
-      item.address?.village ||
-      item.address?.county ||
-      item.display_name.split(',')[0],
-    country:
-      item.address?.country ||
-      item.display_name.split(',').slice(-1)[0].trim() ||
-      '',
-  }));
+  if (!data || !Array.isArray(data)) {
+    console.error('Invalid data structure:', data);
+    return [];
+  }
+  
+  console.log('Raw location data from API:', JSON.stringify(data).substring(0, 200));
+  
+  try {
+    return data.map((item) => ({
+      lat: parseFloat(item.lat || '0'),
+      lon: parseFloat(item.lon || '0'),
+      display_name: item.display_name || 'Unknown location',
+      address: item.address || {},
+      name:
+        item.address?.city ||
+        item.address?.town ||
+        item.address?.village ||
+        item.address?.county ||
+        (item.display_name ? item.display_name.split(',')[0] : 'Unknown'),
+      country:
+        item.address?.country ||
+        (item.display_name ? item.display_name.split(',').slice(-1)[0].trim() : '') ||
+        '',
+    }));
+  } catch (error) {
+    console.error('Error normalizing location data:', error);
+    return [];
+  }
 };
 
 export const useLocationSearch = () => {
@@ -44,33 +55,48 @@ export const useLocationSearch = () => {
     setError('');
 
     try {
-      const response = await axios.get(
-        'https://nominatim.openstreetmap.org/search',
+      console.log('Sending location search request for query:', query);
+      
+      const response = await axiosInstance.get(
+        '/api/location/search',
         {
-          params: {
-            q: query,
-            format: 'json',
-            addressdetails: 1,
-            limit: 5, // Keep suggestion limit reasonable
-          },
+          params: { q: query },
+          // Force JSON parsing
           headers: {
-            'User-Agent': 'Islamic Dashboard App', // Replace with your app name if needed
-          },
+            'Accept': 'application/json'
+          }
         }
       );
-
-      if (response.data && response.data.length > 0) {
-        const normalized = normalizeSearchResults(response.data);
+      
+      console.log('Location search response status:', response.status);
+      
+      // Extra safeguard to ensure we have proper data
+      let locationData = response.data;
+      if (typeof locationData === 'string') {
+        try {
+          locationData = JSON.parse(locationData);
+          console.log('Parsed string data to JSON');
+        } catch (e) {
+          console.error('Failed to parse string response:', e);
+        }
+      }
+      
+      if (locationData && Array.isArray(locationData) && locationData.length > 0) {
+        console.log(`Found ${locationData.length} locations in response`);
+        const normalized = normalizeSearchResults(locationData);
+        console.log('Normalized search results:', normalized);
         setSearchResults(normalized);
       } else {
+        console.log('No locations found in response:', locationData);
         setSearchResults([]);
-        setError('No locations found.'); // Simple error message
+        setError('No locations found.');
       }
     } catch (err) {
       console.error('Error searching locations:', err);
-      setError('Failed to search locations. Please try again.');
+      const message = err.response?.data?.message || 'Failed to search locations. Please try again.';
+      setError(message);
       setSearchResults([]);
-      toast.error('Location search failed. Check connection or try again.');
+      toast.error(message);
     } finally {
       setIsSearching(false);
     }

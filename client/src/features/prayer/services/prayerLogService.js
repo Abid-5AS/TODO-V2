@@ -16,14 +16,16 @@ const formatDateForAPI = (date) => moment(date).format('YYYY-MM-DD');
 export const logOrUpdatePrayerAPI = async (date, prayerName, status = 'Completed') => {
   try {
     const prayer_date = formatDateForAPI(date);
+    console.log(`[Service] Attempting axiosInstance.post for ${prayerName} with status: ${status}`);
     const response = await axiosInstance.post(`${API_BASE}/`, {
       prayer_date,
       prayer_name: prayerName,
       status,
     });
+    console.log(`[Service] axiosInstance.post finished for ${prayerName}. Response success: ${response.data?.success}`);
     return response.data; // Expecting { success: boolean, data: PrayerLog }
   } catch (error) {
-    console.error('Error logging/updating prayer:', error.response?.data || error.message);
+    console.error('[Service] Error during axiosInstance.post:', error.response?.data || error.message);
     // Return a consistent error format or re-throw
     return { success: false, message: error.response?.data?.message || 'Failed to update prayer status.' };
   }

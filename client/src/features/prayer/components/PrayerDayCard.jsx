@@ -45,6 +45,17 @@ const PrayerDayCard = ({
     );
   };
 
+  // Log the values used for the 'Completed' button's disabled state
+  if (prayerName === 'Fajr' || prayerName === 'Dhuhr') { // Only log for relevant prayers
+    console.log(`[PrayerDayCard Render - ${prayerName}]`, {
+      isLoading,
+      isDisabled, // from parent DailyPrayerTracker
+      isCurrentDateToday,
+      prayerHasPassed,
+      finalDisabledProp: isLoading || isDisabled || (isCurrentDateToday && !prayerHasPassed)
+    });
+  }
+
   return (
     <motion.div
       key={prayerName} // Key is managed by the parent map
@@ -52,9 +63,9 @@ const PrayerDayCard = ({
       className={cn(
         "flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-lg shadow-sm transition-all duration-200 gap-3",
         isDisabled && "opacity-70",
-        status === 'completed'
+        status?.toLowerCase() === 'completed'
           ? "bg-green-50 border border-green-100 dark:bg-green-900/20 dark:border-green-900/30"
-          : status === 'missed'
+          : status?.toLowerCase() === 'missed'
           ? "bg-red-50 border border-red-100 dark:bg-red-900/20 dark:border-red-900/30"
           : "bg-white/50 border border-gray-100 dark:bg-gray-800/20 dark:border-gray-700/20 hover:bg-gray-50 dark:hover:bg-gray-800/30"
       )}
@@ -89,15 +100,22 @@ const PrayerDayCard = ({
                 ? "bg-green-600 hover:bg-green-700 text-white" 
                 : "bg-emerald-600 hover:bg-emerald-700 text-white"
             )}
-            onClick={() => handleLogPrayer(prayerName, 'completed')}
-            disabled={isLoading || isDisabled}
+            onClick={() => {
+              // console.log('[PrayerDayCard] Completed Button Clicked!', { prayerName, isLoading, isDisabled });
+              handleLogPrayer(prayerName, 'completed');
+            }}
+            // Disable if: loading, parent disabled (handles future/time not passed), OR already completed
+            disabled={isLoading || isDisabled || status?.toLowerCase() === 'completed'}
           >
             {isLoading ? (
               <Loader2 className="mr-1 h-3 w-3 animate-spin" />
             ) : (
               <Check className="mr-1 h-3 w-3" />
             )}
-            {isDisabled ? (isCurrentDateToday ? "Not time yet" : "Future") : "Completed"}
+            {/* Text updates based on isDisabled (parent) or if already completed */}
+            {isDisabled 
+              ? (isCurrentDateToday && !prayerHasPassed ? "Not time yet" : "Future") 
+              : (status?.toLowerCase() === 'completed' ? "Completed" : "Mark Completed")} 
           </Button>
           <Button
             variant="outline"
@@ -109,14 +127,16 @@ const PrayerDayCard = ({
                 : "border-red-200 text-red-700 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/10"
             )}
             onClick={() => handleLogPrayer(prayerName, 'missed')}
-            disabled={isLoading || isDisabled}
+            // Disable if: loading, parent disabled (handles future/time not passed), OR already missed
+            disabled={isLoading || isDisabled || status?.toLowerCase() === 'missed'}
           >
             {isLoading ? (
               <Loader2 className="mr-1 h-3 w-3 animate-spin" />
             ) : (
               <X className="mr-1 h-3 w-3" />
             )}
-            Missed
+            {/* Refined Text Logic: Show 'Missed' if status is missed, otherwise show 'Mark Missed' */}
+            {status?.toLowerCase() === 'missed' ? "Missed" : "Mark Missed"}
           </Button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User = require("../models/User");
+const User = require("../auth/models/User");
 require("dotenv").config();
 
 passport.use(
@@ -35,14 +35,17 @@ passport.use(
 
         // Attach photo to user object without saving to DB
         const userObj = user.toObject ? user.toObject() : { ...user };
-        userObj.photo = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null;
+        userObj.photo =
+          profile.photos && profile.photos.length > 0
+            ? profile.photos[0].value
+            : null;
         return done(null, userObj);
       } catch (err) {
         console.error("Google Auth Error:", err);
         return done(err, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 passport.serializeUser((user, done) => {

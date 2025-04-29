@@ -15,7 +15,7 @@ const DailyQuranVerse = () => {
 
   const handleCopy = () => {
     if (!verseData) return;
-    const textToCopy = `${verseData.text}\n${verseData.translation}\n- Quran ${verseData.reference}`;
+    const textToCopy = `${verseData.arabicText}\\n${verseData.englishText}\\n- Quran ${verseData.reference} [${verseData.translation}]`;
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
@@ -36,7 +36,7 @@ const DailyQuranVerse = () => {
     }
     const shareData = {
       title: `Daily Quran Verse: ${verseData.reference}`,
-      text: `${verseData.text}\n${verseData.translation}\n- Quran ${verseData.reference}`,
+      text: `${verseData.arabicText}\\n${verseData.englishText}\\n- Quran ${verseData.reference} [${verseData.translation}]`,
       // url: window.location.href, 
     };
     navigator
@@ -108,7 +108,7 @@ const DailyQuranVerse = () => {
     return null; // Should not happen if loading/error states are handled
   }
   
-  const { surahNum, ayahNum } = parseVerseReference(verseData.reference);
+  const { surah, ayah } = parseVerseReference(verseData.reference);
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible">
@@ -136,7 +136,7 @@ const DailyQuranVerse = () => {
           </CardTitle>
           {/* Display Surah:Ayah format */}
           <div className="text-sm text-muted-foreground pt-1">
-            Surah <span className="font-semibold">{surahNum}</span> : Ayah <span className="font-semibold">{ayahNum}</span>
+            Surah <span className="font-semibold">{surah}</span> : Ayah <span className="font-semibold">{ayah}</span>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -144,18 +144,21 @@ const DailyQuranVerse = () => {
             className="text-lg leading-relaxed text-right font-arabic text-gray-800 dark:text-gray-200"
             dir="rtl"
           >
-            {verseData.text}
+            {verseData.arabicText}
           </p>
           <Separator className="bg-purple-200/50 dark:bg-purple-800/30" />
           <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300">
-            {verseData.translation}
+            {verseData.englishText}
+          </p>
+          <p className="text-xs text-right text-muted-foreground italic pt-2">
+            Translator: {verseData.translation}
           </p>
         </CardContent>
         <CardFooter className="flex justify-end space-x-2 bg-black/5 dark:bg-white/5 py-3 px-6">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(`https://quran.com/${surahNum}/${ayahNum}`, '_blank')}
+            onClick={() => window.open(`https://quran.com/${surah}/${ayah}`, '_blank')}
             className="border-purple-200 hover:bg-purple-100/50 dark:border-purple-800 dark:hover:bg-purple-900/30"
           >
             <BookText size={16} className="mr-1" />

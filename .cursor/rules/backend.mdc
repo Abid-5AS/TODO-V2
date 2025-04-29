@@ -3,17 +3,37 @@ description:
 globs: 
 alwaysApply: false
 ---
-# Backend Refactor and Modularization Rules
+**Backend Refactor and Modularization Rules**
 
-1. No functionality or API response changes.
-2. Use feature-based folder structure: group by feature (auth, tasks, prayers).
-3. Each feature should have its own controllers, routes, models, services, constants, and helpers.
-4. Move shared middlewares and utilities to /middlewares and /utils folders.
-5. Move constants like error messages, roles, configs to constants.js inside each feature.
-6. Move common logic like token generation, password hashing, etc. to helpers.js inside each feature.
-7. Keep controller functions small and focused — move heavy logic to service files.
-8. Format all code using Prettier.
-9. Clean and group imports: external libraries first, middlewares next, services/models next, then local files.
-10. Use environment variables (.env) for all sensitive values.
-11. Setup centralized error handling with consistent HTTP status codes.
-12. Remove all unused variables and commented-out code.
+1. Do not change any existing API endpoint paths.  
+2. Do not change the request body structures or field names the frontend sends.  
+3. Do not change the response structures or field names the frontend expects.  
+4. Do not change HTTP status codes being returned.  
+5. Do not modify authentication or token structures.  
+6. Group the backend code into a feature-based folder structure.  
+   - Each feature (auth, tasks, projects, prayerLog, ai) must have its own folder.
+   - Inside each feature, there must be: controllers/, routes/, models/, services/, helpers/, and constants.js.
+7. Controllers must be thin. They should only handle request and response. Business logic must be moved to the services layer.
+8. Services must contain all core business logic and interact with models.
+9. Helpers folder must contain small utility functions specific to the feature (example: email validation, formatting dates).
+10. constants.js inside each feature must contain all static values like error messages, role names, or status strings.
+11. Shared utilities like asyncHandler, errorHandler, token generation should be moved to a top-level utils/ folder.
+12. Reusable middlewares like authMiddleware should be placed in a middlewares/ folder.
+13. Keep config-related files (database connection, passport strategies) inside a config/ folder.
+14. If a file grows beyond 200–300 lines or handles multiple different things, split it into smaller files inside the correct subfolder.
+15. For routes, name files clearly like authRoutes.js, taskRoutes.js, projectRoutes.js.
+16. Remove all unused files, commented code, and backup files (such as files starting with an underscore).
+17. Organize imports cleanly:
+    - First external libraries (express, mongoose, etc.)
+    - Then middlewares
+    - Then services, models, controllers
+    - Then helpers and constants
+    - Then config files
+18. Use relative imports cleanly, and avoid deeply nested imports.
+19. Format all code using Prettier.
+20. After refactoring, test all major frontend flows to make sure nothing is broken:
+    - Login and registration
+    - Fetching data with GET
+    - Creating and updating data with POST and PUT
+    - Deleting data with DELETE
+    - Testing protected authenticated routes.

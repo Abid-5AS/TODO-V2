@@ -18,16 +18,41 @@ export const hasPrayerTimePassed = (prayerName, prayerTimes) => {
   
   // Try to get the prayer time from the prayerTimes object
   const prayerTimeStr = prayerTimes[prayerName] || prayerTimes[prayerName.toLowerCase()];
-  if (!prayerTimeStr || typeof prayerTimeStr !== 'string' || !prayerTimeStr.includes(':')) return false;
+  
+  // **DEBUG LOGGING START**
+  console.log(`[hasPrayerTimePassed] Checking: ${prayerName}`);
+  console.log(`[hasPrayerTimePassed] Current Time (local): ${currentTime.toLocaleTimeString()}`);
+  console.log(`[hasPrayerTimePassed] Current Minutes Since Midnight: ${currentMinutesSinceMidnight}`);
+  console.log(`[hasPrayerTimePassed] Prayer Time String: ${prayerTimeStr}`);
+  // **DEBUG LOGGING END**
+
+  if (!prayerTimeStr || typeof prayerTimeStr !== 'string' || !prayerTimeStr.includes(':')) {
+      console.log(`[hasPrayerTimePassed] Invalid prayer time string for ${prayerName}. Returning false.`);
+      return false;
+  }
   
   // Convert prayer time to minutes since midnight
   const [prayerHour, prayerMinute] = prayerTimeStr.split(':').map(Number);
-  if (isNaN(prayerHour) || isNaN(prayerMinute)) return false;
+
+  // **DEBUG LOGGING START**
+  console.log(`[hasPrayerTimePassed] Parsed Prayer Hour: ${prayerHour}, Minute: ${prayerMinute}`);
+  // **DEBUG LOGGING END**
+
+  if (isNaN(prayerHour) || isNaN(prayerMinute)) {
+      console.log(`[hasPrayerTimePassed] Failed to parse prayer time string for ${prayerName}. Returning false.`);
+      return false;
+  }
   
   const prayerMinutesSinceMidnight = prayerHour * 60 + prayerMinute;
   
+  // **DEBUG LOGGING START**
+  console.log(`[hasPrayerTimePassed] Prayer Minutes Since Midnight: ${prayerMinutesSinceMidnight}`);
+  const result = currentMinutesSinceMidnight >= prayerMinutesSinceMidnight;
+  console.log(`[hasPrayerTimePassed] Comparison Result (${currentMinutesSinceMidnight} >= ${prayerMinutesSinceMidnight}): ${result}`);
+  // **DEBUG LOGGING END**
+  
   // Prayer time has passed if current time is later
-  return currentMinutesSinceMidnight >= prayerMinutesSinceMidnight;
+  return result;
 };
 
 /**

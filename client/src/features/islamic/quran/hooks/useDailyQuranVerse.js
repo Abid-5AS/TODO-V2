@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from 'axios';
+import axiosInstance from "@/api/axiosInstance";
 import { toast } from "sonner";
 import { getLocalStorageItem, setLocalStorageItem } from "@/utils/localStorageUtils";
 import { getTodayDateString } from "@/common/utils/dateUtils";
@@ -9,7 +9,7 @@ const DAILY_VERSE_CACHE_KEY = "dailyQuranVerseData";
 // Helper function to fetch daily verse (kept internal to hook for now)
 const fetchDailyQuranVerseAPI = async () => {
   try {
-    const response = await axios.get(`/api/quran/daily-verse`);
+    const response = await axiosInstance.get(`/api/ai/quran/daily-verse`);
     return {
       success: true,
       data: response.data,

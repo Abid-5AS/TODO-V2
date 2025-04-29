@@ -31,7 +31,10 @@ export const usePrayerTimes = (location, settings) => {
 
   // Fetch prayer times from Service or Cache
   const loadPrayerTimes = useCallback(async () => {
-    if (!location) return;
+    if (!location) {
+      console.log("[usePrayerTimes] No location provided, exiting loadPrayerTimes.");
+      return;
+    }
 
     const lat = location?.lat || 0;
     const lng = location?.lon || location?.lng || 0;
@@ -39,16 +42,17 @@ export const usePrayerTimes = (location, settings) => {
     const timezoneIdentifier = getTimezoneFromLocation(location); // Use util function
     const cacheKey = `prayerTimes_${lat}_${lng}_${todayStr}_${timezoneIdentifier}`;
 
-    // 1. Try loading from cache
-    const cachedData = getLocalStorageItem(cacheKey);
-    if (cachedData) {
-      console.log("[usePrayerTimes] Using cached prayer times for", cacheKey);
-      setPrayerTimes(cachedData);
-      setProhibitedTimes(calculateProhibitedTimes(cachedData));
-      setError(null);
-      setIsLoading(false);
-      return;
-    }
+    // --- TEMPORARILY DISABLED CACHE CHECK FOR DEBUGGING ---
+    // const cachedData = getLocalStorageItem(cacheKey);
+    // if (cachedData) {
+    //   console.log("[usePrayerTimes] Found cached data unexpectedly, exiting loadPrayerTimes.", cachedData);
+    //   setPrayerTimes(cachedData);
+    //   setProhibitedTimes(calculateProhibitedTimes(cachedData));
+    //   setError(null);
+    //   setIsLoading(false);
+    //   return;
+    // }
+    // --- END TEMP DISABLE ---
 
     // 2. Fetch from Service
     console.log("[usePrayerTimes] Fetching prayer times from Service for", cacheKey);
@@ -56,10 +60,16 @@ export const usePrayerTimes = (location, settings) => {
     setError(null);
 
     try {
+      // Log the settings being used for the fetch
+      console.log('[usePrayerTimes] Fetching with settings:', JSON.stringify(settings));
+
       const result = await fetchAndProcessPrayerTimes(location, settings, todayStr);
 
       if (result.success && result.data) {
         console.log("[usePrayerTimes] Fetched successfully from service");
+        // Log the data AFTER adjustments from the service
+        console.log('[usePrayerTimes] Processed timings received:', JSON.stringify(result.data));
+
         setPrayerTimes(result.data);
         setLocalStorageItem(cacheKey, result.data);
         setProhibitedTimes(calculateProhibitedTimes(result.data));
@@ -92,6 +102,7 @@ export const usePrayerTimes = (location, settings) => {
 
   // Effect to load prayer times (unchanged structure)
   useEffect(() => {
+    console.log("[usePrayerTimes] useEffect triggered. Location:", location);
     if (location) {
       loadPrayerTimes();
     } else {

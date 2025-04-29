@@ -315,19 +315,10 @@ export const calculateProhibitedTimes = (
   // Return array of prohibited times with icon types instead of JSX
   return [
     {
-      name: "After Fajr Until Sunrise",
-      reason:
-        "After Fajr prayer until the sun has risen to the height of a spear (approx. 15 minutes after sunrise)",
-      time: `${formatTimeFunc(timings.Fajr)} - ${formatTimeFunc(
-        addMinutes(timings.Sunrise, 15)
-      )}`,
-      iconType: "sunrise",
-    },
-    {
       name: "During Sunrise",
       reason: "When the sun is rising (approx. 15-20 minutes after dawn)",
       time: `${formatTimeFunc(
-        subtractMinutes(timings.Sunrise, 5)
+        timings.Sunrise
       )} - ${formatTimeFunc(addMinutes(timings.Sunrise, 15))}`,
       iconType: "sun",
     },

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePrayerTimes } from '@/features/islamic/hooks/usePrayerTimes';
 import { useLocation } from '@/features/islamic/hooks/useLocation';
+import { useSettings } from '@/features/islamic/hooks/useSettings';
 import { usePrayerLog } from '@/features/prayer/contexts/PrayerLogContext';
 import { PRAYER_NAMES } from '@/features/prayer/constants';
 import { formatPrayerTime, hasPrayerTimePassed } from '@/features/prayer/helpers';
@@ -10,9 +11,12 @@ import DailyTrackerHeader from './DailyTrackerHeader';
 import PrayerDayCard from './PrayerDayCard';
 
 const DailyPrayerTracker = () => {
-  // Get the location and prayer times
+  // Get location and settings
   const { location } = useLocation();
-  const { prayerTimes, isLoading: isPrayerTimesLoading } = usePrayerTimes(location);
+  const { settings } = useSettings();
+
+  // Pass both location and settings to usePrayerTimes
+  const { prayerTimes, isLoading: isPrayerTimesLoading } = usePrayerTimes(location, settings);
 
   // Local loading state for individual prayer buttons
   const [loadingPrayer, setLoadingPrayer] = useState({});
@@ -24,7 +28,8 @@ const DailyPrayerTracker = () => {
     loading,
     error,
     changeDate,
-    togglePrayerStatus
+    // Get the raw toggle function from context
+    togglePrayerStatus: togglePrayerStatusFromContext 
   } = usePrayerLog();
 
   // Use isToday from common utils
@@ -37,20 +42,25 @@ const DailyPrayerTracker = () => {
   const handleNextDay = () => changeDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
   const handleToday = () => changeDate(new Date());
 
-  // Enhanced prayer logging with local loading state
+  // Enhanced prayer logging with local loading state and passing current prayerTimes
   const handleLogPrayer = async (prayerName, status) => {
-    // Set local loading state for this specific prayer
     setLoadingPrayer(prev => ({ ...prev, [prayerName]: true }));
     
+    let success = false; 
     try {
-      // Call the togglePrayerStatus function from the context
-      await togglePrayerStatus(prayerName, status);
+      // Call the togglePrayerStatus function from the context,
+      // ** passing the current prayerTimes **
+      success = await togglePrayerStatusFromContext(prayerName, status, prayerTimes);
       
-      console.log(`[DailyPrayerTracker] Successfully logged ${prayerName} as ${status}`);
+      if (success) {
+        console.log(`[DailyPrayerTracker] Successfully logged ${prayerName} as ${status}`);
+      } else {
+        console.log(`[DailyPrayerTracker] Log operation for ${prayerName} as ${status} did not proceed or failed.`);
+      }
     } catch (error) {
       console.error(`Error logging ${prayerName} as ${status}:`, error);
+      success = false; 
     } finally {
-      // Clear loading state after operation completes
       setLoadingPrayer(prev => ({ ...prev, [prayerName]: false }));
     }
   };
@@ -95,14 +105,14 @@ const DailyPrayerTracker = () => {
             
             return (
               <PrayerDayCard
-                key={prayer} // Key remains on the mapped element
+                key={prayer} 
                 prayerName={prayer}
-                prayerTime={formatPrayerTime(prayer, prayerTimes)}
-                prayerHasPassed={prayerHasPassed}
-                status={dailyStatus[prayer]} // Pass the status directly
-                isDisabled={isDisabled}
+                prayerTime={formatPrayerTime(prayer, prayerTimes)} // Pass formatted time
+                prayerHasPassed={prayerHasPassed} // Pass check result
+                status={dailyStatus[prayer]} 
+                isDisabled={isFuture || (isCurrentDateToday && !prayerHasPassed)}
                 isLoading={isPrayerLoading}
-                handleLogPrayer={handleLogPrayer} // Pass the logging handler
+                handleLogPrayer={handleLogPrayer} // Pass the enhanced handler
                 isCurrentDateToday={isCurrentDateToday}
               />
             );

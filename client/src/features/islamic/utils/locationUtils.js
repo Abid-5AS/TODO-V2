@@ -199,13 +199,22 @@ export const getCurrentLocationWithDetails = async () => {
  * @returns {Object|null} Normalized location object or null if invalid.
  */
 export const normalizeLocationData = (data, type = 'search') => {
-  if (!data) return null;
+  console.log('normalizeLocationData called with:', { data, type });
+  
+  if (!data) {
+    console.error('normalizeLocationData received null data');
+    return null;
+  }
+
+  // Debug missing properties
+  if (!data.lat) console.warn('Missing lat property in data:', data);
+  if (!data.lon && !data.lng) console.warn('Missing lon/lng property in data:', data);
 
   const lat = parseFloat(data.lat);
   const lon = parseFloat(data.lon || data.lng); // Accept lng as well
 
   if (isNaN(lat) || isNaN(lon)) {
-    console.error('Invalid coordinates received:', data);
+    console.error('Invalid coordinates received:', { lat, lon, originalData: data });
     return null;
   }
 
@@ -229,7 +238,7 @@ export const normalizeLocationData = (data, type = 'search') => {
 
   const displayName = data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 
-  return {
+  const normalizedLocation = {
     lat,
     lon, // Use lon consistently
     display_name: displayName,
@@ -237,4 +246,7 @@ export const normalizeLocationData = (data, type = 'search') => {
     name: name,
     country: data.country || data.address?.country || '',
   };
+  
+  console.log('normalizeLocationData returning:', normalizedLocation);
+  return normalizedLocation;
 };

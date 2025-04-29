@@ -27,7 +27,7 @@ export const usePrayerActions = ({
   dailyStatus,
   setDailyStatus,
   setLastUpdated,
-  prayerTimes,
+  prayerTimes: initialPrayerTimes,
   fetchDailyLogs,
   fetchMonthlyData,
   fetchStats,
@@ -40,7 +40,7 @@ export const usePrayerActions = ({
 
   // --- Action Functions ---
   const logPrayer = useCallback(
-    async (prayerName, status) => {
+    async (prayerName, status, currentPrayerTimes) => {
       if (!currentDate) return false;
       console.log(`[usePrayerActions] Logging ${prayerName} as ${status ?? 'null'} for ${currentDate.toISOString()}`);
 
@@ -48,7 +48,7 @@ export const usePrayerActions = ({
         toast({ title: `Cannot mark prayers for future dates`, variant: 'destructive' });
         return false;
       }
-      if (isCurrentDateToday && status?.toLowerCase() === 'completed' && !hasPrayerTimePassed(prayerName, prayerTimes)) {
+      if (isCurrentDateToday && status?.toLowerCase() === 'completed' && !hasPrayerTimePassed(prayerName, currentPrayerTimes)) {
         toast({ title: `Cannot mark ${prayerName} as completed`, description: "Prayer time hasn't arrived", variant: 'destructive' });
         return false;
       }
@@ -98,43 +98,35 @@ export const usePrayerActions = ({
         setLoadingAction(false);
       }
     },
-    // Update dependencies 
-    [currentDate, dailyStatus, prayerTimes, isCurrentDateToday, isFutureDate, toast, 
+    // Dependencies for logPrayer (excluding prayerTimes)
+    [currentDate, dailyStatus, isCurrentDateToday, isFutureDate, toast, 
      setDailyStatus, setLastUpdated, 
-     fetchDailyLogs, fetchMonthlyData, fetchStats] 
+     fetchDailyLogs, fetchMonthlyData, fetchStats]
   );
 
   const togglePrayerCompleted = useCallback(
-    async (prayerName) => {
+    async (prayerName, currentPrayerTimes) => {
       const currentPrayerStatus = dailyStatus?.[prayerName];
       const newStatus = currentPrayerStatus === 'Completed' ? 'Missed' : 'Completed';
-      return await logPrayer(prayerName, newStatus);
+      return await logPrayer(prayerName, newStatus, currentPrayerTimes ?? initialPrayerTimes);
     },
     [dailyStatus, logPrayer]
   );
 
   const togglePrayerStatus = useCallback(
-    async (prayerName, status = null) => {
+    async (prayerName, status = null, currentPrayerTimes) => {
       if (!currentDate || isFutureDate) return;
 
       const currentStatus = dailyStatus?.[prayerName] || null;
       let newStatus = status;
       
-      // Cycle logic: null -> completed -> missed -> null
       if (newStatus === null) {
-        if (currentStatus === null) newStatus = 'completed';
-        else if (currentStatus?.toLowerCase() === 'completed') newStatus = 'missed';
-        else newStatus = null; 
+         if (currentStatus === null) newStatus = 'completed';
+         else if (currentStatus?.toLowerCase() === 'completed') newStatus = 'missed';
+         else newStatus = null; 
       }
 
-      if (newStatus?.toLowerCase() === currentStatus?.toLowerCase()) {
-          if (newStatus !== null || currentStatus !== null) { 
-             // Allow redundant calls for now, backend handles upsert.
-          }
-      }
-
-      // Call the main logPrayer function
-      return await logPrayer(prayerName, newStatus);
+      return await logPrayer(prayerName, newStatus, currentPrayerTimes ?? initialPrayerTimes);
     },
     [currentDate, isFutureDate, dailyStatus, logPrayer]
   );
