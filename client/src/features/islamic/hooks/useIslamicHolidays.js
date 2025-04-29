@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import moment from 'moment'; // Keep moment for date diff calculations
+import { hijriToGregorian } from '@tabby_ai/hijri-converter'; // Import the converter
 
 // Constants (could be moved to islamic/constants)
-const HOLIDAY_STORAGE_KEY = "islamic_holiday_data";
+const HOLIDAY_STORAGE_KEY = "islamic_holiday_data_v2"; // Changed key for new structure
 const ONE_MONTH_IN_MS = 30 * 24 * 60 * 60 * 1000; // Approximation
 const UPCOMING_EVENT_THRESHOLD_DAYS = 60; // Show events within the next 60 days
 
@@ -20,15 +21,23 @@ const baseHolidays = [
     { day: 10, month: 12, name: "Eid al-Adha", type: "religious" }
 ];
 
-// Helper to convert Hijri date components to an approximate Gregorian moment object
-// NOTE: This is a simplification for calculating date differences. For precise display
-// or conversion, a dedicated library is better.
-const approximateHijriToGregorianMoment = (day, month, year, currentGregorianYear) => {
-    // Very rough approximation: map Hijri month to Gregorian month offset
-    // This doesn't account for the ~11 day difference per year accurately.
-    // A better approach might involve a library or more complex calculation.
-    const approxGregorianMonth = (month - 1 + (currentGregorianYear - year) * 11 / 30) % 12;
-    return moment().year(currentGregorianYear).month(approxGregorianMonth).date(day);
+// Array of Hijri month names (consistent with useIslamicDate)
+const hijriMonthNames = [
+  "Muharram", "Safar", "Rabi' al-awwal", "Rabi' al-thani",
+  "Jumada al-ula", "Jumada al-ukhra", "Rajab", "Sha'ban",
+  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+];
+
+// Helper to get Gregorian date object from Hijri components
+const getGregorianDateFromHijri = (day, month, year) => {
+    try {
+        const gregorian = hijriToGregorian({ year, month, day });
+        // Create a JS Date object (month is 0-indexed)
+        return new Date(gregorian.year, gregorian.month - 1, gregorian.day);
+    } catch (e) {
+        console.error(`Error converting Hijri ${day}/${month}/${year} to Gregorian:`, e);
+        return null;
+    }
 };
 
 export const useIslamicHolidays = (currentHijriDateComponents) => {
@@ -48,10 +57,13 @@ export const useIslamicHolidays = (currentHijriDateComponents) => {
         setHolidayError(null);
 
         try {
-            // 1. Check localStorage for cached data
-            const storedData = localStorage.getItem(HOLIDAY_STORAGE_KEY);
+            const currentHijriYear = currentHijriDateComponents.year;
+            const cacheKey = `${HOLIDAY_STORAGE_KEY}_${currentHijriYear}`; // Year-specific cache key
+
+            // 1. Check localStorage for cached data for the CURRENT Hijri year
+            const storedData = localStorage.getItem(cacheKey);
             let holidayData = null;
-            let calculatedHolidays = [];
+            let processedHolidays = [];
             let calculatedUpcoming = [];
 
             if (storedData) {
@@ -59,74 +71,78 @@ export const useIslamicHolidays = (currentHijriDateComponents) => {
                     const parsedData = JSON.parse(storedData);
                     const currentTime = new Date().getTime();
                     const isDataValid = (currentTime - parsedData.timestamp) < ONE_MONTH_IN_MS;
-                    
-                    // Check if data is valid and belongs to the current Hijri year
-                    if (isDataValid && parsedData.data && Array.isArray(parsedData.data.holidays) && parsedData.hijriYear === currentHijriDateComponents.year) {
-                        console.log("[useIslamicHolidays] Using cached holiday data for year", currentHijriDateComponents.year);
+
+                    if (isDataValid && parsedData.data && Array.isArray(parsedData.data.holidays)) {
+                        console.log("[useIslamicHolidays] Using cached holiday data for year", currentHijriYear);
                         holidayData = parsedData.data;
-                        calculatedHolidays = holidayData.holidays || [];
+                        processedHolidays = holidayData.holidays || [];
                         calculatedUpcoming = holidayData.upcomingEvents || [];
                     } else {
-                        console.log("[useIslamicHolidays] Cached holiday data invalid or for wrong year, generating new data");
-                        localStorage.removeItem(HOLIDAY_STORAGE_KEY);
+                        console.log("[useIslamicHolidays] Cached holiday data invalid or expired, generating new data for year", currentHijriYear);
+                        localStorage.removeItem(cacheKey);
                     }
                 } catch (parseError) {
                     console.error("[useIslamicHolidays] Error parsing stored holiday data:", parseError);
-                    localStorage.removeItem(HOLIDAY_STORAGE_KEY);
+                    localStorage.removeItem(cacheKey);
                 }
             }
 
             // 2. Generate if not cached or invalid
             if (!holidayData) {
-                console.log("[useIslamicHolidays] Generating new Islamic holiday data for year", currentHijriDateComponents.year);
+                console.log("[useIslamicHolidays] Generating new Islamic holiday data for year", currentHijriYear);
                 const currentMoment = moment(); // Use current Gregorian date for diff calculation
-                const currentHijriYear = currentHijriDateComponents.year;
-                const currentHijriMonth = currentHijriDateComponents.month;
-                const currentHijriDay = currentHijriDateComponents.day;
-                
-                calculatedHolidays = [...baseHolidays]; // Use the base list
+                processedHolidays = [];
                 calculatedUpcoming = [];
 
                 baseHolidays.forEach(holiday => {
-                    // Approximate Gregorian date for the holiday in the current Hijri year
-                    const approxHolidayMoment = approximateHijriToGregorianMoment(holiday.day, holiday.month, currentHijriYear, currentMoment.year());
-                    
+                    const hijriDate = { day: holiday.day, month: holiday.month, year: currentHijriYear };
+                    const gregorianDateObj = getGregorianDateFromHijri(hijriDate.day, hijriDate.month, hijriDate.year);
+
+                    if (!gregorianDateObj) return; // Skip if conversion failed
+
+                    const gregorianMoment = moment(gregorianDateObj);
+                    const hijriDateFormatted = `${hijriDate.day} ${hijriMonthNames[hijriDate.month - 1] || ''} ${hijriDate.year}`;
+                    const gregorianDateFormatted = gregorianMoment.format('MMM D, YYYY');
+
                     // Calculate days remaining (can be negative if past)
-                    const daysRemaining = approxHolidayMoment.diff(currentMoment, 'days');
+                    const daysRemaining = gregorianMoment.diff(currentMoment, 'days');
+
+                    const processedHoliday = {
+                        ...holiday,
+                        hijriDate: hijriDateFormatted,
+                        gregorianDate: gregorianDateFormatted,
+                        daysRemaining: daysRemaining
+                    };
+
+                    processedHolidays.push(processedHoliday);
 
                     // Add to upcoming events if within threshold and not past
                     if (daysRemaining >= 0 && daysRemaining <= UPCOMING_EVENT_THRESHOLD_DAYS) {
-                        calculatedUpcoming.push({
-                            ...holiday,
-                            daysRemaining: daysRemaining,
-                            date: `${holiday.day}/${holiday.month}/${currentHijriYear}` // Simple Hijri date string
-                        });
+                        calculatedUpcoming.push(processedHoliday); // Add the fully processed holiday
                     }
                 });
 
                 // Sort upcoming events by days remaining
                 calculatedUpcoming.sort((a, b) => a.daysRemaining - b.daysRemaining);
 
-                // Cache the newly generated data with timestamp and year
-                const dataToStore = { 
-                    holidays: calculatedHolidays, 
-                    upcomingEvents: calculatedUpcoming 
+                // Cache the newly generated data with timestamp
+                const dataToStore = {
+                    holidays: processedHolidays,
+                    upcomingEvents: calculatedUpcoming
                 };
-                localStorage.setItem(HOLIDAY_STORAGE_KEY, JSON.stringify({ 
-                    timestamp: new Date().getTime(), 
-                    hijriYear: currentHijriYear, 
-                    data: dataToStore 
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    data: dataToStore
                 }));
-                holidayData = dataToStore;
             }
 
-            setHolidays(calculatedHolidays);
+            setHolidays(processedHolidays);
             setUpcomingEvents(calculatedUpcoming);
 
         } catch (error) {
             console.error("[useIslamicHolidays] Error loading holidays:", error);
             setHolidayError("Could not load holiday information.");
-            setHolidays([...baseHolidays]); // Fallback to base holidays
+            setHolidays([]); // Fallback to empty
             setUpcomingEvents([]);
         } finally {
             setIsLoadingHolidays(false);
@@ -139,10 +155,14 @@ export const useIslamicHolidays = (currentHijriDateComponents) => {
 
     // Function to manually clear cache and refresh
     const refreshHolidays = useCallback(() => {
-        console.log("[useIslamicHolidays] Clearing cache and refreshing holidays.");
-        localStorage.removeItem(HOLIDAY_STORAGE_KEY);
+        const year = currentHijriDateComponents?.year;
+        if (year) {
+          const cacheKey = `${HOLIDAY_STORAGE_KEY}_${year}`;
+          console.log(`[useIslamicHolidays] Clearing cache (${cacheKey}) and refreshing holidays.`);
+          localStorage.removeItem(cacheKey);
+        }
         loadHolidaysAndEvents();
-    }, [loadHolidaysAndEvents]);
+    }, [loadHolidaysAndEvents, currentHijriDateComponents]);
 
     return { holidays, upcomingEvents, isLoadingHolidays, holidayError, refreshHolidays };
 }; 

@@ -77,7 +77,14 @@ function IslamicCalendarSection({ itemVariants, isLoading: externalLoading }) {
             <ul className="list-disc list-inside text-sm text-slate-600 dark:text-slate-300 pl-1">
               {islamicDate.upcomingEvents.slice(0, 3).map((event, idx) => (
                 <li key={idx} className="mb-1">
-                  {event.name} - {event.date}
+                  {event.name} - {event.hijriDate} ({event.gregorianDate})
+                  {event.daysRemaining !== undefined && (
+                    <span className="text-xs ml-2 text-blue-500">
+                      {event.daysRemaining === 0 ? 
+                        'today' : 
+                        `in ~${event.daysRemaining} days`}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -104,16 +111,7 @@ function IslamicCalendarSection({ itemVariants, isLoading: externalLoading }) {
             <ul className="list-disc list-inside text-sm text-slate-600 dark:text-slate-300 pl-1">
               {islamicDate.holidays.slice(0, 3).map((holiday, idx) => (
                 <li key={idx} className="mb-1">
-                  {holiday.name} - {holiday.date}
-                  {holiday.daysLeft !== undefined && (
-                    <span className="text-xs ml-2 text-blue-500">
-                      {holiday.daysLeft > 120 ? 
-                        `next year` : 
-                        holiday.daysLeft === 0 ? 
-                          'today' : 
-                          `in ~${holiday.daysLeft} days`}
-                    </span>
-                  )}
+                  {holiday.name} - {holiday.hijriDate} ({holiday.gregorianDate})
                 </li>
               ))}
               {islamicDate.holidays.length > 3 && (
