@@ -1,11 +1,12 @@
 // src/features/tasks/components/TaskForm.jsx
 // Provides the form for creating new tasks, including AI suggestions.
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTasks } from "../hooks/useTasks"; // Import useTasks hook
 import {
   getAISubtaskSuggestions,
   getAIDescriptionSuggestion,
+  suggestTaskFromImage,
 } from "../services/aiService"; // Corrected path
 import { Button } from "../../../components/ui/button"; // Corrected path
 import { Input } from "../../../components/ui/input"; // Corrected path
@@ -36,6 +37,7 @@ import {
   Check,
   ListPlus,
   Loader2,
+  ImageIcon,
 } from "lucide-react";
 import { cn } from "../../../lib/utils"; // Corrected path
 import {
@@ -84,6 +86,14 @@ const TaskForm = ({
   const [newLabel, setNewLabel] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
+  // New state for image handling
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [aiImageSuggestions, setAiImageSuggestions] = useState([]);
+  const [aiImageLoading, setAiImageLoading] = useState(false);
+  const [aiImageError, setAiImageError] = useState(null);
+  const imageInputRef = useRef(null); // Ref for hidden file input
+
   // Update project in form if initialProject changes or availableProjects loads
   useEffect(() => {
     setForm((f) => ({
@@ -115,6 +125,94 @@ const TaskForm = ({
       setForm({ ...form, dueDate: "" });
       setUseDueDate(false);
     }
+  };
+
+  // Handle image selection
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      setAiImageError(null); // Clear previous errors
+      setAiImageSuggestions([]); // Clear previous suggestions
+      // Create image preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setSelectedImage(null);
+      setImagePreviewUrl(null);
+    }
+  };
+
+  // Trigger hidden file input
+  const handleImageUploadClick = () => {
+    imageInputRef.current?.click();
+  };
+
+  // Remove selected image
+  const handleRemoveImage = () => {
+      setSelectedImage(null);
+      setImagePreviewUrl(null);
+      setAiImageSuggestions([]);
+      setAiImageError(null);
+       if (imageInputRef.current) {
+            imageInputRef.current.value = ""; // Reset file input
+        }
+  }
+
+  // AI Image Suggestions
+  const handleAIImageSuggest = async () => {
+    if (!selectedImage) {
+      toast({
+        title: "No Image Selected",
+        description: "Please select an image first to get suggestions.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setAiImageLoading(true);
+    setAiImageSuggestions([]);
+    setAiImageError(null);
+    try {
+      const data = await suggestTaskFromImage(selectedImage);
+      const suggestions = (data.suggestions || "")
+        .split(/\n|\r/)
+        .map((s) => s.replace(/^[-•*\d.\s]+/, "").trim()) // Basic cleaning
+        .filter(Boolean)
+        .slice(0, 5); // Limit suggestions
+
+      setAiImageSuggestions(suggestions);
+
+      if (!suggestions.length) {
+        toast({
+          title: "No tasks found in image",
+          description: data.suggestions || "The AI could not identify specific tasks.",
+          variant: "default",
+        });
+      } else {
+         toast({ title: "AI suggested tasks based on image" });
+      }
+    } catch (err) {
+      console.error("AI Image Suggestion error:", err);
+      const errorMsg = err.message || "Failed to get suggestions from image.";
+      setAiImageError(errorMsg);
+      toast({
+        title: "AI Image Suggestion Failed",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      setAiImageSuggestions([]);
+    } finally {
+      setAiImageLoading(false);
+    }
+  };
+
+  // Function to apply an AI suggestion to the title
+  const applyImageSuggestionToTitle = (suggestion) => {
+    setForm((prev) => ({ ...prev, title: suggestion }));
+    setAiImageSuggestions([]); // Clear suggestions after applying one
   };
 
   // Handle adding labels
@@ -198,6 +296,14 @@ const TaskForm = ({
       setAiDescription("");
       setSelectedLabels([]);
       setUseDueDate(false);
+      // Reset image state too
+      setSelectedImage(null);
+      setImagePreviewUrl(null);
+      setAiImageSuggestions([]);
+      setAiImageError(null);
+      if (imageInputRef.current) {
+            imageInputRef.current.value = ""; // Reset file input
+      }
       if (onTaskCreated) onTaskCreated(); // Close dialog/sheet
     } catch (err) {
       console.error("Create task error:", err);
@@ -279,396 +385,445 @@ const TaskForm = ({
   };
 
   return (
-    <div className="p-5 md:p-6">
-      <DialogHeader className="pb-4 border-b mb-5">
-        <DialogTitle className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Add New Task
-        </DialogTitle>
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+      <DialogHeader>
+        <DialogTitle>Add New Task</DialogTitle>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title Input */}
-        <div>
-          <Label htmlFor="title" className="font-medium text-sm mb-1 block">
-            Title <span className="text-red-500">*</span>
-          </Label>
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={imageInputRef}
+        onChange={handleImageChange}
+        accept="image/png, image/jpeg, image/webp" // Supported by LM Studio
+        style={{ display: "none" }}
+      />
+
+      {/* Task Title & AI Buttons */}
+      <div className="space-y-1">
+        <Label htmlFor="title">Task Title *</Label>
+        <div className="flex items-center gap-2">
           <Input
             id="title"
             name="title"
+            placeholder="e.g., Plan team meeting for Q3 kickoff"
             value={form.title}
             onChange={handleChange}
             required
-            className="mt-1 bg-background/70 dark:bg-input/50"
-            placeholder="e.g., Plan project kickoff meeting"
+            className="flex-grow"
           />
-        </div>
-
-        {/* AI Buttons */}
-        <div className="flex flex-wrap gap-2">
+          {/* Image Upload Button */}
           <Button
             type="button"
-            onClick={handleAIDescription}
-            disabled={
-              aiDescriptionLoading || aiSubtasksLoading || !form.title.trim()
-            }
-            size="sm"
             variant="outline"
-            className="bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-300 hover:bg-green-500/20"
+            size="icon"
+            onClick={handleImageUploadClick}
+            title="Upload image for AI task suggestions"
+            disabled={aiImageLoading}
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+           {/* AI Image Suggest Button (only show if image selected) */}
+          {selectedImage && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleAIImageSuggest}
+              title="Get AI task suggestions from image"
+              disabled={aiImageLoading || !selectedImage}
+            >
+              {aiImageLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-purple-500" />
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Image Preview and Remove Button */}
+      {imagePreviewUrl && (
+         <div className="relative w-full max-w-xs group">
+          <Label>Image Preview:</Label>
+          <img src={imagePreviewUrl} alt="Selected preview" className="mt-2 rounded border max-h-40 w-auto" />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute top-0 right-0 m-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleRemoveImage}
+            title="Remove selected image"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* AI Image Suggestions Display */}
+      {aiImageSuggestions.length > 0 && (
+        <div className="space-y-1 pt-2">
+          <Label className="text-sm font-medium text-purple-600">AI Suggestions (from image):</Label>
+          <div className="flex flex-wrap gap-2">
+            {aiImageSuggestions.map((suggestion, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Badge
+                  variant="secondary"
+                  className="cursor-pointer hover:bg-purple-100"
+                  onClick={() => applyImageSuggestionToTitle(suggestion)}
+                  title={`Click to use: "${suggestion}"`}
+                >
+                  {suggestion}
+                </Badge>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+       {aiImageError && (
+          <p className="text-sm text-red-600">Error: {aiImageError}</p>
+        )}
+
+      {/* Description & AI Button */}
+      <div className="space-y-1">
+        <Label htmlFor="description">Description</Label>
+        <div className="flex items-center gap-2">
+          <Textarea
+            id="description"
+            name="description"
+            placeholder="Add details, notes, or links..."
+            value={form.description}
+            onChange={handleChange}
+            rows={3}
+            className="flex-grow resize-none"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleAIDescription}
+            title="Get AI description suggestion"
+            disabled={aiDescriptionLoading || aiSubtasksLoading || !form.title.trim()}
           >
             {aiDescriptionLoading ? (
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="mr-1 h-4 w-4" />
+              <Sparkles className="h-4 w-4" />
             )}
-            AI Description
-          </Button>
-          <Button
-            type="button"
-            onClick={handleAISuggest}
-            disabled={
-              aiSubtasksLoading || aiDescriptionLoading || !form.title.trim()
-            }
-            size="sm"
-            variant="outline"
-            className="bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20"
-          >
-            {aiSubtasksLoading ? (
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-            ) : (
-              <Brain className="mr-1 h-4 w-4" />
-            )}
-            AI Subtasks
           </Button>
         </div>
+      </div>
 
-        {/* AI Description Suggestion Area */}
-        {aiDescription && (
+      {/* AI Description Suggestion Area */}
+      {aiDescription && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 space-y-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800"
+        >
+          <p className="text-sm text-green-800 dark:text-green-200">
+            {aiDescription}
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setAiDescription("")}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Discard
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddAIDescription}
+              size="sm"
+              variant="outline"
+              className="bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20"
+            >
+              <Check className="mr-1 h-4 w-4" /> Use This
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Date & Priority */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Due Date */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="dueDate" className="font-medium text-sm">
+              Due Date
+            </Label>
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="use-due-date"
+                className="text-xs text-muted-foreground"
+              >
+                {useDueDate ? "Enabled" : "Disabled"}
+              </Label>
+              <Switch
+                id="use-due-date"
+                checked={useDueDate}
+                onCheckedChange={(checked) => {
+                  setUseDueDate(checked);
+                  if (!checked) setForm({ ...form, dueDate: "" });
+                }}
+              />
+            </div>
+          </div>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-9",
+                  "bg-background/70 dark:bg-input/50",
+                  !useDueDate &&
+                    "text-muted-foreground opacity-50 cursor-not-allowed",
+                  form.dueDate && useDueDate && "text-foreground"
+                )}
+                disabled={!useDueDate}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {form.dueDate && useDueDate ? (
+                  format(new Date(form.dueDate), "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={
+                  form.dueDate && isValid(new Date(form.dueDate))
+                    ? new Date(form.dueDate)
+                    : undefined
+                }
+                onSelect={handleDateChange}
+                initialFocus
+                disabled={!useDueDate}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        {/* Priority Select */}
+        <div className="space-y-1.5">
+          <Label htmlFor="priority" className="font-medium text-sm">
+            Priority
+          </Label>
+          <Select
+            value={form.priority}
+            onValueChange={(value) => handleSelectChange("priority", value)}
+          >
+            <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Low">Low</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Project Select */}
+      <div className="space-y-1.5">
+        <Label htmlFor="project" className="font-medium text-sm">
+          Project
+        </Label>
+        <Select
+          value={form.project}
+          onValueChange={(value) => handleSelectChange("project", value)}
+        >
+          <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
+            <SelectValue placeholder="Select project" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Projects</SelectLabel>
+              {availableProjects.map((project) => (
+                <SelectItem key={project} value={project}>
+                  {project}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Labels Input */}
+      <div className="space-y-1.5">
+        <Label className="font-medium text-sm">Labels</Label>
+        <div className="flex flex-wrap gap-1.5 mb-2 min-h-[20px]">
+          {selectedLabels.map((label) => (
+            <Badge
+              key={label}
+              variant="secondary"
+              className="px-2 py-0.5 text-xs bg-muted hover:bg-muted/80"
+            >
+              {label}
+              <button
+                type="button"
+                onClick={() => handleRemoveLabel(label)}
+                className="ml-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-background/50 p-px"
+                aria-label={`Remove label ${label}`}
+              >
+                <X size={12} />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <div className="flex space-x-2">
+          <Input
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Add a label..."
+            className="bg-background/70 dark:bg-input/50 h-9"
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), handleAddLabel())
+            }
+          />
+          <Button
+            type="button"
+            onClick={handleAddLabel}
+            disabled={!newLabel.trim()}
+            variant="outline"
+            size="sm"
+            className="flex-shrink-0 bg-background/70 hover:bg-muted"
+          >
+            Add Label
+          </Button>
+        </div>
+      </div>
+
+      {/* Subtasks Section */}
+      <div className="space-y-1.5">
+        <Label htmlFor="subtasks" className="font-medium text-sm">
+          Subtasks
+        </Label>
+        {/* AI Suggestion Area for Subtasks */}
+        {aiSuggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 space-y-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800"
+            className="p-3 space-y-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800"
           >
-            <p className="text-sm text-green-800 dark:text-green-200">
-              {aiDescription}
-            </p>
+            <ul className="pl-4 list-disc text-sm space-y-1 text-blue-800 dark:text-blue-200">
+              {aiSuggestions.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
             <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={() => setAiDescription("")}
+                onClick={() => setAiSuggestions([])}
                 className="text-muted-foreground hover:text-foreground"
               >
-                Discard
+                Discard All
               </Button>
               <Button
                 type="button"
-                onClick={handleAddAIDescription}
+                onClick={handleAddAISubtasks}
                 size="sm"
                 variant="outline"
-                className="bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20"
+                className="bg-blue-500/10 border-blue-500/30 text-blue-700 hover:bg-blue-500/20"
               >
-                <Check className="mr-1 h-4 w-4" /> Use This
+                <ListPlus className="mr-1 h-4 w-4" /> Add These
               </Button>
             </div>
           </motion.div>
         )}
-
-        {/* Description Input */}
-        <div>
-          <Label
-            htmlFor="description"
-            className="font-medium text-sm mb-1 block"
-          >
-            Description
-          </Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            rows={3}
-            className="mt-1 resize-none bg-background/70 dark:bg-input/50"
-            placeholder="Add details, notes, or links..."
-          />
-        </div>
-
-        {/* Date & Priority */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Due Date */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="dueDate" className="font-medium text-sm">
-                Due Date
-              </Label>
-              <div className="flex items-center space-x-2">
-                <Label
-                  htmlFor="use-due-date"
-                  className="text-xs text-muted-foreground"
-                >
-                  {useDueDate ? "Enabled" : "Disabled"}
-                </Label>
-                <Switch
-                  id="use-due-date"
-                  checked={useDueDate}
-                  onCheckedChange={(checked) => {
-                    setUseDueDate(checked);
-                    if (!checked) setForm({ ...form, dueDate: "" });
-                    // If enabling, maybe open the calendar?
-                    // if (checked) setCalendarOpen(true);
-                  }}
-                  className="data-[state=checked]:bg-primary"
-                  size="sm"
-                />
-              </div>
-            </div>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-9",
-                    "bg-background/70 dark:bg-input/50",
-                    !useDueDate &&
-                      "text-muted-foreground opacity-50 cursor-not-allowed",
-                    form.dueDate && useDueDate && "text-foreground"
-                  )}
-                  disabled={!useDueDate}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {form.dueDate && useDueDate ? (
-                    format(new Date(form.dueDate), "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={
-                    form.dueDate && isValid(new Date(form.dueDate))
-                      ? new Date(form.dueDate)
-                      : undefined
-                  }
-                  onSelect={handleDateChange}
-                  initialFocus
-                  disabled={!useDueDate}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          {/* Priority Select */}
-          <div className="space-y-1.5">
-            <Label htmlFor="priority" className="font-medium text-sm">
-              Priority
-            </Label>
-            <Select
-              value={form.priority}
-              onValueChange={(value) => handleSelectChange("priority", value)}
-            >
-              <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Low">Low</SelectItem>
-                <SelectItem value="Medium">Medium</SelectItem>
-                <SelectItem value="High">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Project Select */}
-        <div className="space-y-1.5">
-          <Label htmlFor="project" className="font-medium text-sm">
-            Project
-          </Label>
-          <Select
-            value={form.project}
-            onValueChange={(value) => handleSelectChange("project", value)}
-          >
-            <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
-              <SelectValue placeholder="Select project" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Projects</SelectLabel>
-                {availableProjects.map((project) => (
-                  <SelectItem key={project} value={project}>
-                    {project}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Labels Input */}
-        <div className="space-y-1.5">
-          <Label className="font-medium text-sm">Labels</Label>
-          <div className="flex flex-wrap gap-1.5 mb-2 min-h-[20px]">
-            {selectedLabels.map((label) => (
-              <Badge
-                key={label}
-                variant="secondary"
-                className="px-2 py-0.5 text-xs bg-muted hover:bg-muted/80"
+        {/* Subtask List */}
+        {subtasks.length > 0 && (
+          <ul className="space-y-1.5 mt-2">
+            {subtasks.map((st, idx) => (
+              <li
+                key={`sub-${idx}`}
+                className="flex items-center space-x-2 p-1 bg-muted/40 dark:bg-zinc-800/40 rounded-md"
               >
-                {label}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveLabel(label)}
-                  className="ml-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-background/50 p-px"
-                  aria-label={`Remove label ${label}`}
-                >
-                  <X size={12} />
-                </button>
-              </Badge>
-            ))}
-          </div>
-          <div className="flex space-x-2">
-            <Input
-              value={newLabel}
-              onChange={(e) => setNewLabel(e.target.value)}
-              placeholder="Add a label..."
-              className="bg-background/70 dark:bg-input/50 h-9"
-              onKeyDown={(e) =>
-                e.key === "Enter" && (e.preventDefault(), handleAddLabel())
-              }
-            />
-            <Button
-              type="button"
-              onClick={handleAddLabel}
-              disabled={!newLabel.trim()}
-              variant="outline"
-              size="sm"
-              className="flex-shrink-0 bg-background/70 hover:bg-muted"
-            >
-              Add Label
-            </Button>
-          </div>
-        </div>
-
-        {/* Subtasks Section */}
-        <div className="space-y-1.5">
-          <Label htmlFor="subtasks" className="font-medium text-sm">
-            Subtasks
-          </Label>
-          {/* AI Suggestion Area for Subtasks */}
-          {aiSuggestions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 space-y-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800"
-            >
-              <ul className="pl-4 list-disc text-sm space-y-1 text-blue-800 dark:text-blue-200">
-                {aiSuggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-              <div className="flex justify-end gap-2">
+                <span className="text-xs pl-1 text-muted-foreground">•</span>
+                <Input
+                  value={st.title}
+                  onChange={(e) => handleEditSubtask(idx, e.target.value)}
+                  className="text-sm bg-transparent border-0 focus:ring-0 flex-1 h-7 py-0"
+                  placeholder={`Subtask ${idx + 1}`}
+                />
                 <Button
                   type="button"
-                  size="sm"
+                  onClick={() => handleRemoveSubtask(idx)}
                   variant="ghost"
-                  onClick={() => setAiSuggestions([])}
-                  className="text-muted-foreground hover:text-foreground"
+                  size="icon"
+                  className="h-6 w-6 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
+                  aria-label={`Remove subtask ${idx + 1}`}
                 >
-                  Discard All
+                  <X size={14} />
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleAddAISubtasks}
-                  size="sm"
-                  variant="outline"
-                  className="bg-blue-500/10 border-blue-500/30 text-blue-700 hover:bg-blue-500/20"
-                >
-                  <ListPlus className="mr-1 h-4 w-4" /> Add These
-                </Button>
-              </div>
-            </motion.div>
-          )}
-          {/* Subtask List */}
-          {subtasks.length > 0 && (
-            <ul className="space-y-1.5 mt-2">
-              {subtasks.map((st, idx) => (
-                <li
-                  key={`sub-${idx}`}
-                  className="flex items-center space-x-2 p-1 bg-muted/40 dark:bg-zinc-800/40 rounded-md"
-                >
-                  <span className="text-xs pl-1 text-muted-foreground">•</span>
-                  <Input
-                    value={st.title}
-                    onChange={(e) => handleEditSubtask(idx, e.target.value)}
-                    className="text-sm bg-transparent border-0 focus:ring-0 flex-1 h-7 py-0"
-                    placeholder={`Subtask ${idx + 1}`}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleRemoveSubtask(idx)}
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
-                    aria-label={`Remove subtask ${idx + 1}`}
-                  >
-                    <X size={14} />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {/* Add Subtask Input */}
-          <div className="flex space-x-2 pt-1">
-            <Input
-              id="subtasks"
-              value={newSubtask}
-              onChange={(e) => setNewSubtask(e.target.value)}
-              placeholder="Add a subtask item..."
-              onKeyDown={(e) =>
-                e.key === "Enter" && (e.preventDefault(), handleAddSubtask())
-              }
-              className="bg-background/70 dark:bg-input/50 h-9"
-            />
-            <Button
-              type="button"
-              onClick={handleAddSubtask}
-              disabled={!newSubtask.trim()}
-              variant="outline"
-              size="sm"
-              className="flex-shrink-0 bg-background/70 hover:bg-muted"
-            >
-              <PlusCircle size={16} className="mr-1" /> Add
-            </Button>
-          </div>
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
-            {error}
-          </div>
+              </li>
+            ))}
+          </ul>
         )}
-
-        {/* Footer Buttons */}
-        <DialogFooter className="pt-4">
+        {/* Add Subtask Input */}
+        <div className="flex space-x-2 pt-1">
+          <Input
+            id="subtasks"
+            value={newSubtask}
+            onChange={(e) => setNewSubtask(e.target.value)}
+            placeholder="Add a subtask item..."
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), handleAddSubtask())
+            }
+            className="bg-background/70 dark:bg-input/50 h-9"
+          />
           <Button
-            type="submit"
-            disabled={loading}
-            className="w-full sm:w-auto backdrop-blur-xl border border-white/20 dark:border-gray-700/30 bg-white/10 dark:bg-zinc-800/20 text-zinc-800 dark:text-white shadow-sm hover:bg-white/20 dark:hover:bg-zinc-800/30 transition-all duration-200"
+            type="button"
+            onClick={handleAddSubtask}
+            disabled={!newSubtask.trim()}
+            variant="outline"
+            size="sm"
+            className="flex-shrink-0 bg-background/70 hover:bg-muted"
           >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Task
-              </span>
-            )}
+            <PlusCircle size={16} className="mr-1" /> Add
           </Button>
-        </DialogFooter>
-      </form>
-    </div>
+        </div>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
+          {error}
+        </div>
+      )}
+
+      {/* Footer Buttons */}
+      <DialogFooter className="pt-4">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full sm:w-auto backdrop-blur-xl border border-white/20 dark:border-gray-700/30 bg-white/10 dark:bg-zinc-800/20 text-zinc-800 dark:text-white shadow-sm hover:bg-white/20 dark:hover:bg-zinc-800/30 transition-all duration-200"
+        >
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center">
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Task
+            </span>
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 };
 

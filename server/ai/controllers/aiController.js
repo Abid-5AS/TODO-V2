@@ -214,3 +214,26 @@ exports.getDailyVerse = asyncHandler(async (req, res, next) => {
         data: verseData 
   });
 });
+
+// @desc    Suggest tasks based on an uploaded image
+// @route   POST /api/ai/suggest-task-from-image
+// @access  Private
+exports.suggestTaskFromImage = asyncHandler(async (req, res, next) => {
+  // 1. Check if file exists (from multer middleware)
+  if (!req.file) {
+    throw new BadRequestError(ERROR_MESSAGES.IMAGE_FILE_REQUIRED || 'Image file is required.'); // Use constant or fallback
+  }
+
+  // 2. Extract optional prompt/context from body if needed
+  const { prompt } = req.body; // Example: User might provide context
+
+  // 3. Call the AI service function (to be implemented)
+  const result = await aiService.generateTaskSuggestionsFromImage(req.file, prompt);
+
+  // 4. Handle response
+  res.status(200).json({
+    success: true,
+    suggestions: result.suggestions, // Or structure defined by the service
+    provider: result.provider,
+  });
+});

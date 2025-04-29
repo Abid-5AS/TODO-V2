@@ -1,10 +1,16 @@
 const axios = require("axios");
+const { LMStudioClient } = require("@lmstudio/sdk");
 const { groqClient, lmStudioSettings } = require("../../config/aiProviders");
 const { AppError } = require("../../utils/errorHandler");
-const { PROVIDERS, LMSTUDIO_DEFAULTS, GROQ_DEFAULTS, ERROR_MESSAGES } = require("../constants");
+const { PROVIDERS, LMSTUDIO_DEFAULTS, GROQ_DEFAULTS, ERROR_MESSAGES, SYSTEM_PROMPTS } = require("../constants");
 
 // In-memory state - Needs proper management for scaling
 let useLocalAI = process.env.USE_LOCAL_AI === "true" || false;
+
+// Instantiate LMStudio Client
+const lmStudioClient = new LMStudioClient({
+  baseUrl: lmStudioSettings.wsURL,
+});
 
 exports.getCurrentProvider = () => {
     return useLocalAI ? PROVIDERS.LOCAL : PROVIDERS.CLOUD;
@@ -18,19 +24,23 @@ exports.toggleProvider = (useLocal) => {
 exports.callAI = async (systemPrompt, userPrompt, options = {}) => {
   try {
     if (useLocalAI) {
-      const response = await axios.post(
-        `${lmStudioSettings.baseURL}/chat/completions`,
-        {
-          messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-          model: lmStudioSettings.model || LMSTUDIO_DEFAULTS.MODEL,
-          temperature: options.temperature ?? LMSTUDIO_DEFAULTS.TEMPERATURE,
-          max_tokens: options.max_tokens ?? LMSTUDIO_DEFAULTS.MAX_TOKENS,
-          top_p: options.top_p ?? LMSTUDIO_DEFAULTS.TOP_P,
-          stream: false,
-        },
-        { headers: { "Content-Type": "application/json" }, timeout: options.timeout ?? LMSTUDIO_DEFAULTS.TIMEOUT }
-      );
-      return { content: response.data.choices[0]?.message?.content || "", provider: PROVIDERS.LOCAL };
+      const modelId = lmStudioSettings.model || LMSTUDIO_DEFAULTS.MODEL;
+      const prediction = await lmStudioClient.llm.createChatCompletion({
+        model: modelId,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: options.temperature ?? LMSTUDIO_DEFAULTS.TEMPERATURE,
+        max_tokens: options.max_tokens ?? LMSTUDIO_DEFAULTS.MAX_TOKENS,
+        top_p: options.top_p ?? LMSTUDIO_DEFAULTS.TOP_P,
+        stream: false,
+      });
+
+      return {
+        content: prediction.choices[0]?.message?.content || "",
+        provider: PROVIDERS.LOCAL,
+      };
     } else {
       const chatCompletion = await groqClient.chat.completions.create({
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
@@ -44,11 +54,18 @@ exports.callAI = async (systemPrompt, userPrompt, options = {}) => {
       return { content: chatCompletion.choices[0]?.message?.content || "", provider: PROVIDERS.CLOUD };
     }
   } catch (error) {
-    console.error("AI Provider Error:", error.message);
+    console.error("AI Provider Error:", error);
     let friendlyMessage = ERROR_MESSAGES.GENERAL_FAILURE;
     if (useLocalAI) {
-      if (error.code === "ECONNREFUSED") friendlyMessage = ERROR_MESSAGES.LMSTUDIO_CONNECTION_FAILED;
-      else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) friendlyMessage = ERROR_MESSAGES.LMSTUDIO_TIMEOUT;
+      if (error.message?.includes("ECONNREFUSED") || error.message?.includes("fetch failed")) {
+        friendlyMessage = ERROR_MESSAGES.LMSTUDIO_CONNECTION_FAILED;
+      } else if (error.message?.includes("timeout")) {
+        friendlyMessage = ERROR_MESSAGES.LMSTUDIO_TIMEOUT;
+      } else if (error.message?.includes("404") || error.message?.includes("model not found")) {
+          friendlyMessage = `Model '${lmStudioSettings.model || LMSTUDIO_DEFAULTS.MODEL}' not found or loaded in LM Studio.`;
+      } else {
+        friendlyMessage = `LM Studio error: ${error.message}`;
+      }
     } else {
       if (error.status === 401) friendlyMessage = ERROR_MESSAGES.GROQ_AUTH_FAILED;
       else if (error.status === 429) friendlyMessage = ERROR_MESSAGES.GROQ_RATE_LIMIT;
@@ -58,23 +75,89 @@ exports.callAI = async (systemPrompt, userPrompt, options = {}) => {
 };
 
 exports.checkLocalAIConnection = async () => {
+  // TODO: Check if lmStudioClient has a dedicated ping/status method
+  // For now, keep using axios or try loading models as a check
   try {
+    // Option 1: Keep axios check - using HTTP URL for REST API calls
     await axios.get(`${lmStudioSettings.baseURL}/models`, { timeout: LMSTUDIO_DEFAULTS.STATUS_CHECK_TIMEOUT });
+    // Option 2: Try listing loaded models via SDK (might be more robust)
+    // await lmStudioClient.llm.listLoaded(); 
     return { status: true, message: ERROR_MESSAGES.LMSTUDIO_CONNECTION_SUCCESS };
   } catch (error) {
     let message = ERROR_MESSAGES.LMSTUDIO_UNREACHABLE;
-    if (error.code === "ECONNREFUSED") message = ERROR_MESSAGES.LMSTUDIO_CONNECTION_FAILED_DETAIL(lmStudioSettings.baseURL);
-    else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) message = ERROR_MESSAGES.LMSTUDIO_TIMEOUT_DETAIL(lmStudioSettings.baseURL);
-    else message = error.message || ERROR_MESSAGES.UNKNOWN_CONNECTION_ERROR;
-    
-    const details = {
-        code: error.code,
-        address: error.address,
-        port: error.port,
-        baseURL: lmStudioSettings.baseURL,
-        rawError: error.toString(),
-      };
+    let details = {};
+    if (error.response) { // Axios error
+      message = `Failed request to ${lmStudioSettings.baseURL}: ${error.response.status} ${error.response.statusText}`;
+      details.status = error.response.status;
+      details.statusText = error.response.statusText;
+    } else if (error.request) { // No response received
+      if (error.code === "ECONNREFUSED") message = ERROR_MESSAGES.LMSTUDIO_CONNECTION_FAILED_DETAIL(lmStudioSettings.baseURL);
+      else if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) message = ERROR_MESSAGES.LMSTUDIO_TIMEOUT_DETAIL(lmStudioSettings.baseURL);
+      else message = `LM Studio is unreachable at ${lmStudioSettings.baseURL}. Is it running?`;
+      details.code = error.code;
+    } else { // Other errors (like SDK errors if Option 2 is used, or setup issues)
+      message = error.message || ERROR_MESSAGES.UNKNOWN_CONNECTION_ERROR;
+      details.rawError = error.toString();
+    }
+    details.baseURL = lmStudioSettings.baseURL;
+    details.wsURL = lmStudioSettings.wsURL;
     return { status: false, message, details };
+  }
+};
+
+// New service function for image-based task suggestion
+exports.generateTaskSuggestionsFromImage = async (file, userContextPrompt = "") => {
+  if (!useLocalAI) {
+    throw new AppError(ERROR_MESSAGES.LOCAL_AI_REQUIRED_FOR_IMAGES, 400);
+  }
+
+  if (!file || !file.buffer) {
+    throw new AppError("Invalid image file provided.", 400);
+  }
+
+  try {
+    const modelId = lmStudioSettings.model || LMSTUDIO_DEFAULTS.MODEL;
+    const imageBase64 = file.buffer.toString("base64");
+    const preparedImage = await lmStudioClient.files.prepareImageBase64(imageBase64);
+
+    const userPromptContent = [
+        { type: "image", image: preparedImage },
+        { type: "text", text: userContextPrompt || "Analyze the image and suggest 1-3 actionable tasks based on its content. Focus on clear, concise task titles. If the image contains text (like a list or note), extract tasks directly from it. If it's a general scene, infer potential tasks. Format the output as a numbered list." },
+    ];
+
+    const prediction = await lmStudioClient.llm.createChatCompletion({
+      model: modelId,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPTS.SUGGEST_TASKS_FROM_IMAGE },
+        { role: "user", content: userPromptContent },
+      ],
+      temperature: LMSTUDIO_DEFAULTS.TEMPERATURE_VISION, // Use different temp for vision?
+      max_tokens: LMSTUDIO_DEFAULTS.MAX_TOKENS_VISION, // Use different max_tokens?
+      top_p: LMSTUDIO_DEFAULTS.TOP_P,
+      stream: false,
+    });
+
+    return {
+      suggestions: prediction.choices[0]?.message?.content || "",
+      provider: PROVIDERS.LOCAL,
+    };
+
+  } catch (error) {
+    console.error("LM Studio Image Suggestion Error:", error);
+    let friendlyMessage = ERROR_MESSAGES.GENERAL_FAILURE;
+    // Reuse existing error handling logic, potentially refining for image-specific issues
+     if (error.message?.includes("ECONNREFUSED") || error.message?.includes("fetch failed")) {
+        friendlyMessage = ERROR_MESSAGES.LMSTUDIO_CONNECTION_FAILED;
+      } else if (error.message?.includes("timeout")) {
+        friendlyMessage = ERROR_MESSAGES.LMSTUDIO_TIMEOUT;
+      } else if (error.message?.includes("404") || error.message?.includes("model not found")) {
+          friendlyMessage = `Model '${lmStudioSettings.model || LMSTUDIO_DEFAULTS.MODEL}' not found, not loaded, or does not support image input in LM Studio.`;
+      } else if (error.message?.includes("invalid image data")) {
+           friendlyMessage = "The provided image format might not be supported by LM Studio (try JPEG, PNG, WebP)."
+      } else {
+        friendlyMessage = `LM Studio error during image processing: ${error.message}`;
+      }
+    throw new AppError(friendlyMessage, 500);
   }
 };
 
