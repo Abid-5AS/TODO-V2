@@ -12,39 +12,51 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true); // Start true to check token
   const [authError, setAuthError] = useState(null);
 
-  // --- Logout Function (needed by initial check) ---
-  const logout = useCallback(() => { // Wrap in useCallback
+  // --- Logout Function ---
+  const logout = useCallback(() => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setAuthError(null); // Clear errors on logout
+    // No need to set isLoading here, let refresh handle it
   }, []);
 
-  // Check for existing token on initial load
+  // --- Function to refresh user profile --- NEW
+  const refreshUserProfile = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setIsLoading(false); // No token, definitely not loading/authenticated
+      setIsAuthenticated(false);
+      setUser(null);
+      return; // Exit early if no token
+    }
+
+    setIsLoading(true); // Start loading indicator
+    try {
+      const userData = await fetchUserProfile();
+      if (userData) {
+        setUser(userData);
+        setIsAuthenticated(true);
+        setAuthError(null); // Clear any previous auth errors
+      } else {
+        console.warn("Refresh User: Token found but profile fetch failed.");
+        logout(); // Logout if fetch fails despite token
+      }
+    } catch (error) {
+      console.error("Refresh User failed:", error);
+      // Keep existing authError or set a new one?
+      // setAuthError(error.message || "Failed to refresh user data."); 
+      logout(); // Logout on error during refresh
+    } finally {
+      setIsLoading(false); // Finished loading
+    }
+  }, [logout]);
+
+  // Check auth status on initial load using the refresh function
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          // No need to set token here, fetchUserProfile uses interceptor
-          const userData = await fetchUserProfile(); 
-          if (userData) {
-            setUser(userData);
-            setIsAuthenticated(true);
-          } else {
-            console.warn("Auth check: Token found but profile fetch failed.");
-            logout();
-          }
-        } catch (error) {
-          console.error("Auth check failed:", error);
-          logout(); // Logout on error
-        }
-      } 
-      setIsLoading(false); // Finished checking
-    };
-    checkAuthStatus();
-  }, [logout]); // Add logout as dependency
+    refreshUserProfile();
+  }, [refreshUserProfile]); // Run when refreshUserProfile function is defined
 
   // Persist user in localStorage when user state changes
   useEffect(() => {
@@ -64,48 +76,41 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", token); // Store token immediately
     
     try {
-      const userData = await fetchUserProfile(); // Fetch profile using the stored token (via interceptor)
-      if (userData) {
-        setUser(userData);
-        setIsAuthenticated(true);
-        setIsLoading(false);
-        return true; // Indicate success
+      // Use the refresh function here too!
+      await refreshUserProfile(); 
+      // Check if refresh was successful (isAuthenticated would be true)
+      if (localStorage.getItem('token')) { // Check token existence as proxy for success
+           setIsLoading(false); // Explicitly set loading false after refresh
+           return true;
       } else {
-        // Profile fetch failed even with token
-        console.error("OAuth Error: Could not fetch user profile with provided token.");
-        logout(); // Clean up inconsistent state
-        setIsLoading(false);
-        return false; // Indicate failure
+          throw new Error("Profile fetch failed after OAuth.");
       }
-    } catch (error) {
+
+    } catch (error) { // Catch errors specifically from refreshUserProfile or token check
       console.error("OAuth profile fetch error:", error);
       setAuthError(error.message || "Failed to fetch profile after OAuth login.");
       logout(); // Clean up on error
       setIsLoading(false);
       return false; // Indicate failure
     }
-  }, [logout]); // Add logout dependency
+  }, [logout, refreshUserProfile]); // Add dependencies
 
   // --- Auth Actions --- 
   // login function now ONLY handles credential-based login
   const login = async (credentials) => {
-    // Remove direct handling of user/token here
-    // if (credentials.user && credentials.token) { ... }
-
     setIsLoading(true);
     setAuthError(null);
     try {
       // Handle regular credential-based login
       const data = await loginUser(credentials);
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
-      setIsAuthenticated(true);
+      setUser(data.user); // Set user directly
+      localStorage.setItem("token", data.token); // Set token
+      setIsAuthenticated(true); // Set authenticated status
+      // No need to call refreshUserProfile here, login response is sufficient
       return { success: true };
 
     } catch (error) {
       setAuthError(error.message || "Login failed");
-      setIsAuthenticated(false);
-      setUser(null); // Ensure user is null on failed login
       logout(); // Use the logout function for cleanup
       return {
         success: false,
@@ -121,14 +126,12 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     try {
       const data = await signupUser(userDataInput);
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
-      setIsAuthenticated(true);
+      setUser(data.user); // Set user directly
+      localStorage.setItem("token", data.token); // Set token
+      setIsAuthenticated(true); // Set authenticated status
       return { success: true };
     } catch (error) {
       setAuthError(error.message || "Signup failed");
-      setIsAuthenticated(false);
-      setUser(null); // Ensure user is null on failed signup
       logout(); // Use the logout function for cleanup
       return { 
         success: false, 
@@ -148,10 +151,11 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         isLoading,
         authError,
-        login, // For credentials login
-        handleOAuthToken, // For OAuth callback
+        login,
+        handleOAuthToken,
         signup,
         logout,
+        refreshUserProfile, // Expose the refresh function
       }}
     >
       {children}

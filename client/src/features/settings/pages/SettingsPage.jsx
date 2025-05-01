@@ -9,7 +9,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"; // Updated path
-import { AISettings, AppearanceSettings } from "../components";
+import { AISettings, AppearanceSettings, AccountSettings } from "../components";
 import { SlidersHorizontal, Bot, Palette, UserCircle } from "lucide-react";
 
 const SettingsPage = () => {
@@ -82,26 +82,7 @@ const SettingsPage = () => {
           </TabsContent>
 
           <TabsContent value="account" className="mt-0">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.4, ease: "easeOut" },
-                },
-              }}
-              className="w-full bg-card/70 backdrop-blur-sm border-border/50 p-6 rounded-lg"
-            >
-              <h3 className="text-lg font-medium text-center">
-                Account Settings
-              </h3>
-              <p className="text-muted-foreground mt-2 text-sm text-center">
-                Manage your account details (coming soon).
-              </p>
-            </motion.div>
+            <AccountSettings />
           </TabsContent>
         </motion.div>
       </Tabs>

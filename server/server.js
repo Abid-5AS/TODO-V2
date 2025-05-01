@@ -46,12 +46,14 @@ app.get("/", (req, res) => {
 // --- Mount Routers ---
 const prayerLogRoutes = require('./prayerLog/routes/prayerLogRoutes');
 const locationRoutes = require('./location/routes/locationRoutes');
+const calendarRoutes = require('./calendar/routes/calendarRoutes');
 app.use("/api/auth", require("./auth/routes/authRoutes"));
 app.use("/api/tasks", require("./tasks/routes/taskRoutes"));
 app.use("/api/ai", require("./ai/routes/aiRoutes"));
 app.use("/api/projects", require("./projects/routes/projectRoutes"));
 app.use('/api/prayer-logs', prayerLogRoutes);
 app.use('/api/location', locationRoutes);
+app.use("/api/calendar", calendarRoutes);
 
 // --- Global Error Handler ---
 // Replace the old generic handler with the new one

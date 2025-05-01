@@ -19,6 +19,7 @@ import { PrayerLogProvider } from "../features/prayer/contexts/PrayerLogContext"
 import Navbar from "../features/dashboard/components/Navbar"; // Public Navbar
 import ErrorBoundary from "../components/ErrorBoundary"; // Import the ErrorBoundary component
 import ErrorPage from "../pages/ErrorPage";
+import CalendarOAuthCallback from "../features/calendar/components/CalendarOAuthCallback";
 
 // Placeholder for Help page (could be moved to a 'help' feature later)
 const HelpPage = () => (
@@ -99,6 +100,9 @@ function AppRoutes() {
 
       {/* OAuth Success Route (Public but redirects) */}
       <Route path="/oauth-success" element={<OAuthSuccess />} />
+
+      {/* Calendar OAuth Callback Route (Public but should only be hit via redirect) */}
+      <Route path="/oauth/calendar/callback" element={<CalendarOAuthCallback />} />
 
       {/* Error Routes */}
       <Route path="/404" element={<ErrorPage statusCode={404} />} />

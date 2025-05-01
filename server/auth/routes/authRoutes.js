@@ -6,7 +6,10 @@ const {
   getMe,
   googleAuth,
   googleCallback,
+  connectGoogleCalendar,
+  googleCalendarCallback,
 } = require("../controllers/authController");
+const passport = require("passport");
 
 const router = express.Router();
 
@@ -33,5 +36,9 @@ router.get("/google", googleAuth);
 // @desc    Handle Google OAuth callback
 // @access  Public
 router.get("/google/callback", googleCallback);
+
+// Google Calendar Connection (Requires user to be logged in first)
+router.get("/google/calendar/connect", connectGoogleCalendar);
+router.get("/google/calendar/callback", googleCalendarCallback);
 
 module.exports = router;

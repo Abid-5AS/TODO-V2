@@ -1,13 +1,23 @@
 const Task = require("../models/Task");
 const { NotFoundError } = require("../../utils/errorHandler");
 const { ERROR_MESSAGES } = require("../constants");
+const { addEventToCalendar } = require("../../calendar/services/calendarService");
 
 exports.findTasks = async (query, sortOptions) => {
   return await Task.find(query).sort(sortOptions);
 };
 
 exports.createTask = async (taskData) => {
-  return await Task.create(taskData);
+  const newTask = await Task.create(taskData);
+
+  if (newTask && newTask.user) {
+    addEventToCalendar(newTask.user.toString(), newTask.toObject())
+      .catch(err => {
+        console.error("[TaskService] Background calendar event creation failed:", err.message);
+      });
+  }
+
+  return newTask;
 };
 
 exports.findTaskById = async (taskId) => {

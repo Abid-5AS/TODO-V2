@@ -28,6 +28,23 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     sparse: true, // Allows multiple docs with null googleId
   },
+  // Add these fields for Google Calendar integration
+  googleCalendarAccessToken: {
+    type: String,
+    select: false, // Usually hide tokens by default
+  },
+  googleCalendarRefreshToken: {
+    type: String,
+    select: false, // Usually hide tokens by default
+  },
+  googleCalendarTokenExpiry: {
+    type: Date,
+    select: false,
+  },
+  isCalendarConnected: { // Flag for the frontend
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -49,6 +66,8 @@ UserSchema.pre("save", async function (next) {
 
 // Method to compare entered password with hashed password in database
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+  // Check if password exists before comparing (for Google users)
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
