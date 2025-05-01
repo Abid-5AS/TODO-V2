@@ -111,7 +111,7 @@ const DashboardLayout = () => {
 
       {/* TaskForm Dialog */} 
       <Dialog open={taskFormOpen} onOpenChange={setTaskFormOpen}>
-        <DialogContent className="sm:max-w-[550px] glass-card relative shadow-lg p-0">
+        <DialogContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl glass-card relative shadow-lg p-0">
           <TaskForm
             availableProjects={allProjects}
             onTaskCreated={handleCloseTaskForm}

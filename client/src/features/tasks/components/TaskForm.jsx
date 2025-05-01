@@ -38,6 +38,8 @@ import {
   ListPlus,
   Loader2,
   ImageIcon,
+  FileText,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "../../../lib/utils"; // Corrected path
 import {
@@ -59,6 +61,10 @@ const defaultForm = {
   project: "Inbox",
 };
 
+const TASK_TITLE_LIMIT = 250;
+const SUBTASK_TITLE_LIMIT = 250;
+const DESCRIPTION_LIMIT = 1000;
+
 const TaskForm = ({
   onTaskCreated,
   availableProjects = [],
@@ -78,8 +84,8 @@ const TaskForm = ({
   const [loading, setLoading] = useState(false);
   const [aiSubtasksLoading, setAiSubtasksLoading] = useState(false);
   const [aiDescriptionLoading, setAiDescriptionLoading] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [aiDescription, setAiDescription] = useState("");
+  const [aiSubtaskSuggestions, setAiSubtaskSuggestions] = useState([]);
+  const [aiDescriptionSuggestion, setAiDescriptionSuggestion] = useState("");
   const [error, setError] = useState(null);
   const [useDueDate, setUseDueDate] = useState(false);
   const [selectedLabels, setSelectedLabels] = useState([]);
@@ -93,6 +99,9 @@ const TaskForm = ({
   const [aiImageLoading, setAiImageLoading] = useState(false);
   const [aiImageError, setAiImageError] = useState(null);
   const imageInputRef = useRef(null); // Ref for hidden file input
+
+  // New state for AI Subtask Suggestions
+  const [showAllSubtaskSuggestions, setShowAllSubtaskSuggestions] = useState(false);
 
   // Update project in form if initialProject changes or availableProjects loads
   useEffect(() => {
@@ -254,576 +263,620 @@ const TaskForm = ({
 
   // Add AI-suggested subtasks
   const handleAddAISubtasks = () => {
-    const newAISubtasks = aiSuggestions.map((title) => ({
+    const newSubtasksFromAI = aiSubtaskSuggestions.map((title) => ({
       title,
       status: "pending",
     }));
-    // Avoid adding duplicates
-    const currentTitles = new Set(subtasks.map((st) => st.title));
-    const uniqueNewSubtasks = newAISubtasks.filter(
-      (nst) => !currentTitles.has(nst.title)
-    );
-    setSubtasks([...subtasks, ...uniqueNewSubtasks]);
-    setAiSuggestions([]); // Clear suggestions after adding
+    setSubtasks([...subtasks, ...newSubtasksFromAI]);
+    setAiSubtaskSuggestions([]); // Clear suggestions after adding
   };
 
-  // Submit form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.title.trim()) {
-      toast({ title: "Task title is required", variant: "destructive" });
+  // Add individual AI-suggested subtask
+  const handleAddIndividualAISubtask = (suggestion) => {
+    if (suggestion.length > SUBTASK_TITLE_LIMIT) {
+      toast({
+        title: "Subtask Too Long",
+        description: `AI suggestion is ${suggestion.length} characters, exceeding the ${SUBTASK_TITLE_LIMIT} character limit. Please shorten it manually.`, 
+        variant: "destructive",
+        duration: 5000,
+      });
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const taskData = {
-        ...form,
-        labels: selectedLabels, // Send array directly
-        subtasks,
-        dueDate: form.dueDate || null, // Ensure null if empty
-        project: form.project || "Inbox", // Ensure default
-      };
-
-      // Use the addTask function from useTasks for optimistic updates
-      await addTask(taskData);
-
-      toast({ title: "Task Created Successfully" });
-      // Reset form state
-      setForm({ ...defaultForm, project: initialProject || "Inbox" });
-      setSubtasks([]);
-      setAiSuggestions([]);
-      setAiDescription("");
-      setSelectedLabels([]);
-      setUseDueDate(false);
-      // Reset image state too
-      setSelectedImage(null);
-      setImagePreviewUrl(null);
-      setAiImageSuggestions([]);
-      setAiImageError(null);
-      if (imageInputRef.current) {
-            imageInputRef.current.value = ""; // Reset file input
-      }
-      if (onTaskCreated) onTaskCreated(); // Close dialog/sheet
-    } catch (err) {
-      console.error("Create task error:", err);
-      const message =
-        err.response?.data?.message || err.message || "Failed to create task";
-      setError(message);
-      toast({
-        title: "Error Creating Task",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (suggestion.trim()) {
+      setSubtasks([
+        ...subtasks,
+        { title: suggestion.trim(), status: "pending" },
+      ]);
+      // Optionally remove the added suggestion from the list
+      setAiSubtaskSuggestions(aiSubtaskSuggestions.filter(s => s !== suggestion)); 
     }
   };
 
-  // AI suggestions
-  const handleAISuggest = async () => {
-    if (!form.title.trim()) return;
+  // Discard all AI subtask suggestions
+  const handleDiscardAISubtasks = () => {
+    setAiSubtaskSuggestions([]);
+  };
+
+  // AI Subtask Suggestions
+  const handleAISubtaskSuggest = async () => {
+    if (!form.title) {
+      toast({
+        title: "Task Title Required",
+        description: "Please enter a task title first to generate subtasks.",
+        variant: "destructive",
+      });
+      return;
+    }
     setAiSubtasksLoading(true);
-    setAiSuggestions([]);
+    setAiSubtaskSuggestions([]); // Clear previous suggestions if any
+    setError(null);
     try {
       const data = await getAISubtaskSuggestions(form.title);
       const suggestions = (data.suggestion || "")
         .split(/\n|\r/)
         .map((s) => s.replace(/^[-•*\d.\s]+/, "").trim())
         .filter(Boolean)
-        .slice(0, 5);
-      setAiSuggestions(suggestions);
-      if (!suggestions.length)
+        .slice(0, 5); // Limit suggestions
+      
+      setAiSubtaskSuggestions(suggestions);
+      
+      if (!suggestions.length) {
         toast({
-          title: "AI couldn't suggest subtasks",
-          description: "Try refining the task title.",
+          title: "No subtasks suggested",
+          description: data.suggestion || "The AI could not identify specific subtasks.",
           variant: "default",
         });
+      } else {
+         toast({ title: "AI suggested subtasks" });
+      }
     } catch (err) {
-      console.error("AI Subtask suggestion error:", err);
+      console.error("AI Subtask Suggestion error:", err);
+      const errorMsg = err.message || "Failed to get subtask suggestions.";
+      setError(errorMsg);
       toast({
-        title: "AI Suggestion Failed",
-        description: err.message,
+        title: "AI Subtask Suggestion Failed",
+        description: errorMsg,
         variant: "destructive",
       });
-      setAiSuggestions([]);
+      setAiSubtaskSuggestions([]); // Clear on error
     } finally {
       setAiSubtasksLoading(false);
     }
   };
 
+  // Add AI description to the form
+  const handleAddAIDescription = () => {
+    if (aiDescriptionSuggestion) {
+        if (aiDescriptionSuggestion.length > DESCRIPTION_LIMIT) {
+             toast({
+                title: "Description Too Long",
+                description: `AI suggestion is ${aiDescriptionSuggestion.length} characters, exceeding the ${DESCRIPTION_LIMIT} character limit. Please shorten it manually.`, 
+                variant: "destructive",
+                duration: 5000,
+             });
+             return;
+        }
+      setForm({ ...form, description: aiDescriptionSuggestion });
+      setAiDescriptionSuggestion(""); // Clear suggestion after adding
+    }
+  };
+  
+  // Discard AI description suggestion
+  const handleDiscardAIDescription = () => {
+      setAiDescriptionSuggestion("");
+  };
+
+  // AI Description Suggestion
   const handleAIDescription = async () => {
-    if (!form.title.trim()) return;
-    setAiDescriptionLoading(true);
-    setAiDescription("");
-    try {
-      const data = await getAIDescriptionSuggestion(form.title);
-      setAiDescription(data.description || "");
-      if (!data.description)
-        toast({
-          title: "AI couldn't generate description",
-          description: "Try refining the task title.",
-          variant: "default",
-        });
-    } catch (err) {
-      console.error("AI Description suggestion error:", err);
+    if (!form.title) {
       toast({
-        title: "AI Description Failed",
-        description: err.message,
+        title: "Task Title Required",
+        description: "Please enter a task title first to generate a description.",
         variant: "destructive",
       });
-      setAiDescription("");
+      return;
+    }
+    setAiDescriptionLoading(true);
+    setAiDescriptionSuggestion("");
+    setError(null);
+    try {
+      const data = await getAIDescriptionSuggestion(form.title);
+      setAiDescriptionSuggestion(data.description || "");
+       if (data.description) {
+         toast({ title: "AI suggested a description" });
+       } else {
+         toast({ title: "AI couldn't suggest a description", variant: "default" });
+       }
+    } catch (err) {
+      console.error("AI Description Suggestion error:", err);
+      const errorMsg = err.message || "Failed to get description suggestion.";
+      setError(errorMsg);
+      toast({
+        title: "AI Description Failed",
+        description: errorMsg,
+        variant: "destructive",
+      });
     } finally {
       setAiDescriptionLoading(false);
     }
   };
 
-  // Add AI description to form
-  const handleAddAIDescription = () => {
-    setForm({ ...form, description: aiDescription });
-    setAiDescription("");
+  // Submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title) {
+      toast({ title: "Task title is required", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const taskData = {
+      ...form,
+      dueDate: useDueDate ? form.dueDate : null, // Only send date if toggle is on
+      subtasks,
+      // image handling needs server implementation
+    };
+
+    try {
+      await addTask(taskData); // Use addTask from the hook
+      toast({ title: "Task Created Successfully!" });
+      // Reset form state after successful creation
+      setForm({
+        ...defaultForm,
+        project: availableProjects.includes(initialProject)
+          ? initialProject
+          : "Inbox",
+      });
+      setSubtasks([]);
+      setSelectedLabels([]);
+      setNewSubtask("");
+      setNewLabel("");
+      setUseDueDate(false);
+      setSelectedImage(null);
+      setImagePreviewUrl(null);
+      setAiImageSuggestions([]);
+      setAiImageError(null);
+      if (imageInputRef.current) {
+          imageInputRef.current.value = ""; // Reset file input
+      }
+      // Optionally call a callback to close the modal/form
+      if (onTaskCreated) {
+        onTaskCreated();
+      }
+    } catch (err) {
+      console.error("Error creating task:", err);
+      const errMsg = err.response?.data?.message || err.message || "Failed to create task";
+      setError(errMsg);
+      toast({ title: "Error Creating Task", description: errMsg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <DialogHeader>
         <DialogTitle>Add New Task</DialogTitle>
       </DialogHeader>
-
-      {/* Hidden File Input */}
-      <input
-        type="file"
-        ref={imageInputRef}
-        onChange={handleImageChange}
-        accept="image/png, image/jpeg, image/webp" // Supported by LM Studio
-        style={{ display: "none" }}
-      />
-
-      {/* Task Title & AI Buttons */}
-      <div className="space-y-1">
-        <Label htmlFor="title">Task Title *</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            id="title"
-            name="title"
-            placeholder="e.g., Plan team meeting for Q3 kickoff"
-            value={form.title}
-            onChange={handleChange}
-            required
-            className="flex-grow"
-          />
-          {/* Image Upload Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleImageUploadClick}
-            title="Upload image for AI task suggestions"
-            disabled={aiImageLoading}
-          >
-            <ImageIcon className="h-4 w-4" />
-          </Button>
-           {/* AI Image Suggest Button (only show if image selected) */}
-          {selectedImage && (
+      {/* Adjust padding and spacing for mobile */}
+      <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Title and AI Buttons */}
+        <div className="space-y-2">
+          <Label htmlFor="title" className="text-right">
+            Task Title *
+          </Label>
+          <div className="flex items-center space-x-2">
+            <Input
+              id="title"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="What needs to be done?"
+              required
+              maxLength={TASK_TITLE_LIMIT}
+              className="flex-grow"
+            />
+            {/* Generate Subtasks Button - Restored */}
             <Button
               type="button"
               variant="outline"
               size="icon"
-              onClick={handleAIImageSuggest}
-              title="Get AI task suggestions from image"
-              disabled={aiImageLoading || !selectedImage}
+              onClick={handleAISubtaskSuggest}
+              disabled={aiSubtasksLoading || !form.title}
+              title="Generate Subtasks with AI"
             >
-              {aiImageLoading ? (
+              {aiSubtasksLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Sparkles className="h-4 w-4 text-purple-500" />
+                <ClipboardList className="h-4 w-4" />
               )}
             </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Image Preview and Remove Button */}
-      {imagePreviewUrl && (
-         <div className="relative w-full max-w-xs group">
-          <Label>Image Preview:</Label>
-          <img src={imagePreviewUrl} alt="Selected preview" className="mt-2 rounded border max-h-40 w-auto" />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-0 right-0 m-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleRemoveImage}
-            title="Remove selected image"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* AI Image Suggestions Display */}
-      {aiImageSuggestions.length > 0 && (
-        <div className="space-y-1 pt-2">
-          <Label className="text-sm font-medium text-purple-600">AI Suggestions (from image):</Label>
-          <div className="flex flex-wrap gap-2">
-            {aiImageSuggestions.map((suggestion, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer hover:bg-purple-100"
-                  onClick={() => applyImageSuggestionToTitle(suggestion)}
-                  title={`Click to use: "${suggestion}"`}
-                >
-                  {suggestion}
-                </Badge>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-       {aiImageError && (
-          <p className="text-sm text-red-600">Error: {aiImageError}</p>
-        )}
-
-      {/* Description & AI Button */}
-      <div className="space-y-1">
-        <Label htmlFor="description">Description</Label>
-        <div className="flex items-center gap-2">
-          <Textarea
-            id="description"
-            name="description"
-            placeholder="Add details, notes, or links..."
-            value={form.description}
-            onChange={handleChange}
-            rows={3}
-            className="flex-grow resize-none"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleAIDescription}
-            title="Get AI description suggestion"
-            disabled={aiDescriptionLoading || aiSubtasksLoading || !form.title.trim()}
-          >
-            {aiDescriptionLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* AI Description Suggestion Area */}
-      {aiDescription && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-3 space-y-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800"
-        >
-          <p className="text-sm text-green-800 dark:text-green-200">
-            {aiDescription}
-          </p>
-          <div className="flex justify-end gap-2">
+             {/* Generate Description Button - Restored/Moved */}
             <Button
               type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => setAiDescription("")}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Discard
-            </Button>
-            <Button
-              type="button"
-              onClick={handleAddAIDescription}
-              size="sm"
               variant="outline"
-              className="bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20"
+              size="icon"
+              onClick={handleAIDescription}
+              disabled={aiDescriptionLoading || !form.title}
+              title="Generate Description with AI"
             >
-              <Check className="mr-1 h-4 w-4" /> Use This
+              {aiDescriptionLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
             </Button>
           </div>
-        </motion.div>
-      )}
-
-      {/* Date & Priority */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Due Date */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="dueDate" className="font-medium text-sm">
-              Due Date
-            </Label>
-            <div className="flex items-center space-x-2">
-              <Label
-                htmlFor="use-due-date"
-                className="text-xs text-muted-foreground"
-              >
-                {useDueDate ? "Enabled" : "Disabled"}
-              </Label>
-              <Switch
-                id="use-due-date"
-                checked={useDueDate}
-                onCheckedChange={(checked) => {
-                  setUseDueDate(checked);
-                  if (!checked) setForm({ ...form, dueDate: "" });
-                }}
-              />
-            </div>
-          </div>
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal h-9",
-                  "bg-background/70 dark:bg-input/50",
-                  !useDueDate &&
-                    "text-muted-foreground opacity-50 cursor-not-allowed",
-                  form.dueDate && useDueDate && "text-foreground"
-                )}
-                disabled={!useDueDate}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {form.dueDate && useDueDate ? (
-                  format(new Date(form.dueDate), "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={
-                  form.dueDate && isValid(new Date(form.dueDate))
-                    ? new Date(form.dueDate)
-                    : undefined
-                }
-                onSelect={handleDateChange}
-                initialFocus
-                disabled={!useDueDate}
-              />
-            </PopoverContent>
-          </Popover>
         </div>
-        {/* Priority Select */}
-        <div className="space-y-1.5">
-          <Label htmlFor="priority" className="font-medium text-sm">
-            Priority
-          </Label>
-          <Select
-            value={form.priority}
-            onValueChange={(value) => handleSelectChange("priority", value)}
-          >
-            <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
-              <SelectValue placeholder="Select priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Low">Low</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="High">High</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
-      {/* Project Select */}
-      <div className="space-y-1.5">
-        <Label htmlFor="project" className="font-medium text-sm">
-          Project
-        </Label>
-        <Select
-          value={form.project}
-          onValueChange={(value) => handleSelectChange("project", value)}
-        >
-          <SelectTrigger className="w-full bg-background/70 dark:bg-input/50 h-9">
-            <SelectValue placeholder="Select project" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Projects</SelectLabel>
-              {availableProjects.map((project) => (
-                <SelectItem key={project} value={project}>
-                  {project}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Labels Input */}
-      <div className="space-y-1.5">
-        <Label className="font-medium text-sm">Labels</Label>
-        <div className="flex flex-wrap gap-1.5 mb-2 min-h-[20px]">
-          {selectedLabels.map((label) => (
-            <Badge
-              key={label}
-              variant="secondary"
-              className="px-2 py-0.5 text-xs bg-muted hover:bg-muted/80"
-            >
-              {label}
-              <button
-                type="button"
-                onClick={() => handleRemoveLabel(label)}
-                className="ml-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-background/50 p-px"
-                aria-label={`Remove label ${label}`}
-              >
-                <X size={12} />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <div className="flex space-x-2">
-          <Input
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="Add a label..."
-            className="bg-background/70 dark:bg-input/50 h-9"
-            onKeyDown={(e) =>
-              e.key === "Enter" && (e.preventDefault(), handleAddLabel())
-            }
-          />
-          <Button
-            type="button"
-            onClick={handleAddLabel}
-            disabled={!newLabel.trim()}
-            variant="outline"
-            size="sm"
-            className="flex-shrink-0 bg-background/70 hover:bg-muted"
-          >
-            Add Label
-          </Button>
-        </div>
-      </div>
-
-      {/* Subtasks Section */}
-      <div className="space-y-1.5">
-        <Label htmlFor="subtasks" className="font-medium text-sm">
-          Subtasks
-        </Label>
-        {/* AI Suggestion Area for Subtasks */}
-        {aiSuggestions.length > 0 && (
+        {/* AI Subtask Suggestions - Updated with Show More/Less and Scroll */}
+        {aiSubtaskSuggestions.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-3 space-y-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="p-4 border rounded-md bg-muted/40 space-y-3 relative"
           >
-            <ul className="pl-4 list-disc text-sm space-y-1 text-blue-800 dark:text-blue-200">
-              {aiSuggestions.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setAiSuggestions([])}
-                className="text-muted-foreground hover:text-foreground"
+            <div className="flex justify-between items-center mb-2">
+                <Label className="font-medium">AI Suggested Subtasks:</Label>
+                <Button 
+                    type="button" 
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleDiscardAISubtasks}
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                    title="Discard all suggestions"
+                 >
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+            {/* Scrollable container with reduced max height */}
+            <div className="max-h-28 overflow-y-auto pr-2"> {/* Reduced max-h to 28 (7rem) */} 
+                <ul className="space-y-2"> 
+                  {(showAllSubtaskSuggestions
+                      ? aiSubtaskSuggestions 
+                      : aiSubtaskSuggestions.slice(0, 3) // Show first 3 initially
+                  ).map((suggestion, idx) => (
+                    <li key={idx} className="flex items-center justify-between gap-2 text-sm">
+                        <span className="flex-grow truncate" title={suggestion}>{suggestion}</span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleAddIndividualAISubtask(suggestion)}
+                            className="h-6 w-6 flex-shrink-0"
+                            title={`Add subtask: ${suggestion}`}
+                        >
+                            <PlusCircle className="h-4 w-4" />
+                        </Button>
+                    </li>
+                  ))}
+                </ul>
+            </div>
+            {/* Show More/Less Button */}
+            {aiSubtaskSuggestions.length > 3 && (
+                <Button 
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={() => setShowAllSubtaskSuggestions(!showAllSubtaskSuggestions)}
+                    className="p-0 h-auto text-xs"
+                >
+                    {showAllSubtaskSuggestions ? "Show Less" : `Show ${aiSubtaskSuggestions.length - 3} More...`}
+                </Button>
+            )}
+          </motion.div>
+        )}
+        
+        {/* Image Upload Section */}
+        <div className="space-y-3">
+          <Label>Image Attachment (Optional)</Label>
+          <div className="flex items-center space-x-3">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleImageUploadClick}
+              disabled={aiImageLoading}
+            >
+              <ImageIcon className="mr-2 h-4 w-4" /> 
+              {selectedImage ? "Change Image" : "Upload Image"}
+            </Button>
+            {selectedImage && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleRemoveImage}
+                title="Remove Image"
               >
-                Discard All
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+             {/* AI Suggestion from Image Button */}
+             {selectedImage && (
+               <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleAIImageSuggest}
+                  disabled={aiImageLoading}
+                  title="Suggest Task from Image"
+                >
+                  {aiImageLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                  )}
+                </Button>
+             )}
+          </div>
+          <input
+            type="file"
+            ref={imageInputRef}
+            onChange={handleImageChange}
+            accept="image/*"
+            className="hidden"
+          />
+          {imagePreviewUrl && (
+            <div className="mt-2 border rounded-md p-2 max-w-[200px]">
+              <img src={imagePreviewUrl} alt="Preview" className="rounded-md object-cover"/>
+            </div>
+          )}
+          {/* Display AI image suggestions */} 
+          {aiImageSuggestions.length > 0 && (
+             <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="p-4 border rounded-md bg-muted/40 space-y-2"
+             >
+                <Label>AI Suggested Task Titles (from Image):</Label>
+                <ul className="list-disc list-inside text-sm space-y-1">
+                  {aiImageSuggestions.map((sug, idx) => (
+                    <li key={idx} className="flex items-center justify-between">
+                        <span>{sug}</span>
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => applyImageSuggestionToTitle(sug)}
+                            title="Use this title"
+                        >
+                            <Check className="h-4 w-4 text-green-600"/>
+                        </Button>
+                    </li>
+                  ))}
+                </ul>
+             </motion.div>
+          )}
+          {aiImageError && <p className="text-sm text-red-500">{aiImageError}</p>}
+        </div>
+
+        {/* Description and AI Button */}
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <div className="relative">
+             <Textarea
+                id="description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Add more details..."
+                maxLength={DESCRIPTION_LIMIT}
+                className="pr-10"
+             />
+          </div>
+        </div>
+
+        {/* AI Description Suggestion */}
+        {aiDescriptionSuggestion && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="p-4 border rounded-md bg-muted/40 space-y-2"
+          >
+            <Label className="font-medium">AI Suggested Description:</Label>
+            <p className="text-sm italic">{aiDescriptionSuggestion}</p>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button
+                  type="button"
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleDiscardAIDescription}
+                  title="Discard suggestion"
+              >
+                  Discard
               </Button>
               <Button
-                type="button"
-                onClick={handleAddAISubtasks}
-                size="sm"
-                variant="outline"
-                className="bg-blue-500/10 border-blue-500/30 text-blue-700 hover:bg-blue-500/20"
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAddAIDescription}
+                  title="Use this description"
               >
-                <ListPlus className="mr-1 h-4 w-4" /> Add These
+                  <Check className="mr-2 h-4 w-4" /> Use Suggestion
               </Button>
             </div>
           </motion.div>
         )}
-        {/* Subtask List */}
-        {subtasks.length > 0 && (
-          <ul className="space-y-1.5 mt-2">
-            {subtasks.map((st, idx) => (
-              <li
-                key={`sub-${idx}`}
-                className="flex items-center space-x-2 p-1 bg-muted/40 dark:bg-zinc-800/40 rounded-md"
+
+        {/* Due Date & Priority - Adjust grid for better spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 items-start">
+          {/* Due Date Column */}
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">Due Date</Label>
+            <div className="flex items-center space-x-2">
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "flex-grow justify-start text-left font-normal", // Use flex-grow
+                      !form.dueDate && "text-muted-foreground"
+                    )}
+                    disabled={!useDueDate}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {form.dueDate ? format(new Date(form.dueDate), "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={form.dueDate ? new Date(form.dueDate) : undefined}
+                    onSelect={handleDateChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <Switch
+                checked={useDueDate}
+                onCheckedChange={setUseDueDate}
+                aria-label="Toggle Due Date"
+              />
+            </div>
+          </div>
+          {/* Priority Column */}
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select
+              name="priority"
+              value={form.priority}
+              onValueChange={(value) => handleSelectChange("priority", value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="High">High</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Project & Labels - Increased spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 items-start">
+           {/* Project Column */}
+           <div className="space-y-2">
+              <Label htmlFor="project">Project</Label>
+              <Select
+                name="project"
+                value={form.project}
+                onValueChange={(value) => handleSelectChange("project", value)}
+                required
               >
-                <span className="text-xs pl-1 text-muted-foreground">•</span>
-                <Input
-                  value={st.title}
-                  onChange={(e) => handleEditSubtask(idx, e.target.value)}
-                  className="text-sm bg-transparent border-0 focus:ring-0 flex-1 h-7 py-0"
-                  placeholder={`Subtask ${idx + 1}`}
-                />
-                <Button
-                  type="button"
-                  onClick={() => handleRemoveSubtask(idx)}
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
-                  aria-label={`Remove subtask ${idx + 1}`}
-                >
-                  <X size={14} />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {/* Add Subtask Input */}
-        <div className="flex space-x-2 pt-1">
-          <Input
-            id="subtasks"
-            value={newSubtask}
-            onChange={(e) => setNewSubtask(e.target.value)}
-            placeholder="Add a subtask item..."
-            onKeyDown={(e) =>
-              e.key === "Enter" && (e.preventDefault(), handleAddSubtask())
-            }
-            className="bg-background/70 dark:bg-input/50 h-9"
-          />
-          <Button
-            type="button"
-            onClick={handleAddSubtask}
-            disabled={!newSubtask.trim()}
-            variant="outline"
-            size="sm"
-            className="flex-shrink-0 bg-background/70 hover:bg-muted"
-          >
-            <PlusCircle size={16} className="mr-1" /> Add
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Projects</SelectLabel>
+                    {/* Ensure Inbox is always an option */}
+                    {availableProjects.includes("Inbox") || (
+                       <SelectItem value="Inbox">Inbox</SelectItem>
+                    )}
+                    {availableProjects
+                        .filter(p => p !== "Inbox") // Exclude Inbox if already added
+                        .map((proj) => (
+                           <SelectItem key={proj} value={proj}>{proj}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+           </div>
+           {/* Labels Column */}
+           <div className="space-y-2">
+            <Label htmlFor="labels">Labels</Label>
+            <div className="flex items-center space-x-2">
+              <Input
+                id="newLabel"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="Add a label..."
+                className="flex-grow" // Allow input to grow
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddLabel();
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={handleAddLabel} className="flex-shrink-0">Add Label</Button> {/* Prevent button shrink */}
+            </div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {selectedLabels.map((label) => (
+                <Badge key={label} variant="secondary" className="flex items-center">
+                  {label}
+                  <button
+                    type="button"
+                    className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    onClick={() => handleRemoveLabel(label)}
+                  >
+                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Subtasks Section - Increased spacing */}
+        <div className="space-y-4">
+          <Label>Subtasks</Label>
+          {subtasks.map((sub, idx) => (
+            <div key={idx} className="flex items-center space-x-2">
+              <Input
+                value={sub.title}
+                onChange={(e) => handleEditSubtask(idx, e.target.value)}
+                placeholder="Subtask description"
+                maxLength={SUBTASK_TITLE_LIMIT}
+                className="flex-grow"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemoveSubtask(idx)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <div className="flex items-center space-x-2">
+            <Input
+              value={newSubtask}
+              onChange={(e) => setNewSubtask(e.target.value)}
+              placeholder="Add new subtask..."
+              maxLength={SUBTASK_TITLE_LIMIT}
+              className="flex-grow"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault(); 
+                  handleAddSubtask();
+                }
+              }}
+            />
+            <Button type="button" variant="outline" onClick={handleAddSubtask}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Subtask
+            </Button>
+          </div>
+        </div>
+
+        {error && <p className="text-sm text-red-500">Error: {error}</p>}
+
+        <DialogFooter>
+          <Button type="submit" disabled={loading || !form.title}>
+            {loading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...</>
+            ) : (
+              "Add Task"
+            )}
           </Button>
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
-          {error}
-        </div>
-      )}
-
-      {/* Footer Buttons */}
-      <DialogFooter className="pt-4">
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full sm:w-auto backdrop-blur-xl border border-white/20 dark:border-gray-700/30 bg-white/10 dark:bg-zinc-800/20 text-zinc-800 dark:text-white shadow-sm hover:bg-white/20 dark:hover:bg-zinc-800/30 transition-all duration-200"
-        >
-          {loading ? (
-            <span className="flex items-center justify-center">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Task
-            </span>
-          )}
-        </Button>
-      </DialogFooter>
-    </form>
+        </DialogFooter>
+      </form>
+    </motion.div>
   );
 };
 

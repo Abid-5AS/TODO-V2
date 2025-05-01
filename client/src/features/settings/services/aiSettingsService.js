@@ -6,7 +6,7 @@ import axiosInstance from '../../../api/axiosInstance';
 export const getAIProviderStatus = async () => {
   try {
     const response = await axiosInstance.get('/api/ai/provider-status');
-    // Expecting { success: boolean, useLocalAI: boolean, status: 'connected' | 'disconnected' | 'unknown', provider: string }
+    // Expecting { success: boolean, provider: 'cloud'|'local'|'ollama', status: 'connected'|'disconnected'|'unknown' }
     return response.data;
   } catch (error) {
     console.error("Get AI Provider Status API error:", error.response?.data || error.message);
@@ -14,18 +14,18 @@ export const getAIProviderStatus = async () => {
   }
 };
 
-export const toggleAIProvider = async (useLocalAI) => {
+export const toggleAIProvider = async (providerType) => {
   try {
-    const response = await axiosInstance.post('/api/ai/toggle-provider', { useLocal: useLocalAI });
-     // Expecting { success: boolean, useLocalAI: boolean, status?: 'connected' | 'disconnected' | 'unknown', message?: string }
+    const response = await axiosInstance.post('/api/ai/toggle-provider', { provider: providerType });
+    // Expecting { success: boolean, provider: 'cloud'|'local'|'ollama', status?: 'connected'|'disconnected'|'unknown', message?: string }
     return response.data;
   } catch (error) {
     console.error("Toggle AI Provider API error:", error.response?.data || error.message);
-    return { success: false, error: error.response?.data?.message || error.message || 'Failed to toggle AI provider.' };
+    return { success: false, error: error.response?.data?.message || error.message || 'Failed to set AI provider.' };
   }
 };
 
-// New function to check local AI connection
+// Function to check local AI connection
 export const checkLocalAIConnection = async () => {
   try {
     const response = await axiosInstance.get('/api/ai/check-local-connection');

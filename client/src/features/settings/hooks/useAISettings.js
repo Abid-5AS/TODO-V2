@@ -6,14 +6,26 @@ import {
   checkLocalAIConnection,
 } from "../services/aiSettingsService";
 
+// Local storage key for persisting AI provider selection
+const AI_PROVIDER_STORAGE_KEY = "task-tree-ai-provider";
+
 export const useAISettings = () => {
   const { toast } = useToast();
-  const [isLocalAI, setIsLocalAI] = useState(false);
+  // Initialize from localStorage if available, otherwise default to "cloud"
+  const [provider, setProvider] = useState(() => {
+    const savedProvider = localStorage.getItem(AI_PROVIDER_STORAGE_KEY);
+    return savedProvider || "cloud";
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Fetching status...");
   const [connectionStatus, setConnectionStatus] = useState("unknown"); // 'connected', 'disconnected', 'checking', 'unknown'
   const [connectionCheckResult, setConnectionCheckResult] = useState(null); // Stores result object from check
+
+  // Sync state with localStorage whenever provider changes
+  useEffect(() => {
+    localStorage.setItem(AI_PROVIDER_STORAGE_KEY, provider);
+  }, [provider]);
 
   const fetchProviderStatus = useCallback(async () => {
     setIsLoading(true);
@@ -21,13 +33,25 @@ export const useAISettings = () => {
     setConnectionCheckResult(null); // Clear previous check results
     try {
       const data = await getAIProviderStatus();
-      setIsLocalAI(data.useLocalAI);
-      setConnectionStatus(data.connectionStatus || "unknown");
-      setStatusMessage(
-        data.useLocalAI
-          ? `Using Local AI Provider (${data.connectionStatus || "unknown"})`
-          : "Using Cloud AI Provider",
-      );
+      
+      // Only update provider from server if it differs from localStorage
+      // This ensures user's local choice takes precedence
+      if (data.provider && data.provider !== provider) {
+        setProvider(data.provider);
+      }
+      
+      setConnectionStatus(data.status || "unknown");
+      
+      // Set status message based on provider
+      if (provider === "cloud") {
+        setStatusMessage("Using Cloud AI Provider");
+      } else if (provider === "local") {
+        setStatusMessage(`Using Local AI Provider (${data.status || "unknown"})`);
+      } else if (provider === "ollama") {
+        setStatusMessage(`Using Ollama AI Provider (${data.status || "unknown"})`);
+      } else {
+        setStatusMessage(`Using ${provider} AI Provider`);
+      }
     } catch (error) {
       console.error("Error fetching AI provider status:", error);
       setStatusMessage("Error fetching status");
@@ -39,38 +63,66 @@ export const useAISettings = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [provider, toast]);
 
   useEffect(() => {
     fetchProviderStatus();
+    
+    // Set up an interval to periodically check the status 
+    // (especially important for local providers that might start/stop)
+    const intervalId = setInterval(fetchProviderStatus, 30000); // 30 seconds
+    
+    return () => {
+      clearInterval(intervalId); // Clean up the interval on component unmount
+    };
   }, [fetchProviderStatus]);
 
-  const handleToggle = useCallback(async () => {
+  const handleProviderChange = useCallback(async (newProvider) => {
+    if (newProvider === provider) return; // No change
+    
     setIsToggling(true);
     setConnectionCheckResult(null); // Clear check results when toggling
-    const optimisticNewValue = !isLocalAI;
-    setStatusMessage(optimisticNewValue ? "Switching to Local AI..." : "Switching to Cloud AI...");
+    
+    // Set message based on provider selection
+    if (newProvider === "cloud") {
+      setStatusMessage("Switching to Cloud AI...");
+    } else if (newProvider === "local") {
+      setStatusMessage("Switching to Local AI (LM Studio)...");
+    } else if (newProvider === "ollama") {
+      setStatusMessage("Switching to Ollama...");
+    } else {
+      setStatusMessage(`Switching to ${newProvider}...`);
+    }
 
     // Optimistic UI update
-    setIsLocalAI(optimisticNewValue);
+    setProvider(newProvider);
 
     try {
-      const data = await toggleAIProvider(optimisticNewValue);
-      setIsLocalAI(data.useLocalAI);
-      setConnectionStatus(data.connectionStatus || "unknown");
-      setStatusMessage(
-        data.useLocalAI
-          ? `Switched to Local AI Provider (${data.connectionStatus || "unknown"})`
-          : "Switched to Cloud AI Provider",
-      );
+      const data = await toggleAIProvider(newProvider);
+      
+      // Update state based on response
+      setProvider(data.provider || newProvider);
+      setConnectionStatus(data.status || "unknown");
+      
+      // Set status message based on provider
+      if (data.provider === "cloud") {
+        setStatusMessage("Switched to Cloud AI Provider");
+      } else if (data.provider === "local") {
+        setStatusMessage(`Switched to Local AI Provider (${data.status || "unknown"})`);
+      } else if (data.provider === "ollama") {
+        setStatusMessage(`Switched to Ollama AI Provider (${data.status || "unknown"})`);
+      } else {
+        setStatusMessage(`Switched to ${data.provider} AI Provider`);
+      }
+      
       toast({
         title: "Success",
-        description: `Successfully switched to ${data.useLocalAI ? "Local" : "Cloud"} AI provider.`,
+        description: `Successfully switched to ${data.provider === "cloud" ? "Cloud" : data.provider === "local" ? "Local" : "Ollama"} AI provider.`,
       });
     } catch (error) {
-      console.error("Error toggling AI provider:", error);
+      console.error("Error setting AI provider:", error);
       // Revert optimistic update on error
-      setIsLocalAI(!optimisticNewValue);
+      setProvider(provider);
       setStatusMessage("Error switching provider");
       toast({
         title: "Error",
@@ -82,39 +134,39 @@ export const useAISettings = () => {
     } finally {
       setIsToggling(false);
     }
-  }, [isLocalAI, toast, fetchProviderStatus]);
+  }, [provider, toast, fetchProviderStatus]);
 
   const handleCheckConnection = useCallback(async () => {
-    if (!isLocalAI) {
+    if (provider === "cloud") {
         toast({
             title: "Info",
-            description: "Connection check is only applicable for the Local AI provider.",
+            description: "Connection check is only applicable for local AI providers.",
             variant: "default",
           });
-      return; // Don't check if not using local AI
+      return; // Don't check if using cloud
     }
 
     setConnectionStatus("checking");
-    setStatusMessage("Checking connection to local AI...");
+    setStatusMessage(`Checking connection to ${provider} AI...`);
     setConnectionCheckResult(null);
     try {
       const result = await checkLocalAIConnection();
       setConnectionStatus(result.status ? "connected" : "disconnected");
       setStatusMessage(
         result.status
-          ? "Successfully connected to Local AI."
-          : "Failed to connect to Local AI.",
+          ? `Successfully connected to ${provider === "local" ? "Local" : "Ollama"} AI.`
+          : `Failed to connect to ${provider === "local" ? "Local" : "Ollama"} AI.`,
       );
       setConnectionCheckResult(result); // Store the full result
       toast({
         title: result.status ? "Connection Successful" : "Connection Failed",
         description:
           result.message ||
-          (result.status ? "LM Studio is reachable." : "Could not reach LM Studio."),
+          (result.status ? `${provider === "local" ? "LM Studio" : "Ollama"} is reachable.` : `Could not reach ${provider === "local" ? "LM Studio" : "Ollama"}.`),
         variant: result.status ? "default" : "destructive",
       });
     } catch (error) {
-      console.error("Error checking local AI connection:", error);
+      console.error(`Error checking ${provider} AI connection:`, error);
       setConnectionStatus("disconnected");
       setStatusMessage("Error checking connection");
       setConnectionCheckResult({
@@ -131,16 +183,16 @@ export const useAISettings = () => {
     } finally {
         // No status change needed here, handled within try/catch
     }
-  }, [isLocalAI, toast]);
+  }, [provider, toast]);
 
   return {
-    isLocalAI,
+    provider,
     isLoading,
     isToggling,
     statusMessage,
     connectionStatus,
     connectionCheckResult,
-    handleToggle,
+    handleProviderChange,
     handleCheckConnection,
     refetchStatus: fetchProviderStatus, // Expose refetch capability
   };

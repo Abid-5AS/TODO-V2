@@ -9,6 +9,7 @@ const {
   checkLocalConnection,
   getDailyVerse,
   suggestTaskFromImage,
+  checkOllamaVision,
 } = require("../controllers/aiController");
 
 const router = express.Router();
@@ -38,6 +39,9 @@ router.get("/provider-status", getProviderStatus);
 
 // Route: GET /api/ai/check-local-connection
 router.get("/check-local-connection", checkLocalConnection);
+
+// Route: GET /api/ai/check-ollama-vision
+router.get("/check-ollama-vision", checkOllamaVision);
 
 // Route: POST /api/ai/suggest-subtasks
 router.post("/suggest-subtasks", suggestSubtasks);

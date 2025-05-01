@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"; // Updated path
 import { Button } from "@/components/ui/button"; // Updated path
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Updated path
 import { Loader2, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 // Remove unused service imports if hook handles them
 // import { getAIProviderStatus, toggleAIProvider } from "../services/aiSettingsService"; 
 import { useAISettings } from "../hooks/useAISettings"; // Import the custom hook - relative path is okay
@@ -26,30 +27,16 @@ import { useAISettings } from "../hooks/useAISettings"; // Import the custom hoo
 const AISettings = () => {
   // Use the custom hook to manage state and logic
   const {
-    isLocalAI,
+    provider,
     isLoading,
     isToggling,
     statusMessage, // Now a string directly from the hook
     connectionStatus,
     connectionCheckResult, // Now an object { status, message, details? }
-    handleToggle,
+    handleProviderChange,
     handleCheckConnection,
     refetchStatus // Added refetch capability
   } = useAISettings();
-
-  // Remove all useState, useCallback, and useEffect logic that's now in the hook
-  // const { toast } = useToast(); // Removed
-  // const [isLocalAI, setIsLocalAI] = useState(false); // Removed
-  // const [isLoading, setIsLoading] = useState(true); // Removed
-  // const [isToggling, setIsToggling] = useState(false); // Removed
-  // const [statusMessage, setStatusMessage] = useState(null); // Removed (now a string)
-  // const [connectionStatus, setConnectionStatus] = useState("unknown"); // Removed
-  // const [connectionCheckResult, setConnectionCheckResult] = useState(null); // Removed (now an object)
-
-  // const fetchProviderStatus = useCallback(...); // Removed
-  // const handleToggle = useCallback(...); // Removed (provided by hook)
-  // const checkLMStudioConnection = async () => { ... }; // Renamed to handleCheckConnection in hook
-  // useEffect(() => { fetchProviderStatus(); }, []); // Removed (handled by hook)
 
   // Animation variants
   const cardVariants = {
@@ -61,12 +48,8 @@ const AISettings = () => {
     }
   };
 
-  const switchVariants = {
-    checked: { backgroundColor: "var(--primary)" },
-    unchecked: { backgroundColor: "var(--muted)" },
-    hover: { scale: 1.05 },
-    tap: { scale: 0.95 }
-  };
+  const isLocalAI = provider === 'local';
+  const isOllama = provider === 'ollama';
 
   return (
     <motion.div
@@ -84,50 +67,54 @@ const AISettings = () => {
             )}
           </CardTitle>
           <CardDescription>
-            Choose between using local AI models (via LM Studio) or a cloud AI service (Groq).
+            Choose between using local AI models, Ollama, or a cloud AI service (Groq).
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {/* Main Toggle Section */}
+          {/* Main Provider Selection */}
           <div className="flex flex-col gap-4 p-4 border rounded-lg bg-background/50">
-            <div className="flex items-center space-x-2 justify-between">
-              <div>
-                <Label htmlFor="ai-provider-toggle" className="text-base font-medium">
-                  Use Local AI Models
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {isLocalAI 
-                    ? "Using LM Studio for local AI inference." 
-                    : "Using Groq Cloud API for AI features."}
-                </p>
-              </div>
-              
-              <motion.div
-                whileHover="hover"
-                whileTap="tap"
-                variants={switchVariants}
+            <div>
+              <Label className="text-base font-medium mb-2 block">AI Provider</Label>
+              <RadioGroup 
+                value={provider} 
+                onValueChange={handleProviderChange}
+                disabled={isLoading || isToggling}
+                className="space-y-2"
               >
-                <Switch
-                  id="ai-provider-toggle"
-                  checked={isLocalAI}
-                  onCheckedChange={handleToggle} // Use handler from hook
-                  disabled={isLoading || isToggling}
-                  className="data-[state=checked]:bg-primary"
-                />
-              </motion.div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cloud" id="cloud" />
+                  <Label htmlFor="cloud">Cloud AI (Groq)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="local" id="local" />
+                  <Label htmlFor="local">Local AI (LM Studio)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="ollama" id="ollama" />
+                  <Label htmlFor="ollama">Ollama</Label>
+                </div>
+              </RadioGroup>
+              
+              <p className="text-sm text-muted-foreground mt-2">
+                {provider === "cloud" 
+                  ? "Using Groq Cloud API for AI features." 
+                  : provider === "local"
+                  ? "Using LM Studio for local AI inference."
+                  : "Using Ollama for local AI inference with vision capabilities."}
+              </p>
             </div>
 
             {/* Status Badges */} 
             <div className="flex items-center mt-1 space-x-2">
               <Badge 
-                variant={isLocalAI ? "outline" : "default"}
+                variant={provider !== "cloud" ? "outline" : "default"}
                 className="capitalize"
               >
-                {isLocalAI ? "Local" : "Cloud"}
+                {provider === "cloud" ? "Cloud" : provider === "local" ? "Local" : "Ollama"}
               </Badge>
               
-              {isLocalAI && (
+              {provider !== "cloud" && (
                 <Badge 
                   variant={connectionStatus === "connected" ? "success" : connectionStatus === 'disconnected' ? "destructive" : "secondary"}
                   className={`capitalize ${connectionStatus === 'checking' || connectionStatus === 'unknown' ? 'animate-pulse' : ''}`} // Updated pulse condition
@@ -136,17 +123,18 @@ const AISettings = () => {
                 </Badge>
               )}
             </div>
-             {/* Status Message Display */}
-             {statusMessage && (
-               <p className={`text-sm mt-2 ${
-                 connectionStatus === 'connected' ? 'text-green-600 dark:text-green-400' : 
-                 connectionStatus === 'disconnected' ? 'text-red-600 dark:text-red-400' : 
-                 connectionStatus === 'checking' ? 'text-blue-600 dark:text-blue-400' : 
-                 'text-muted-foreground' // Default for 'unknown' or other messages
-               }`}>
-                 {statusMessage}
-               </p>
-             )}
+            
+            {/* Status Message Display */}
+            {statusMessage && (
+              <p className={`text-sm mt-2 ${
+                connectionStatus === 'connected' ? 'text-green-600 dark:text-green-400' : 
+                connectionStatus === 'disconnected' ? 'text-red-600 dark:text-red-400' : 
+                connectionStatus === 'checking' ? 'text-blue-600 dark:text-blue-400' : 
+                'text-muted-foreground' // Default for 'unknown' or other messages
+              }`}>
+                {statusMessage}
+              </p>
+            )}
           </div>
 
           {/* Connection Check Result */} 
@@ -207,10 +195,49 @@ const AISettings = () => {
               </Alert>
             </motion.div>
           )}
+
+          {/* Ollama Specific Section */}
+          {isOllama && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-4 space-y-4 p-4 bg-muted/50 rounded-md border"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Info size={16} className="text-blue-500"/>
+                    Ollama Requirements
+                </p>
+                <Button
+                  onClick={handleCheckConnection} // Use handler from hook
+                  disabled={isLoading || isToggling || connectionStatus === 'checking'}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                >
+                  {connectionStatus === 'checking' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                  Check Connection
+                </Button>
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground pl-2">
+                <li>Ensure Ollama is installed and running.</li>
+                <li>Verify that needed models (llava-phi3, mistral) are downloaded.</li>
+                <li>Make sure your firewall allows connections to Ollama from this application (usually on port 11434).</li>
+              </ul>
+              <Alert variant="info" className="mt-3 text-xs">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Image Processing</AlertTitle>
+                <AlertDescription>
+                  Ollama is required for image-to-task suggestions. Make sure the llava-phi3 model is installed by running <code className="px-1 py-0.5 bg-muted rounded text-xs">ollama pull llava-phi3</code>.
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
         </CardContent>
         
         <CardFooter className="text-xs text-muted-foreground pt-4 border-t">
-          Toggling the AI provider may require an application restart to take full effect in all features. Current status: {isLoading ? "Loading..." : isLocalAI ? `Local (${connectionStatus})` : "Cloud"}
+          Toggling the AI provider may require an application restart to take full effect in all features. Current status: {isLoading ? "Loading..." : provider === "cloud" ? "Cloud" : provider === "local" ? `Local (${connectionStatus})` : `Ollama (${connectionStatus})`}
         </CardFooter>
       </Card>
     </motion.div>

@@ -1,0 +1,118 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+**"You are a technical writer for my MERN stack project.  
+You have full access to the full project codebase.  
+Follow these instructions strictly:**
+
+---
+
+### 📂 Step 1: Create Two Base Markdown Files
+
+- `client.md` — document the **frontend** (React app inside `client/`)
+- `server.md` — document the **backend** (Express app inside `server/`)
+
+Each must include:
+
+- Overview
+- Full Project Structure (folder/file tree)
+- Technologies and Libraries Used (with where/how they are used)
+- Feature Overview
+- API and Service Overview
+- Core Logic of important files (components/pages/hooks/services)
+- UI Libraries usage (Tailwind CSS, shadcn/ui, lucide-react, framer-motion)
+- Data Flow and Communication
+- Folder Responsibilities
+- Setup Notes
+- How to Extend or Maintain
+
+---
+
+### 📂 Step 2: Then Create One `.md` File for **Each Feature Folder**
+
+**For each feature**, create a **separate markdown file** like:
+
+- `auth.md`
+- `tasks.md`
+- `projects.md`
+- `prayerLog.md`
+- `islamic.md`
+- `stats.md`
+- `settings.md`
+- `ai.md`
+- `dashboard.md`
+- `client-common-utils.md`
+- etc.
+
+_(every folder that represents a feature must have a separate `.md` file)_
+
+---
+
+### 📜 Inside Each Feature `.md`, Document:
+
+1. **Feature Overview**:
+   - What this feature does.
+   - How it connects to other features or core app flow.
+
+2. **Folder Structure**:
+   - Show the tree of files and folders inside that feature.
+
+3. **All Components**:
+   - For every component inside the feature (including small ones):
+     - What it does
+     - Props it receives
+     - Important internal logic
+     - Which libraries/components it uses (e.g., shadcn `Button`, `Dialog`, etc.)
+     - How it connects to other parts (routes, services, UI)
+
+4. **All Pages** (if any):
+   - Route they are connected to.
+   - Important logic inside.
+   - Usage of hooks, services, etc.
+
+5. **All Hooks**:
+   - What each hook does.
+   - Input/Output behavior.
+   - How it interacts with components or APIs.
+
+6. **All Services**:
+   - Purpose of each service (e.g., taskService.js, authService.js).
+   - Important API endpoints they call.
+   - Key functions exposed.
+
+7. **Utilities and Constants**:
+   - Purpose of helper/util files.
+   - Important constants and their usage.
+
+8. **Backend APIs related** (if applicable):
+   - Related Express API routes if they are called from this feature.
+
+9. **Libraries Used Inside This Feature**:
+   - Mention if Tailwind, shadcn/ui, framer-motion, etc. are used specifically for something here.
+
+10. **Data Flow and State Management**:
+    - How data flows in the feature (props drilling, context, local state, service fetching, etc.)
+
+11. **Accessibility Notes**:
+    - If components use ARIA roles, focus traps, keyboard navigation, etc.
+
+12. **Animations (if any)**:
+    - Describe any animations done via framer-motion or TailwindCSS.
+
+13. **Extension Ideas**:
+    - Suggest how this feature could be extended in the future.
+
+---
+
+### 📚 Important Notes
+
+- **Document ALL components/pages/hooks/services**, even tiny ones.
+- **Explain** – not just list.
+- **Show relationships** between frontend parts and backend routes.
+- **Highlight** the use of important libraries in each feature.
+- **Use bullet points** and **short code snippets** only where helpful.
+- **Skip** `.DS_Store`, backup files, and auto-generated files.
+- **Be clean and modular**.
+- **No missing small details** — completeness is mandatory.
